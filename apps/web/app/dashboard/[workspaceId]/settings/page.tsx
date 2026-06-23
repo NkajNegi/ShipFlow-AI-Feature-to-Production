@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Loader2,
-  Github,
   CreditCard,
   Users,
   Gauge,
@@ -79,7 +78,7 @@ export default function SettingsPage({
       <Card className="border-border">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Github className="h-5 w-5" /> GitHub Integration
+            <GitBranch className="h-5 w-5" /> GitHub Integration
           </CardTitle>
           <CardDescription>
             Connect the ShipFlow GitHub App to enable PR sync and the AI review
@@ -100,7 +99,7 @@ export default function SettingsPage({
           ) : (
             <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
               <a href={ghInstall.data?.url ?? "#"}>
-                <Github className="mr-2 h-4 w-4" /> Connect GitHub
+                <GitBranch className="mr-2 h-4 w-4" /> Connect GitHub
               </a>
             </Button>
           )}
