@@ -74,17 +74,69 @@ model Verification {
 // ShipFlow SaaS Schema
 // -----------------------------
 model Workspace {
-  id               String            @id @default(cuid())
-  name             String
-  stripeCustomerId String?           @unique
-  planTier         String            @default("FREE") // FREE or PRO
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id        String @id @default(cuid())
+  name      String
+  planTier  String @default("FREE") // FREE or PRO
 
-  members  WorkspaceMember[]
-  projects Project[]
+  // Billing (Razorpay)
+  razorpayCustomerId     String? @unique @map("razorpay_customer_id")
+  razorpaySubscriptionId String? @unique @map("razorpay_subscription_id")
+  aiReviewCredits        Int     @default(20) @map("ai_review_credits")
+
+  // GitHub App installation
+  githubInstallationId Int?    @unique @map("github_installation_id")
+  githubAccountLogin   String? @map("github_account_login")
+
+  // Bring-your-own AI key (Anthropic/Claude only), encrypted at rest
+  anthropicApiKeyEnc String? @map("anthropic_api_key_enc")
+
+  // Notifications (Slack / Discord incoming webhook)
+  notifyWebhookUrl String? @map("notify_webhook_url")
+  notifyType       String? @map("notify_type") // SLACK or DISCORD
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members      WorkspaceMember[]
+  projects     Project[]
+  subscription Subscription?
+  invitations  Invitation[]
 
   @@map("workspace")
+}
+
+model Invitation {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  email       String
+  role        String   @default("MEMBER") // ADMIN, LEAD, MEMBER
+  token       String   @unique
+  status      String   @default("PENDING") // PENDING, ACCEPTED, REVOKED
+  invitedById String   @map("invited_by_id")
+  expiresAt   DateTime @map("expires_at")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, email])
+  @@index([token])
+  @@map("invitation")
+}
+
+model Subscription {
+  id          String   @id @default(cuid())
+  workspaceId String   @unique @map("workspace_id")
+  plan        String   @default("FREE") // FREE or PRO
+  status      String   @default("ACTIVE") // ACTIVE, PAST_DUE, CANCELLED
+  razorpayId  String?  @map("razorpay_id")
+  currentPeriodEnd DateTime? @map("current_period_end")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("subscription")
 }
 
 model WorkspaceMember {
@@ -105,6 +157,8 @@ model Project {
   id          String   @id @default(cuid())
   name        String
   workspaceId String   @map("workspace_id")
+  // Secret token for external feature-request ingestion (email/ticket/API).
+  ingestToken String   @unique @default(cuid()) @map("ingest_token")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -116,16 +170,30 @@ model Project {
 }
 
 model FeatureRequest {
-  id          String   @id @default(cuid())
-  title       String
-  context     String   @db.Text
-  projectId   String   @map("project_id")
-  status      String   @default("DISCOVERY") // DISCOVERY, PLANNING, IN_PROGRESS, REVIEW, SHIPPED
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String @id @default(cuid())
+  title     String
+  context   String @db.Text
+  projectId String @map("project_id")
+  // Where the request came from: UI, EMAIL, TICKET, API
+  source    String @default("UI")
+  // DISCOVERY, GENERATING_PRD, PLANNING, IN_PROGRESS, IN_REVIEW,
+  // FIX_NEEDED, APPROVED, SHIPPED, REJECTED
+  status    String @default("DISCOVERY")
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  prds    PRD[]
+  // Phase 1 AI clarification analysis (latest run)
+  clarificationJson Json? @map("clarification_json")
+
+  // Phase 5 human approval
+  approvedById String?   @map("approved_by_id")
+  approvedAt   DateTime? @map("approved_at")
+  shippedAt    DateTime? @map("shipped_at")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  prds         PRD[]
+  pullRequests PullRequest[]
 
   @@map("feature_request")
 }
@@ -145,6 +213,8 @@ model PRD {
 
 model Task {
   id          String   @id @default(cuid())
+  // Human-readable reference, e.g. SF-123, used in PR descriptions ("Closes SF-123")
+  ref         Int      @default(autoincrement())
   title       String
   description String   @db.Text
   status      String   @default("TODO") // TODO, IN_PROGRESS, REVIEW, DONE
@@ -152,8 +222,7 @@ model Task {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  prd     PRD      @relation(fields: [prdId], references: [id], onDelete: Cascade)
-  reviews Review[]
+  prd PRD @relation(fields: [prdId], references: [id], onDelete: Cascade)
 
   @@map("task")
 }
@@ -161,27 +230,110 @@ model Task {
 model Repository {
   id          String   @id @default(cuid())
   name        String
+  fullName    String?  @map("full_name") // owner/repo
   githubId    Int?     @unique
   url         String
   projectId   String   @map("project_id")
+  // AI repository analysis (summary, stack, architecture, risks)
+  analysisJson Json?     @map("analysis_json")
+  analyzedAt   DateTime? @map("analyzed_at")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  pullRequests PullRequest[]
 
   @@map("repository")
 }
 
-model Review {
-  id          String   @id @default(cuid())
-  taskId      String   @map("task_id")
-  prNumber    Int?
-  status      String   @default("PENDING") // PENDING, APPROVED, CHANGES_REQUESTED
-  contentJson Json?    // Review comments, diff analysis
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model PullRequest {
+  id               String  @id @default(cuid())
+  number           Int
+  title            String
+  url              String
+  headSha          String? @map("head_sha")
+  state            String  @default("OPEN") // OPEN, CLOSED, MERGED
+  featureRequestId String  @map("feature_request_id")
+  repositoryId     String? @map("repository_id")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  featureRequest FeatureRequest @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
+  repository     Repository?    @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
+  reviews        Review[]
+
+  @@unique([repositoryId, number])
+  @@map("pull_request")
+}
+
+// Idempotency guard for inbound webhooks (GitHub / Razorpay re-send deliveries).
+model WebhookEvent {
+  id        String   @id @default(cuid())
+  provider  String
+  eventId   String   @map("event_id")
+  createdAt DateTime @default(now())
+
+  @@unique([provider, eventId])
+  @@map("webhook_event")
+}
+
+// Audit trail for sensitive actions (approvals, role changes, removals).
+model AuditLog {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  actorId     String   @map("actor_id")
+  actorName   String?  @map("actor_name")
+  action      String
+  target      String?
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId])
+  @@map("audit_log")
+}
+
+// Tracks long-running async (Inngest) work so progress is visible in-app.
+model WorkflowRun {
+  id               String   @id @default(cuid())
+  type             String   // PRD_GENERATION, AI_REVIEW, REPO_ANALYSIS
+  status           String   @default("RUNNING") // RUNNING, COMPLETED, FAILED
+  label            String?
+  featureRequestId String?  @map("feature_request_id")
+  repositoryId     String?  @map("repository_id")
+  stepsJson        Json?    @map("steps_json")
+  error            String?  @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([featureRequestId])
+  @@index([repositoryId])
+  @@map("workflow_run")
+}
+
+// Fixed-window rate limiting for abuse-prone (AI) endpoints.
+model RateLimit {
+  id        String   @id @default(cuid())
+  bucketKey String   @unique @map("bucket_key")
+  count     Int      @default(0)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+  @@map("rate_limit")
+}
+
+model Review {
+  id            String   @id @default(cuid())
+  pullRequestId String   @map("pull_request_id")
+  // PENDING, APPROVED, CHANGES_REQUESTED
+  status        String   @default("PENDING")
+  summary       String?  @db.Text
+  // Array of { severity: BLOCKING|NON_BLOCKING, category, title, detail, file? }
+  issuesJson    Json?    @map("issues_json")
+  blockingCount Int      @default(0) @map("blocking_count")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  pullRequest PullRequest @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
 
   @@map("review")
 }

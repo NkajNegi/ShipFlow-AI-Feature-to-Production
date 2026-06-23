@@ -1,16 +1,22 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { TRPCError } from "@trpc/server";
+import { assertProjectAccess } from "../lib/access";
 
 export const featureRequestRouter = createTRPCRouter({
   create: protectedProcedure
-    .input(z.object({ 
-      projectId: z.string(), 
-      title: z.string().min(1),
-      context: z.string().min(1)
-    }))
+    .input(
+      z.object({
+        projectId: z.string(),
+        title: z.string().min(1).max(200),
+        context: z.string().min(1).max(10000),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
-      // Create a feature request
+      await assertProjectAccess(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.projectId
+      );
       return ctx.prisma.featureRequest.create({
         data: {
           title: input.title,
@@ -23,13 +29,14 @@ export const featureRequestRouter = createTRPCRouter({
   list: protectedProcedure
     .input(z.object({ projectId: z.string() }))
     .query(async ({ ctx, input }) => {
+      await assertProjectAccess(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.projectId
+      );
       return ctx.prisma.featureRequest.findMany({
-        where: {
-          projectId: input.projectId,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
+        where: { projectId: input.projectId },
+        orderBy: { createdAt: "desc" },
       });
     }),
 });

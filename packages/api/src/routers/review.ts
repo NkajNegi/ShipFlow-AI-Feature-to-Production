@@ -1,0 +1,201 @@
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { inngest, EVENTS } from "@repo/inngest";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { assertFeatureRequestAccess, assertWorkspaceMember } from "../lib/access";
+import { enforceRateLimit } from "../lib/ratelimit";
+import { logAudit } from "../lib/audit";
+
+export const reviewRouter = createTRPCRouter({
+  /** Full command-center payload for a feature request (Phase 5 aggregation). */
+  getFeatureDetail: protectedProcedure
+    .input(z.object({ featureRequestId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      await assertFeatureRequestAccess(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.featureRequestId
+      );
+      return ctx.prisma.featureRequest.findUnique({
+        where: { id: input.featureRequestId },
+        include: {
+          project: { select: { id: true, name: true, workspaceId: true } },
+          prds: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            include: { tasks: { orderBy: { ref: "asc" } } },
+          },
+          pullRequests: {
+            orderBy: { createdAt: "desc" },
+            include: {
+              repository: { select: { fullName: true, url: true } },
+              reviews: { orderBy: { createdAt: "desc" } },
+            },
+          },
+        },
+      });
+    }),
+
+  /** Queue an AI review for a pull request as an async Inngest workflow. */
+  runReview: protectedProcedure
+    .input(z.object({ pullRequestId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const pr = await ctx.prisma.pullRequest.findUnique({
+        where: { id: input.pullRequestId },
+        select: { featureRequestId: true },
+      });
+      if (!pr) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "PR not found." });
+      }
+      await assertFeatureRequestAccess(
+        ctx.prisma,
+        ctx.session.user.id,
+        pr.featureRequestId
+      );
+
+      // Throttle manual re-reviews. (The credit itself is consumed when the
+      // Inngest workflow actually runs, in runReviewForPullRequest.)
+      await enforceRateLimit(ctx.prisma, `ai:review:${ctx.session.user.id}`, 20, 60);
+
+      await inngest.send({
+        name: EVENTS.REVIEW_RUN,
+        data: { pullRequestId: input.pullRequestId },
+      });
+      return { queued: true };
+    }),
+
+  /**
+   * Phase 5 — human approval. Only ADMIN or LEAD may approve. Blocks release if
+   * any pull request still has unresolved blocking issues.
+   */
+  approveAndShip: protectedProcedure
+    .input(
+      z.object({ featureRequestId: z.string(), mergePr: z.boolean().default(false) })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const fr = await ctx.prisma.featureRequest.findUnique({
+        where: { id: input.featureRequestId },
+        select: {
+          id: true,
+          project: { select: { workspaceId: true } },
+          pullRequests: {
+            include: { reviews: { orderBy: { createdAt: "desc" }, take: 1 } },
+          },
+        },
+      });
+      if (!fr) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Feature not found." });
+      }
+
+      await assertWorkspaceMember(
+        ctx.prisma,
+        ctx.session.user.id,
+        fr.project.workspaceId,
+        ["ADMIN", "LEAD"]
+      );
+
+      const hasBlocking = fr.pullRequests.some(
+        (pr) => (pr.reviews[0]?.blockingCount ?? 0) > 0
+      );
+      if (hasBlocking) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            "Cannot ship: one or more pull requests still have blocking issues.",
+        });
+      }
+
+      const shippedFr = await ctx.prisma.featureRequest.update({
+        where: { id: input.featureRequestId },
+        data: {
+          status: "SHIPPED",
+          approvedById: ctx.session.user.id,
+          approvedAt: new Date(),
+          shippedAt: new Date(),
+        },
+      });
+      await logAudit({
+        workspaceId: fr.project.workspaceId,
+        actorId: ctx.session.user.id,
+        actorName: ctx.session.user.name,
+        action: "FEATURE_SHIPPED",
+        target: shippedFr.title,
+      });
+      return shippedFr;
+    }),
+
+  reject: protectedProcedure
+    .input(z.object({ featureRequestId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const fr = await assertFeatureRequestAccess(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.featureRequestId,
+        ["ADMIN", "LEAD"]
+      );
+      const rejected = await ctx.prisma.featureRequest.update({
+        where: { id: fr.id },
+        data: { status: "REJECTED" },
+      });
+      await logAudit({
+        workspaceId: fr.project.workspaceId,
+        actorId: ctx.session.user.id,
+        actorName: ctx.session.user.name,
+        action: "FEATURE_REJECTED",
+        target: rejected.title,
+      });
+      return rejected;
+    }),
+
+  /** Velocity & AI metrics for the analytics dashboard. */
+  getWorkspaceMetrics: protectedProcedure
+    .input(z.object({ workspaceId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      await assertWorkspaceMember(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.workspaceId
+      );
+
+      const shipped = await ctx.prisma.featureRequest.findMany({
+        where: {
+          project: { workspaceId: input.workspaceId },
+          status: "SHIPPED",
+          shippedAt: { not: null },
+        },
+        select: { createdAt: true, shippedAt: true },
+      });
+
+      const totalMs = shipped.reduce(
+        (acc, f) =>
+          acc + ((f.shippedAt?.getTime() ?? 0) - f.createdAt.getTime()),
+        0
+      );
+      const avgCycleHours =
+        shipped.length > 0
+          ? Math.round(totalMs / shipped.length / 36e5)
+          : 0;
+
+      const reviews = await ctx.prisma.review.findMany({
+        where: {
+          pullRequest: {
+            featureRequest: { project: { workspaceId: input.workspaceId } },
+          },
+        },
+        select: { blockingCount: true, issuesJson: true },
+      });
+
+      const bugsCaught = reviews.reduce(
+        (acc, r) => acc + (Array.isArray(r.issuesJson) ? r.issuesJson.length : 0),
+        0
+      );
+
+      return {
+        shippedCount: shipped.length,
+        avgCycleHours,
+        reviewCount: reviews.length,
+        bugsCaught,
+        blockingCaught: reviews.reduce((a, r) => a + r.blockingCount, 0),
+      };
+    }),
+});

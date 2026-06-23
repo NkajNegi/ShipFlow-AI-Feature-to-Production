@@ -17,6 +17,13 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Allow post-login redirect (e.g. back to an /invite/<token> page).
+  const getRedirect = () => {
+    if (typeof window === "undefined") return "/dashboard";
+    const r = new URLSearchParams(window.location.search).get("redirect");
+    return r && r.startsWith("/") ? r : "/dashboard";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -38,7 +45,7 @@ export default function LoginPage() {
         if (error) throw error;
       }
       
-      router.push("/dashboard");
+      router.push(getRedirect());
     } catch (err: any) {
       setError(err?.message || "An error occurred");
     } finally {
@@ -48,7 +55,7 @@ export default function LoginPage() {
 
   const handleGithubLogin = async () => {
     setLoading(true);
-    await signIn.social({ provider: "github", callbackURL: "/dashboard" });
+    await signIn.social({ provider: "github", callbackURL: getRedirect() });
     setLoading(false);
   };
 

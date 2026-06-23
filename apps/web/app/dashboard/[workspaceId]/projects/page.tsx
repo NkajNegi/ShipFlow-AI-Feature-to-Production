@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Sparkles, Folder } from "lucide-react";
+import { Loader2, Plus, Sparkles, Folder, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export default function ProjectsPage({ params }: { params: Promise<{ workspaceId: string }> }) {
@@ -91,7 +92,7 @@ export default function ProjectsPage({ params }: { params: Promise<{ workspaceId
       ) : (
         <div className="grid gap-6">
           {projects?.map((project) => (
-            <ProjectCard key={project.id} project={project} />
+            <ProjectCard key={project.id} project={project} workspaceId={workspaceId} />
           ))}
         </div>
       )}
@@ -100,7 +101,7 @@ export default function ProjectsPage({ params }: { params: Promise<{ workspaceId
 }
 
 // A component to display a project and its feature requests
-function ProjectCard({ project }: { project: any }) {
+function ProjectCard({ project, workspaceId }: { project: any; workspaceId: string }) {
   const { data: featureRequests, refetch } = trpc.featureRequest.list.useQuery({ projectId: project.id });
   const [isFeatureModalOpen, setIsFeatureModalOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -111,12 +112,6 @@ function ProjectCard({ project }: { project: any }) {
       setIsFeatureModalOpen(false);
       setTitle("");
       setContext("");
-      refetch();
-    }
-  });
-
-  const generatePRD = trpc.prd.generate.useMutation({
-    onSuccess: () => {
       refetch();
     }
   });
@@ -167,6 +162,22 @@ function ProjectCard({ project }: { project: any }) {
         </Dialog>
       </CardHeader>
       <CardContent className="pt-6">
+        <details className="mb-4 rounded-lg border border-border bg-muted/30 p-3">
+          <summary className="cursor-pointer text-sm font-medium text-muted-foreground">
+            Intake API — submit requests from email / tickets
+          </summary>
+          <div className="mt-3 space-y-2 text-xs">
+            <p className="text-muted-foreground">
+              POST to <code className="text-primary">/api/ingest/feature</code> with this project token:
+            </p>
+            <code className="block break-all rounded bg-background border border-border p-2">
+              {project.ingestToken}
+            </code>
+            <pre className="overflow-x-auto rounded bg-background border border-border p-2 text-[11px] leading-relaxed">{`curl -X POST /api/ingest/feature \\
+  -H 'content-type: application/json' \\
+  -d '{"token":"${project.ingestToken}","title":"...","context":"...","source":"EMAIL"}'`}</pre>
+          </div>
+        </details>
         {featureRequests?.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">No feature requests yet.</p>
         ) : (
@@ -180,26 +191,20 @@ function ProjectCard({ project }: { project: any }) {
                     <span className="bg-primary/20 text-primary px-2 py-1 rounded-full">{fr.status}</span>
                   </div>
                 </div>
-                <div>
-                  {fr.status === "DRAFT" ? (
-                    <Button 
-                      onClick={() => generatePRD.mutate({ featureRequestId: fr.id })}
-                      disabled={generatePRD.isPending}
-                      size="sm"
-                      className="bg-amber-500 hover:bg-amber-600 text-white"
-                    >
-                      {generatePRD.isPending && generatePRD.variables?.featureRequestId === fr.id ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <div className="flex gap-2">
+                  <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                    <Link href={`/dashboard/${workspaceId}/feature/${fr.id}`}>
+                      {fr.status === "DISCOVERY" ? (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" /> Start Discovery
+                        </>
                       ) : (
-                        <Sparkles className="mr-2 h-4 w-4" />
+                        <>
+                          Open <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
                       )}
-                      Generate PRD & Tasks
-                    </Button>
-                  ) : (
-                    <Button variant="outline" size="sm" disabled>
-                      PRD Generated
-                    </Button>
-                  )}
+                    </Link>
+                  </Button>
                 </div>
               </div>
             ))}
