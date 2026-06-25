@@ -1,12 +1,20 @@
 import "@repo/ui/styles.css";
 import "./globals.css";
 import type { Metadata } from "next";
-import { GeistSans } from "geist/font/sans";
-import { Geist } from "next/font/google";
+import { Manrope, JetBrains_Mono } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { TRPCReactProvider } from "@/trpc/Provider";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-sans",
+});
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
+});
 
 export const metadata: Metadata = {
   title: "ShipFlow AI",
@@ -19,8 +27,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={cn("dark font-sans", geist.variable)}>
-      <body className={GeistSans.className}>
+    <html
+      lang="en"
+      className={cn("dark font-sans", manrope.variable, jetbrainsMono.variable)}
+    >
+      <body className={manrope.className}>
         <TRPCReactProvider>{children}</TRPCReactProvider>
       </body>
     </html>
