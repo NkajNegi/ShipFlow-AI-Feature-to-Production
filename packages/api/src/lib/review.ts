@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { generateObject } from "ai";
 import { prisma } from "@repo/db";
-import { aiModel, resolveModel } from "./ai";
+import { resolveModel } from "./ai";
 import { getInstallationOctokit } from "./github";
 import { consumeAiCreditIfPlatform } from "./credits";
 import { startRun, addStep, finishRun } from "./workflow";
@@ -58,7 +58,7 @@ export async function generateReview(args: {
       : args.diff;
 
   const { object } = await generateObject({
-    model: args.model ?? aiModel,
+    model: args.model ?? resolveModel(),
     schema: ReviewResultSchema,
     system:
       "You are a meticulous Staff Engineer acting as an automated QA reviewer. " +
