@@ -8,6 +8,7 @@ import {
 } from "../lib/access";
 import { getInstallationOctokit, getInstallUrl } from "../lib/github";
 import { enforceRateLimit } from "../lib/ratelimit";
+import { assertRepoLimit } from "../lib/plan";
 
 export const githubRouter = createTRPCRouter({
   /** URL to send the user to in order to install the ShipFlow GitHub App. */
@@ -94,6 +95,21 @@ export const githubRouter = createTRPCRouter({
         input.projectId,
         ["ADMIN", "LEAD"]
       );
+
+      // Enforce the per-plan repository limit, but only when connecting a NEW
+      // repo — re-linking an already-connected one doesn't add to the count.
+      const existing = await ctx.prisma.repository.findUnique({
+        where: { githubId: input.githubId },
+        select: { id: true },
+      });
+      if (!existing) {
+        const project = await ctx.prisma.project.findUnique({
+          where: { id: input.projectId },
+          select: { workspaceId: true },
+        });
+        if (project) await assertRepoLimit(ctx.prisma, project.workspaceId);
+      }
+
       return ctx.prisma.repository.upsert({
         where: { githubId: input.githubId },
         update: {

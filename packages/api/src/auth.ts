@@ -2,6 +2,14 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@repo/db";
 
+// Only enable GitHub social login when BOTH credentials are present. Otherwise
+// better-auth would emit an OAuth URL with `client_id=undefined`, sending users
+// to a GitHub error page. With this guard, an unconfigured GitHub button gets a
+// clean "provider not configured" error instead.
+const githubClientId = process.env.GITHUB_CLIENT_ID;
+const githubClientSecret = process.env.GITHUB_CLIENT_SECRET;
+const githubConfigured = Boolean(githubClientId && githubClientSecret);
+
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
@@ -28,12 +36,14 @@ export const auth = betterAuth({
     window: 60,
     max: 20,
   },
-  socialProviders: {
-    github: {
-      clientId: process.env.GITHUB_CLIENT_ID as string,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
-    },
-  },
+  socialProviders: githubConfigured
+    ? {
+        github: {
+          clientId: githubClientId as string,
+          clientSecret: githubClientSecret as string,
+        },
+      }
+    : {},
 });
 
 export type Auth = typeof auth;
