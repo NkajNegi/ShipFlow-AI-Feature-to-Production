@@ -16,7 +16,7 @@ export default function OnboardingPage() {
   const createWorkspace = trpc.workspace.createWorkspace.useMutation({
     onSuccess: (data) => {
       utils.workspace.getUserWorkspaces.invalidate();
-      router.push(`/dashboard/${data.id}`);
+      router.push(`/dashboard/${data.id}?setup=true`);
     },
   });
 

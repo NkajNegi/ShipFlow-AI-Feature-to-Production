@@ -3,6 +3,7 @@
 import { use } from "react";
 import Link from "next/link";
 import { trpc } from "@/trpc/client";
+import { SetupChecklist } from "@/components/setup-checklist";
 import {
   Card,
   CardContent,
@@ -45,10 +46,14 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function WorkspaceDashboard({
   params,
+  searchParams,
 }: {
   params: Promise<{ workspaceId: string }>;
+  searchParams: Promise<{ setup?: string }>;
 }) {
   const { workspaceId } = use(params);
+  const { setup } = use(searchParams);
+  const isWizard = setup === "true";
   const metrics = trpc.review.getWorkspaceMetrics.useQuery({ workspaceId });
   const features = trpc.featureRequest.listByWorkspace.useQuery({ workspaceId });
 
@@ -65,6 +70,7 @@ export default function WorkspaceDashboard({
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
+      <SetupChecklist workspaceId={workspaceId} mode={isWizard ? "wizard" : "dashboard"} />
       <div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
           Dashboard
