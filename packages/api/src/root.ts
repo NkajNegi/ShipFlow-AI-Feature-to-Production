@@ -3,6 +3,8 @@ import { workspaceRouter } from "./routers/workspace";
 import { projectRouter } from "./routers/project";
 import { featureRequestRouter } from "./routers/featureRequest";
 import { taskRouter } from "./routers/task";
+import { commentRouter } from "./routers/comment";
+import { labelRouter } from "./routers/label";
 import { prdRouter } from "./routers/prd";
 import { githubRouter } from "./routers/github";
 import { reviewRouter } from "./routers/review";
@@ -18,6 +20,8 @@ export const appRouter = createTRPCRouter({
   project: projectRouter,
   featureRequest: featureRequestRouter,
   task: taskRouter,
+  comment: commentRouter,
+  label: labelRouter,
   prd: prdRouter,
   github: githubRouter,
   review: reviewRouter,

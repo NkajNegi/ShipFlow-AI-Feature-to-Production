@@ -18,8 +18,14 @@ export function RepoLinker({
     { retry: false }
   );
   const projects = trpc.project.list.useQuery({ workspaceId });
+  const hasProjects = (projects.data ?? []).length > 0;
   const [repoSel, setRepoSel] = useState("");
-  const [projSel, setProjSel] = useState("");
+  const [userProjSel, setUserProjSel] = useState<string | null>(null);
+  
+  // Safe default: "NEW" if loaded and 0 projects, otherwise ""
+  const projSel = userProjSel !== null 
+    ? userProjSel 
+    : (projects.isSuccess && !hasProjects ? "NEW" : "");
 
   const link = trpc.github.linkRepository.useMutation({
     onSuccess: () => {
@@ -34,7 +40,7 @@ export function RepoLinker({
     const r = available.data?.find((x) => String(x.githubId) === repoSel);
     if (r && projSel) {
       link.mutate({
-        projectId: projSel,
+        ...(projSel === "NEW" ? { workspaceId } : { projectId: projSel }),
         githubId: r.githubId,
         name: r.name,
         fullName: r.fullName,
@@ -71,11 +77,16 @@ export function RepoLinker({
         </select>
         <select
           value={projSel}
-          onChange={(e) => setProjSel(e.target.value)}
+          onChange={(e) => setUserProjSel(e.target.value)}
           className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm"
         >
-          <option value="">
-            {projects.isLoading ? "Loading projects…" : "Select a project"}
+          {(!projects.isSuccess || hasProjects) && (
+            <option value="">
+              {projects.isLoading ? "Loading projects…" : "Select a project"}
+            </option>
+          )}
+          <option value="NEW">
+            Auto-create project for repository
           </option>
           {(projects.data ?? []).map((p: any) => (
             <option key={p.id} value={p.id}>

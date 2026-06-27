@@ -28,6 +28,8 @@ model User {
   sessions         Session[]
   accounts         Account[]
   workspaceMembers WorkspaceMember[]
+  tasks            Task[]
+  taskComments     TaskComment[]
 
   @@map("user")
 }
@@ -98,6 +100,8 @@ model Workspace {
 
   // Notifications (Slack / Discord incoming webhook)
   notifyWebhookUrl String? @map("notify_webhook_url")
+
+  labels           Label[]
   notifyType       String? @map("notify_type") // SLACK or DISCORD
 
   createdAt DateTime @default(now())
@@ -171,6 +175,7 @@ model Project {
   workspace       Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   featureRequests FeatureRequest[]
   repositories    Repository[]
+  tasks           Task[]
 
   @@map("project")
 }
@@ -231,13 +236,60 @@ model Task {
   title       String
   description String   @db.Text
   status      String   @default("TODO") // TODO, IN_PROGRESS, REVIEW, DONE
-  prdId       String   @map("prd_id")
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  position    Float    @default(0)
+  dueDate     DateTime? @map("due_date")
+  assigneeId  String?  @map("assignee_id")
+  projectId   String?  @map("project_id")
+  prdId       String?  @map("prd_id")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  prd PRD @relation(fields: [prdId], references: [id], onDelete: Cascade)
+  prd      PRD?          @relation(fields: [prdId], references: [id], onDelete: Cascade)
+  project  Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee User?         @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  comments TaskComment[]
+  labels   TaskLabel[]
 
   @@map("task")
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  taskId    String   @map("task_id")
+  authorId  String   @map("author_id")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("task_comment")
+}
+
+model Label {
+  id          String   @id @default(cuid())
+  name        String
+  color       String   
+  workspaceId String   @map("workspace_id")
+  createdAt   DateTime @default(now())
+
+  workspace Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tasks     TaskLabel[]
+
+  @@map("label")
+}
+
+model TaskLabel {
+  taskId  String @map("task_id")
+  labelId String @map("label_id")
+
+  task  Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  label Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, labelId])
+  @@map("task_label")
 }
 
 model Repository {

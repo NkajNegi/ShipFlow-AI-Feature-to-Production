@@ -79,35 +79,57 @@ async function handlePullRequest(payload: any) {
     : null;
   if (!repository) return;
 
-  const stored = await prisma.pullRequest.upsert({
-    where: {
-      repositoryId_number: { repositoryId: repository.id, number: pr.number },
-    },
-    update: {
-      title: pr.title,
-      url: pr.html_url,
-      headSha: pr.head?.sha,
-      state: pr.merged ? "MERGED" : pr.state === "closed" ? "CLOSED" : "OPEN",
-    },
-    create: {
-      number: pr.number,
-      title: pr.title,
-      url: pr.html_url,
-      headSha: pr.head?.sha,
-      state: "OPEN",
-      featureRequestId: task.prd.featureRequestId,
-      repositoryId: repository.id,
-    },
-  });
+  if (task.prd) {
+    const stored = await prisma.pullRequest.upsert({
+      where: {
+        repositoryId_number: { repositoryId: repository.id, number: pr.number },
+      },
+      update: {
+        title: pr.title,
+        url: pr.html_url,
+        headSha: pr.head?.sha,
+        state: pr.merged ? "MERGED" : pr.state === "closed" ? "CLOSED" : "OPEN",
+      },
+      create: {
+        number: pr.number,
+        title: pr.title,
+        url: pr.html_url,
+        headSha: pr.head?.sha,
+        state: "OPEN",
+        featureRequestId: task.prd.featureRequestId,
+        repositoryId: repository.id,
+      },
+    });
 
-  // Move the feature into development and queue the AI QA pass via Inngest.
-  await prisma.featureRequest.update({
-    where: { id: task.prd.featureRequestId },
-    data: { status: "IN_PROGRESS" },
-  });
+    // Move the feature into development and queue the AI QA pass via Inngest.
+    await prisma.featureRequest.update({
+      where: { id: task.prd.featureRequestId },
+      data: { status: "IN_PROGRESS" },
+    });
 
-  await inngest.send({
-    name: EVENTS.REVIEW_RUN,
-    data: { pullRequestId: stored.id },
+    await inngest.send({
+      name: EVENTS.REVIEW_RUN,
+      data: { pullRequestId: stored.id },
+    });
+  }
+
+  // Update task statuses based on PR state
+  const newStatus = pr.merged ? "DONE" : (pr.state === "closed" ? "TODO" : "REVIEW");
+  const taskIdsToUpdate = await prisma.task.findMany({
+    where: { 
+      ref: { in: refs },
+      OR: [
+        { projectId: repository.projectId },
+        { prd: { featureRequest: { projectId: repository.projectId } } }
+      ]
+    },
+    select: { id: true },
   });
+  if (taskIdsToUpdate.length > 0) {
+    await prisma.task.updateMany({
+      where: { id: { in: taskIdsToUpdate.map(t => t.id) } },
+      data: { status: newStatus },
+    });
+  }
+
 }

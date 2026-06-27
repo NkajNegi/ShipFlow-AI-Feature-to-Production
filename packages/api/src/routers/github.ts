@@ -81,7 +81,8 @@ export const githubRouter = createTRPCRouter({
   linkRepository: protectedProcedure
     .input(
       z.object({
-        projectId: z.string(),
+        projectId: z.string().optional(),
+        workspaceId: z.string().optional(),
         githubId: z.number(),
         name: z.string(),
         fullName: z.string(),
@@ -89,12 +90,45 @@ export const githubRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await assertProjectAccess(
-        ctx.prisma,
-        ctx.session.user.id,
-        input.projectId,
-        ["ADMIN", "LEAD"]
-      );
+      if (!input.projectId && !input.workspaceId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Must provide either projectId or workspaceId",
+        });
+      }
+
+      let finalProjectId = input.projectId;
+
+      if (finalProjectId) {
+        await assertProjectAccess(
+          ctx.prisma,
+          ctx.session.user.id,
+          finalProjectId,
+          ["ADMIN", "LEAD"]
+        );
+      } else if (input.workspaceId) {
+        await assertWorkspaceMember(
+          ctx.prisma,
+          ctx.session.user.id,
+          input.workspaceId,
+          ["ADMIN", "LEAD"]
+        );
+        // Auto-create a project
+        const project = await ctx.prisma.project.create({
+          data: {
+            name: input.name,
+            workspaceId: input.workspaceId,
+          },
+        });
+        finalProjectId = project.id;
+      }
+
+      if (!finalProjectId) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to resolve project ID",
+        });
+      }
 
       // Enforce the per-plan repository limit, but only when connecting a NEW
       // repo — re-linking an already-connected one doesn't add to the count.
@@ -104,7 +138,7 @@ export const githubRouter = createTRPCRouter({
       });
       if (!existing) {
         const project = await ctx.prisma.project.findUnique({
-          where: { id: input.projectId },
+          where: { id: finalProjectId },
           select: { workspaceId: true },
         });
         if (project) await assertRepoLimit(ctx.prisma, project.workspaceId);
@@ -116,14 +150,14 @@ export const githubRouter = createTRPCRouter({
           name: input.name,
           fullName: input.fullName,
           url: input.url,
-          projectId: input.projectId,
+          projectId: finalProjectId,
         },
         create: {
           githubId: input.githubId,
           name: input.name,
           fullName: input.fullName,
           url: input.url,
-          projectId: input.projectId,
+          projectId: finalProjectId,
         },
       });
     }),
