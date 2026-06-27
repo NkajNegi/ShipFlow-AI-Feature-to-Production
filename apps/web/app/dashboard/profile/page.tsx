@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   Trash2,
   Sparkles,
+  Power,
 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -186,7 +187,11 @@ function UserAiKeyCard() {
   const remove = trpc.profile.removeAnthropicKey.useMutation({
     onSuccess: () => utils.profile.getAiKeyStatus.invalidate(),
   });
+  const toggle = trpc.profile.setAiKeyEnabled.useMutation({
+    onSuccess: () => utils.profile.getAiKeyStatus.invalidate(),
+  });
 
+  const enabled = status.data?.enabled !== false; // default on
   const invalidFormat =
     apiKey.length > 0 && !apiKey.trim().startsWith("sk-ant-");
 
@@ -216,29 +221,69 @@ function UserAiKeyCard() {
         {status.isLoading ? (
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
         ) : status.data?.hasKey ? (
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-emerald-400">
-              <CheckCircle2 className="h-5 w-5" />
-              <span className="text-sm">
-                Using your key{" "}
-                <code className="text-muted-foreground">
-                  {status.data.maskedKey}
-                </code>
-              </span>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={remove.isPending}
-              onClick={() => remove.mutate()}
-            >
-              {remove.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              {enabled ? (
+                <div className="flex items-center gap-2 text-emerald-400">
+                  <CheckCircle2 className="h-5 w-5" />
+                  <span className="text-sm">
+                    Using your key{" "}
+                    <code className="text-muted-foreground">
+                      {status.data.maskedKey}
+                    </code>
+                  </span>
+                </div>
               ) : (
-                <Trash2 className="mr-2 h-4 w-4" />
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Power className="h-5 w-5" />
+                  <span className="text-sm">
+                    Key saved but turned off{" "}
+                    <code>{status.data.maskedKey}</code> — workspace/platform key
+                    is used.
+                  </span>
+                </div>
               )}
-              Remove
-            </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={remove.isPending}
+                onClick={() => remove.mutate()}
+              >
+                {remove.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-2 h-4 w-4" />
+                )}
+                Remove
+              </Button>
+            </div>
+
+            {/* On/off toggle — keep the key, just stop using it. */}
+            <div className="flex items-center justify-between rounded-md border border-border p-3">
+              <div className="text-sm">
+                <p className="font-medium">Use my key for AI</p>
+                <p className="text-xs text-muted-foreground">
+                  Turn off to fall back to the workspace/platform key without
+                  deleting your key.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={enabled}
+                disabled={toggle.isPending}
+                onClick={() => toggle.mutate({ enabled: !enabled })}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                  enabled ? "bg-primary" : "bg-muted"
+                } ${toggle.isPending ? "opacity-60" : ""}`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                    enabled ? "translate-x-5" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">

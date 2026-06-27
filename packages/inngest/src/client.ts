@@ -20,6 +20,9 @@ type Events = {
   "commit/review.requested": {
     data: { commitReviewId: string };
   };
+  "readiness/check.requested": {
+    data: { featureRequestId: string };
+  };
 };
 
 export const EVENTS = {
@@ -27,6 +30,7 @@ export const EVENTS = {
   REVIEW_RUN: "review/run.requested",
   REPO_ANALYZE: "repo/analyze.requested",
   COMMIT_REVIEW: "commit/review.requested",
+  READINESS_CHECK: "readiness/check.requested",
 } as const;
 
 export const inngest = new Inngest({

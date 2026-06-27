@@ -64,6 +64,32 @@ export const reviewRouter = createTRPCRouter({
       return { queued: true };
     }),
 
+  /** Queue an AI release-readiness check for a feature (async Inngest). */
+  runReadinessCheck: protectedProcedure
+    .input(z.object({ featureRequestId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await assertFeatureRequestAccess(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.featureRequestId
+      );
+      await enforceRateLimit(
+        ctx.prisma,
+        `ai:readiness:${ctx.session.user.id}`,
+        15,
+        60
+      );
+      await ctx.prisma.featureRequest.update({
+        where: { id: input.featureRequestId },
+        data: { readinessStatus: "PENDING" },
+      });
+      await inngest.send({
+        name: EVENTS.READINESS_CHECK,
+        data: { featureRequestId: input.featureRequestId },
+      });
+      return { queued: true };
+    }),
+
   /**
    * Phase 5 — human approval. Only ADMIN or LEAD may approve. Blocks release if
    * any pull request still has unresolved blocking issues.

@@ -4,6 +4,7 @@ import { generatePrdForFeature } from "../lib/prd";
 import { runReviewForPullRequest } from "../lib/review";
 import { analyzeRepository } from "../lib/repo";
 import { runCommitReview } from "../lib/commitReview";
+import { runReadinessCheck } from "../lib/readiness";
 
 /**
  * Inngest workflow functions (async, durable, retryable).
@@ -62,6 +63,18 @@ export const runCommitReviewFn = inngest.createFunction(
   }
 );
 
+export const runReadinessCheckFn = inngest.createFunction(
+  { id: "run-readiness-check", name: "Run AI Release Readiness Check", retries: 2 },
+  { event: EVENTS.READINESS_CHECK },
+  async ({ event, step }) => {
+    const { featureRequestId } = event.data;
+    const id = await step.run("run-readiness", () =>
+      runReadinessCheck(featureRequestId)
+    );
+    return { featureRequestId: id };
+  }
+);
+
 // Hourly housekeeping: prune expired rate-limit buckets and old records.
 export const cleanupFn = inngest.createFunction(
   { id: "housekeeping-cleanup" },
@@ -88,5 +101,6 @@ export const inngestFunctions = [
   runReviewFn,
   repoAnalyzeFn,
   runCommitReviewFn,
+  runReadinessCheckFn,
   cleanupFn,
 ];

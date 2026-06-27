@@ -19,6 +19,9 @@ model User {
   // Per-user bring-your-own Anthropic (Claude) key, encrypted at rest. Used as
   // the default for the user's AI usage; a workspace key overrides it when set.
   anthropicApiKeyEnc String? @map("anthropic_api_key_enc") @db.Text
+  // Toggle: when false the saved key is kept but ignored (falls back to the
+  // workspace/platform key) so the user can switch BYOK off without deleting it.
+  aiKeyEnabled       Boolean @default(true) @map("ai_key_enabled")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -185,6 +188,13 @@ model FeatureRequest {
 
   // Phase 1 AI clarification analysis (latest run)
   clarificationJson Json? @map("clarification_json")
+
+  // Phase 5 AI release-readiness check (latest run)
+  // readinessStatus: PENDING, COMPLETED, FAILED
+  readinessStatus    String?   @map("readiness_status")
+  // { verdict: READY|NEEDS_ATTENTION|NOT_READY, summary, blockers[], risks[], recommendations[] }
+  readinessJson      Json?     @map("readiness_json")
+  readinessCheckedAt DateTime? @map("readiness_checked_at")
 
   // Phase 5 human approval
   approvedById String?   @map("approved_by_id")

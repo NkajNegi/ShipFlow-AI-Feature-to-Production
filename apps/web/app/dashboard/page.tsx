@@ -10,5 +10,5 @@ export default async function DashboardRootPage() {
   }
 
   // Redirect to the first workspace's board by default
-  redirect(`/dashboard/${workspaces[0].id}/board`);
+  redirect(`/dashboard/${workspaces[0]!.id}/board`);
 }

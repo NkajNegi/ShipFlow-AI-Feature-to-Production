@@ -121,12 +121,13 @@ export async function runCommitReview(
     if (cr.requestedById) {
       const user = await prisma.user.findUnique({
         where: { id: cr.requestedById },
-        select: { anthropicApiKeyEnc: true },
+        select: { anthropicApiKeyEnc: true, aiKeyEnabled: true },
       });
-      userKeyEnc = user?.anthropicApiKeyEnc ?? null;
+      // Honour the user's BYOK on/off toggle.
+      userKeyEnc = user?.aiKeyEnabled ? (user.anthropicApiKeyEnc ?? null) : null;
     }
 
-    const [owner, repo] = cr.repository.fullName.split("/");
+    const [owner, repo] = cr.repository.fullName.split("/") as [string, string];
     const octokit = getInstallationOctokit(workspace.githubInstallationId);
 
     await addStep(runId, "Fetching commit diff from GitHub");

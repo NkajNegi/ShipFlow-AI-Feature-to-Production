@@ -37,7 +37,7 @@ export async function analyzeRepository(
 
   try {
     await consumeAiCreditIfPlatform(prisma, workspace.id);
-    const [owner, name] = repo.fullName.split("/");
+    const [owner, name] = repo.fullName.split("/") as [string, string];
     const octokit = getInstallationOctokit(workspace.githubInstallationId);
 
     await addStep(runId, "Reading repository from GitHub");

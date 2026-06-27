@@ -49,13 +49,17 @@ export const clarifyRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Not found." });
       }
       // Per-user key is the default; the workspace key overrides it when set.
+      // Honour the user's BYOK on/off toggle.
       const actingUser = await ctx.prisma.user.findUnique({
         where: { id: ctx.session.user.id },
-        select: { anthropicApiKeyEnc: true },
+        select: { anthropicApiKeyEnc: true, aiKeyEnabled: true },
       });
+      const userKey = actingUser?.aiKeyEnabled
+        ? actingUser.anthropicApiKeyEnc
+        : null;
       const model = resolveModel(
         feature.project.workspace.anthropicApiKeyEnc,
-        actingUser?.anthropicApiKeyEnc
+        userKey
       );
 
       // Abuse + cost guardrails.

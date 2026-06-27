@@ -37,7 +37,7 @@ export default function KanbanBoardPage({ params }: { params: Promise<{ workspac
   const handleDrop = (e: React.DragEvent, status: string) => {
     e.preventDefault();
     if (draggedTaskId) {
-      updateStatus.mutate({ taskId: draggedTaskId, status });
+      updateStatus.mutate({ taskId: draggedTaskId, status: status as "TODO" | "IN_PROGRESS" | "REVIEW" | "DONE" });
       setDraggedTaskId(null);
     }
   };
@@ -60,9 +60,9 @@ export default function KanbanBoardPage({ params }: { params: Promise<{ workspac
 
   tasks?.forEach(task => {
     if (tasksByStatus[task.status]) {
-      tasksByStatus[task.status].push(task);
+      tasksByStatus[task.status]!.push(task);
     } else {
-      tasksByStatus["TODO"].push(task); // Fallback
+      tasksByStatus["TODO"]!.push(task); // Fallback
     }
   });
 
@@ -91,17 +91,17 @@ export default function KanbanBoardPage({ params }: { params: Promise<{ workspac
                 <h3 className="font-semibold text-foreground flex items-center justify-between">
                   {COLUMN_LABELS[colId]}
                   <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
-                    {tasksByStatus[colId].length}
+                    {tasksByStatus[colId]!.length}
                   </span>
                 </h3>
               </div>
               <div className="p-4 space-y-4 overflow-y-auto flex-1">
-                {tasksByStatus[colId].length === 0 ? (
+                {tasksByStatus[colId]!.length === 0 ? (
                   <div className="h-24 flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed border-border rounded-md">
                     Drop here
                   </div>
                 ) : (
-                  tasksByStatus[colId].map((task) => (
+                  tasksByStatus[colId]!.map((task) => (
                     <div 
                       key={task.id}
                       draggable

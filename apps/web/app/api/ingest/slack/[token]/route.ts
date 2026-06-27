@@ -72,7 +72,7 @@ export async function POST(
   }
 
   // Title = first line / sentence (trimmed); full text kept as context.
-  const firstLine = text.split("\n")[0].slice(0, 200);
+  const firstLine = (text.split("\n")[0] || "").slice(0, 200);
   const title = firstLine.length >= 8 ? firstLine : text.slice(0, 200);
 
   const fr = await prisma.featureRequest.create({

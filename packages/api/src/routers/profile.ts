@@ -50,7 +50,7 @@ export const profileRouter = createTRPCRouter({
   getAiKeyStatus: protectedProcedure.query(async ({ ctx }) => {
     const user = await ctx.prisma.user.findUnique({
       where: { id: ctx.session.user.id },
-      select: { anthropicApiKeyEnc: true },
+      select: { anthropicApiKeyEnc: true, aiKeyEnabled: true },
     });
     const enc = user?.anthropicApiKeyEnc;
     let masked: string | null = null;
@@ -61,8 +61,23 @@ export const profileRouter = createTRPCRouter({
         masked = "••••";
       }
     }
-    return { hasKey: Boolean(enc), maskedKey: masked };
+    return {
+      hasKey: Boolean(enc),
+      maskedKey: masked,
+      enabled: user?.aiKeyEnabled ?? true,
+    };
   }),
+
+  /** Turn the personal key on/off without deleting it. */
+  setAiKeyEnabled: protectedProcedure
+    .input(z.object({ enabled: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.user.update({
+        where: { id: ctx.session.user.id },
+        data: { aiKeyEnabled: input.enabled },
+      });
+      return { ok: true, enabled: input.enabled };
+    }),
 
   setAnthropicKey: protectedProcedure
     .input(z.object({ apiKey: z.string().min(10) }))

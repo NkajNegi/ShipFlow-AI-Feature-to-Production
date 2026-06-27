@@ -205,8 +205,9 @@ function ReviewPanel({
     { repositoryId, sha },
     {
       // Poll until the async review completes or fails.
-      refetchInterval: (query: any) => {
-        const status = query.state.data?.status;
+      // React Query v4: the callback receives `data` as the first argument.
+      refetchInterval: (data: any) => {
+        const status = data?.status;
         return status === "COMPLETED" || status === "FAILED" ? false : 2000;
       },
     }

@@ -43,9 +43,13 @@ export default function FeatureCommandCenter({
   const featureQuery = trpc.review.getFeatureDetail.useQuery(
     { featureRequestId },
     {
-      // Poll while the async Inngest PRD workflow is running.
+      // Poll while an async Inngest workflow is running (PRD or readiness check).
+      // React Query v4: the callback receives `data` as the first argument.
       refetchInterval: (data: any) =>
-        data?.status === "GENERATING_PRD" ? 2500 : false,
+        data?.status === "GENERATING_PRD" ||
+        data?.readinessStatus === "PENDING"
+          ? 2500
+          : false,
     }
   );
   const feature = featureQuery.data;
@@ -76,6 +80,9 @@ export default function FeatureCommandCenter({
     onSuccess: () => featureQuery.refetch(),
   });
   const reject = trpc.review.reject.useMutation({
+    onSuccess: () => featureQuery.refetch(),
+  });
+  const readiness = trpc.review.runReadinessCheck.useMutation({
     onSuccess: () => featureQuery.refetch(),
   });
 
@@ -454,6 +461,13 @@ export default function FeatureCommandCenter({
             <CardTitle className="text-lg">Release Decision</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            <ReadinessSection
+              status={(feature as any).readinessStatus}
+              result={(feature as any).readinessJson}
+              pending={readiness.isPending}
+              error={readiness.error?.message}
+              onRun={() => readiness.mutate({ featureRequestId })}
+            />
             {shipped ? (
               <p className="inline-flex items-center gap-2 text-primary font-medium">
                 <CheckCircle2 className="h-5 w-5" /> Shipped 🎉
@@ -499,6 +513,128 @@ export default function FeatureCommandCenter({
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+}
+
+type ReadinessResult = {
+  verdict: "READY" | "NEEDS_ATTENTION" | "NOT_READY";
+  summary: string;
+  blockers: string[];
+  risks: string[];
+  recommendations: string[];
+};
+
+const VERDICT_META: Record<
+  string,
+  { label: string; cls: string; Icon: any }
+> = {
+  READY: { label: "Ready to ship", cls: "text-emerald-400", Icon: ShieldCheck },
+  NEEDS_ATTENTION: {
+    label: "Needs attention",
+    cls: "text-amber-400",
+    Icon: ShieldAlert,
+  },
+  NOT_READY: { label: "Not ready", cls: "text-red-400", Icon: ShieldAlert },
+};
+
+function ReadinessSection({
+  status,
+  result,
+  pending,
+  error,
+  onRun,
+}: {
+  status?: string | null;
+  result?: ReadinessResult | null;
+  pending: boolean;
+  error?: string;
+  onRun: () => void;
+}) {
+  const running = pending || status === "PENDING";
+  const meta = result ? VERDICT_META[result.verdict] : null;
+
+  return (
+    <div className="rounded-lg border border-border p-4 space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="flex items-center gap-2 font-medium text-foreground">
+          <Sparkles className="h-4 w-4 text-primary" /> AI Release Readiness
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={running}
+          onClick={onRun}
+        >
+          {running ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Sparkles className="mr-2 h-4 w-4" />
+          )}
+          {result || status ? "Re-run check" : "Run readiness check"}
+        </Button>
+      </div>
+
+      {running ? (
+        <p className="text-sm text-muted-foreground">
+          Assessing production readiness against the PRD, tasks &amp; review
+          history…
+        </p>
+      ) : status === "FAILED" && !result ? (
+        <p className="text-sm text-red-400">
+          The readiness check failed. Try running it again.
+        </p>
+      ) : result && meta ? (
+        <div className="space-y-3">
+          <p className={`flex items-center gap-2 font-medium ${meta.cls}`}>
+            <meta.Icon className="h-4 w-4" /> {meta.label}
+          </p>
+          <p className="text-sm">{result.summary}</p>
+          <FindingList
+            label="Blockers"
+            items={result.blockers}
+            cls="text-red-400"
+          />
+          <FindingList
+            label="Risks"
+            items={result.risks}
+            cls="text-amber-400"
+          />
+          <FindingList
+            label="Recommendations"
+            items={result.recommendations}
+            cls="text-primary"
+          />
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          Run an AI go/no-go assessment before approving — it weighs the PRD,
+          tasks, and AI review findings, and explains its verdict.
+        </p>
+      )}
+      {error && <p className="text-sm text-red-400">{error}</p>}
+    </div>
+  );
+}
+
+function FindingList({
+  label,
+  items,
+  cls,
+}: {
+  label: string;
+  items: string[];
+  cls: string;
+}) {
+  if (!items || items.length === 0) return null;
+  return (
+    <div>
+      <p className={`text-xs font-semibold ${cls}`}>{label}</p>
+      <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground mt-1">
+        {items.map((it, i) => (
+          <li key={i}>{it}</li>
+        ))}
+      </ul>
     </div>
   );
 }
