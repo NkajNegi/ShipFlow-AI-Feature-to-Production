@@ -176,6 +176,14 @@ function ProjectCard({ project, workspaceId }: { project: any; workspaceId: stri
             <pre className="overflow-x-auto rounded bg-background border border-border p-2 text-[11px] leading-relaxed">{`curl -X POST /api/ingest/feature \\
   -H 'content-type: application/json' \\
   -d '{"token":"${project.ingestToken}","title":"...","context":"...","source":"EMAIL"}'`}</pre>
+            <p className="text-muted-foreground pt-2">
+              <span className="font-medium">Slack:</span> create a slash command
+              (e.g. <code className="text-primary">/shipflow</code>) with this
+              Request URL — the command text becomes a feature request:
+            </p>
+            <code className="block break-all rounded bg-background border border-border p-2">
+              {`/api/ingest/slack/${project.ingestToken}`}
+            </code>
           </div>
         </details>
         {featureRequests?.length === 0 ? (

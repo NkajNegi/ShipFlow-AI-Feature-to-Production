@@ -17,12 +17,16 @@ type Events = {
   "repo/analyze.requested": {
     data: { repositoryId: string };
   };
+  "commit/review.requested": {
+    data: { commitReviewId: string };
+  };
 };
 
 export const EVENTS = {
   PRD_GENERATE: "prd/generate.requested",
   REVIEW_RUN: "review/run.requested",
   REPO_ANALYZE: "repo/analyze.requested",
+  COMMIT_REVIEW: "commit/review.requested",
 } as const;
 
 export const inngest = new Inngest({

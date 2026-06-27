@@ -10,6 +10,8 @@ import { billingRouter } from "./routers/billing";
 import { clarifyRouter } from "./routers/clarify";
 import { memberRouter } from "./routers/member";
 import { workflowRouter } from "./routers/workflow";
+import { profileRouter } from "./routers/profile";
+import { commitRouter } from "./routers/commit";
 
 export const appRouter = createTRPCRouter({
   workspace: workspaceRouter,
@@ -23,6 +25,8 @@ export const appRouter = createTRPCRouter({
   clarify: clarifyRouter,
   member: memberRouter,
   workflow: workflowRouter,
+  profile: profileRouter,
+  commit: commitRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -592,9 +592,12 @@ function AiKeyCard({ workspaceId }: { workspaceId: string }) {
           <KeyRound className="h-5 w-5 text-primary" /> AI Provider Key (BYOK)
         </CardTitle>
         <CardDescription>
-          Use your own Anthropic (Claude) API key so AI usage is billed to your
-          account. Only Anthropic keys are supported — they start with{" "}
-          <code className="text-primary">sk-ant-</code>. Stored encrypted.
+          Use a workspace Anthropic (Claude) API key so AI usage is billed here.
+          This overrides each member’s personal key. ShipFlow runs Claude Opus
+          only, so the key must have access to{" "}
+          <code className="text-primary">claude-opus-4-8</code> (verified on
+          save). Keys start with{" "}
+          <code className="text-primary">sk-ant-</code> and are stored encrypted.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

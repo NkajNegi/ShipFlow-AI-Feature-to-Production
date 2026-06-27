@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { assertWorkspaceMember } from "../lib/access";
 import { encryptSecret, decryptSecret, maskKey } from "../lib/crypto";
+import { assertAnthropicKeyHasOpus } from "../lib/ai";
 
 export const workspaceRouter = createTRPCRouter({
   getUserWorkspaces: protectedProcedure.query(async ({ ctx }) => {
@@ -113,37 +113,8 @@ export const workspaceRouter = createTRPCRouter({
       );
 
       const key = input.apiKey.trim();
-      // Anthropic keys only.
-      if (!key.startsWith("sk-ant-")) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message:
-            "Only Anthropic (Claude) API keys are allowed. They start with 'sk-ant-'.",
-        });
-      }
-
-      // Validate the key live against Anthropic (no token cost: lists models).
-      try {
-        const res = await fetch("https://api.anthropic.com/v1/models", {
-          headers: {
-            "x-api-key": key,
-            "anthropic-version": "2023-06-01",
-          },
-        });
-        if (!res.ok) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message:
-              "That Anthropic API key was rejected by Anthropic. Please check it and try again.",
-          });
-        }
-      } catch (err) {
-        if (err instanceof TRPCError) throw err;
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Could not verify the Anthropic API key. Please try again.",
-        });
-      }
+      // Validates the key live and confirms Claude Opus access (Opus-only policy).
+      await assertAnthropicKeyHasOpus(key);
 
       await ctx.prisma.workspace.update({
         where: { id: input.workspaceId },

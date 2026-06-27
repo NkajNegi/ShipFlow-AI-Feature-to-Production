@@ -198,4 +198,40 @@ export const reviewRouter = createTRPCRouter({
         blockingCaught: reviews.reduce((a, r) => a + r.blockingCount, 0),
       };
     }),
+
+  /** Recent AI PR reviews across a workspace (for the Review History page). */
+  listForWorkspace: protectedProcedure
+    .input(z.object({ workspaceId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      await assertWorkspaceMember(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.workspaceId
+      );
+      return ctx.prisma.review.findMany({
+        where: {
+          pullRequest: {
+            featureRequest: { project: { workspaceId: input.workspaceId } },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+        select: {
+          id: true,
+          status: true,
+          summary: true,
+          blockingCount: true,
+          createdAt: true,
+          pullRequest: {
+            select: {
+              number: true,
+              title: true,
+              url: true,
+              featureRequest: { select: { id: true, title: true } },
+              repository: { select: { fullName: true } },
+            },
+          },
+        },
+      });
+    }),
 });

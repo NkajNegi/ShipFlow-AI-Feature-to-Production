@@ -3,6 +3,7 @@ import { inngest, EVENTS } from "@repo/inngest";
 import { generatePrdForFeature } from "../lib/prd";
 import { runReviewForPullRequest } from "../lib/review";
 import { analyzeRepository } from "../lib/repo";
+import { runCommitReview } from "../lib/commitReview";
 
 /**
  * Inngest workflow functions (async, durable, retryable).
@@ -49,6 +50,18 @@ export const repoAnalyzeFn = inngest.createFunction(
   }
 );
 
+export const runCommitReviewFn = inngest.createFunction(
+  { id: "run-commit-review", name: "Run AI Commit Review", retries: 2 },
+  { event: EVENTS.COMMIT_REVIEW },
+  async ({ event, step }) => {
+    const { commitReviewId } = event.data;
+    const id = await step.run("run-commit-review", () =>
+      runCommitReview(commitReviewId)
+    );
+    return { commitReviewId: id };
+  }
+);
+
 // Hourly housekeeping: prune expired rate-limit buckets and old records.
 export const cleanupFn = inngest.createFunction(
   { id: "housekeeping-cleanup" },
@@ -74,5 +87,6 @@ export const inngestFunctions = [
   generatePrdFn,
   runReviewFn,
   repoAnalyzeFn,
+  runCommitReviewFn,
   cleanupFn,
 ];

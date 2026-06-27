@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ReactNode, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronsUpDown, Plus, Check, FolderKanban, LayoutList, Settings } from "lucide-react";
+import { ChevronsUpDown, Plus, Check, FolderKanban, LayoutList, Settings, User, GitCommit, LayoutDashboard, ShieldCheck } from "lucide-react";
 
 type WorkspaceLite = { id: string; name: string };
 
@@ -27,7 +27,7 @@ export function DashboardShell({
 
   const is = (seg: string) => pathname.includes(`/${seg}`);
 
-  const navLink = (seg: "projects" | "board" | "settings", label: string, Icon: any) => {
+  const navLink = (seg: "projects" | "board" | "commits" | "reviews" | "settings", label: string, Icon: any) => {
     const href = activeId ? `/dashboard/${activeId}/${seg}` : "#";
     const activeCls = is(seg)
       ? "text-primary bg-primary/10"
@@ -87,9 +87,33 @@ export function DashboardShell({
         </div>
 
         <nav className="flex-1 px-2 py-4 space-y-1">
+          {/* Workspace home (bare /dashboard/<id>). */}
+          <Link
+            href={activeId ? `/dashboard/${activeId}` : "#"}
+            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              pathname === `/dashboard/${activeId}`
+                ? "text-primary bg-primary/10"
+                : "text-foreground hover:bg-muted hover:text-primary"
+            }`}
+          >
+            <LayoutDashboard className="h-4 w-4" /> Dashboard
+          </Link>
           {navLink("projects", "Projects", FolderKanban)}
           {navLink("board", "Kanban Board", LayoutList)}
+          {navLink("commits", "Commit Review", GitCommit)}
+          {navLink("reviews", "Review History", ShieldCheck)}
           {navLink("settings", "Settings", Settings)}
+          {/* Profile is per-user, not workspace-scoped. */}
+          <Link
+            href="/dashboard/profile"
+            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              pathname.startsWith("/dashboard/profile")
+                ? "text-primary bg-primary/10"
+                : "text-foreground hover:bg-muted hover:text-primary"
+            }`}
+          >
+            <User className="h-4 w-4" /> Profile
+          </Link>
         </nav>
       </aside>
 
@@ -106,21 +130,29 @@ export function DashboardShell({
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 w-full h-16 border-t border-border bg-card flex items-center justify-around z-50">
-        {(["projects", "board", "settings"] as const).map((seg) => {
-          const labels: Record<string, string> = {
-            projects: "Projects",
-            board: "Board",
-            settings: "Settings",
-          };
-          const href = activeId ? `/dashboard/${activeId}/${seg}` : "#";
-          const cls = is(seg) ? "text-primary" : "text-muted-foreground hover:text-primary";
+        {([
+          { seg: "", label: "Home" },
+          { seg: "projects", label: "Projects" },
+          { seg: "board", label: "Board" },
+          { seg: "reviews", label: "Reviews" },
+          { seg: "settings", label: "Settings" },
+        ] as const).map(({ seg, label }) => {
+          const href = activeId
+            ? seg
+              ? `/dashboard/${activeId}/${seg}`
+              : `/dashboard/${activeId}`
+            : "#";
+          const isActive = seg
+            ? is(seg)
+            : pathname === `/dashboard/${activeId}`;
+          const cls = isActive ? "text-primary" : "text-muted-foreground hover:text-primary";
           return activeId ? (
-            <Link key={seg} href={href} className={`flex flex-col items-center justify-center w-full h-full ${cls}`}>
-              <span className="text-xs font-medium mt-1">{labels[seg]}</span>
+            <Link key={label} href={href} className={`flex flex-col items-center justify-center w-full h-full ${cls}`}>
+              <span className="text-xs font-medium mt-1">{label}</span>
             </Link>
           ) : (
-            <div key={seg} className="flex flex-col items-center justify-center w-full h-full text-muted-foreground opacity-50">
-              <span className="text-xs font-medium mt-1">{labels[seg]}</span>
+            <div key={label} className="flex flex-col items-center justify-center w-full h-full text-muted-foreground opacity-50">
+              <span className="text-xs font-medium mt-1">{label}</span>
             </div>
           );
         })}

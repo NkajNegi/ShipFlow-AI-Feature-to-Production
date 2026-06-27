@@ -91,6 +91,9 @@ export default function FeatureCommandCenter({
   const prd = feature.prds[0];
   const content = (prd?.contentJson ?? {}) as any;
   const clar = (feature as any).clarificationJson as any;
+  // Require a deliberate confirmation before overriding a non-READY decision
+  // (ALREADY_EXISTS / NEEDS_CLARIFICATION) and generating a PRD anyway.
+  const [confirmOverride, setConfirmOverride] = useState(false);
   const hasBlocking = feature.pullRequests.some(
     (pr: any) => (pr.reviews[0]?.blockingCount ?? 0) > 0
   );
@@ -194,9 +197,25 @@ export default function FeatureCommandCenter({
                   </div>
                 )}
 
+                {/* Override confirmation: skipping a non-READY decision must be deliberate. */}
+                {clar.decision !== "READY" && confirmOverride && (
+                  <p className="text-sm text-amber-400">
+                    The analysis didn’t mark this request as ready
+                    {clar.decision === "ALREADY_EXISTS"
+                      ? " (it may already exist)"
+                      : " (more context was requested)"}
+                    . Generate the PRD anyway? Click again to confirm.
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-2">
                   <Button
-                    onClick={() => generatePRD.mutate({ featureRequestId })}
+                    onClick={() => {
+                      if (clar.decision !== "READY" && !confirmOverride) {
+                        setConfirmOverride(true);
+                        return;
+                      }
+                      generatePRD.mutate({ featureRequestId });
+                    }}
                     disabled={generatePRD.isPending}
                     className="bg-primary text-primary-foreground hover:bg-primary/90"
                   >
@@ -207,11 +226,16 @@ export default function FeatureCommandCenter({
                     )}
                     {clar.decision === "READY"
                       ? "Generate PRD & Tasks"
-                      : "Generate PRD anyway"}
+                      : confirmOverride
+                        ? "Confirm: Generate anyway"
+                        : "Generate PRD anyway"}
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => analyze.mutate({ featureRequestId })}
+                    onClick={() => {
+                      setConfirmOverride(false);
+                      analyze.mutate({ featureRequestId });
+                    }}
                     disabled={analyze.isPending}
                   >
                     Re-analyze

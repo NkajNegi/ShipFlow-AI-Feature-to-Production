@@ -48,7 +48,15 @@ export const clarifyRouter = createTRPCRouter({
       if (!feature) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Not found." });
       }
-      const model = resolveModel(feature.project.workspace.anthropicApiKeyEnc);
+      // Per-user key is the default; the workspace key overrides it when set.
+      const actingUser = await ctx.prisma.user.findUnique({
+        where: { id: ctx.session.user.id },
+        select: { anthropicApiKeyEnc: true },
+      });
+      const model = resolveModel(
+        feature.project.workspace.anthropicApiKeyEnc,
+        actingUser?.anthropicApiKeyEnc
+      );
 
       // Abuse + cost guardrails.
       await enforceRateLimit(ctx.prisma, `ai:clarify:${ctx.session.user.id}`, 15, 60);
