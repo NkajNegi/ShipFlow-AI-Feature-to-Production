@@ -4,6 +4,8 @@ import { use } from "react";
 import Link from "next/link";
 import { trpc } from "@/trpc/client";
 import { SetupChecklist } from "@/components/setup-checklist";
+import { NotificationPopover } from "@/components/notification-popover";
+import { UserProfileDropdown } from "@/components/user-profile-dropdown";
 import {
   Rocket,
   Gauge,
