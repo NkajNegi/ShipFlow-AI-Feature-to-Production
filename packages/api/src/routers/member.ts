@@ -258,6 +258,18 @@ export const memberRouter = createTRPCRouter({
         }
       }
 
+      // Clear task assignments in this workspace
+      await ctx.prisma.task.updateMany({
+        where: {
+          assigneeId: member.userId,
+          OR: [
+            { project: { workspaceId: member.workspaceId } },
+            { prd: { featureRequest: { project: { workspaceId: member.workspaceId } } } }
+          ]
+        },
+        data: { assigneeId: null }
+      });
+
       const removed = await ctx.prisma.workspaceMember.delete({
         where: { id: member.id },
       });
@@ -268,6 +280,6 @@ export const memberRouter = createTRPCRouter({
         action: "MEMBER_REMOVED",
         target: `member ${member.userId}`,
       });
-      return removed;
+      return { success: true, isSelf: member.userId === ctx.session.user.id };
     }),
 });

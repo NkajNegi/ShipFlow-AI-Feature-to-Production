@@ -275,7 +275,15 @@ function TeamCard({ workspaceId }: { workspaceId: string }) {
     onSuccess: () => invites.refetch(),
   });
   const updateRole = trpc.member.updateRole.useMutation({ onSuccess: refresh });
-  const removeMember = trpc.member.remove.useMutation({ onSuccess: refresh });
+  const removeMember = trpc.member.remove.useMutation({ 
+    onSuccess: (data) => {
+      if (data.isSelf) {
+        window.location.href = "/dashboard";
+      } else {
+        refresh();
+      }
+    }
+  });
 
   return (
     <Card className="border-border">
@@ -327,7 +335,11 @@ function TeamCard({ workspaceId }: { workspaceId: string }) {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => removeMember.mutate({ memberId: m.id })}
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to remove ${m.user.name} from the workspace?`)) {
+                          removeMember.mutate({ memberId: m.id });
+                        }
+                      }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
