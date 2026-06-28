@@ -11,9 +11,16 @@ import { prisma } from "@repo/db";
  *   - RAZORPAY_WEBHOOK_SECRET (verified by the webhook route)
  */
 function getClient(): Razorpay {
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!keyId || !keySecret) {
+    throw new Error("Razorpay is not configured on this server.");
+  }
+
   return new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || "",
-    key_secret: process.env.RAZORPAY_KEY_SECRET || "",
+    key_id: keyId,
+    key_secret: keySecret,
   });
 }
 

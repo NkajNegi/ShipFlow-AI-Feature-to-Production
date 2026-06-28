@@ -52,8 +52,15 @@ export const billingRouter = createTRPCRouter({
         input.workspaceId,
         ["ADMIN"]
       );
-      const sub = await createRazorpaySubscription(input.workspaceId);
-      return sub;
+      try {
+        const sub = await createRazorpaySubscription(input.workspaceId);
+        return sub;
+      } catch (err: any) {
+        if (err.message === "Razorpay is not configured on this server.") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: err.message });
+        }
+        throw err;
+      }
     }),
 
   /** Purchase a one-off pack of 100 AI credits for 1000 INR. */
@@ -67,12 +74,18 @@ export const billingRouter = createTRPCRouter({
         ["ADMIN", "LEAD"]
       );
       
-      const link = await createRazorpayPaymentLinkForCredits(
-        input.workspaceId,
-        100, // Credits
-        1000 // INR
-      );
-      
-      return link;
+      try {
+        const link = await createRazorpayPaymentLinkForCredits(
+          input.workspaceId,
+          100, // Credits
+          1000 // INR
+        );
+        return link;
+      } catch (err: any) {
+        if (err.message === "Razorpay is not configured on this server.") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: err.message });
+        }
+        throw err;
+      }
     }),
 });
