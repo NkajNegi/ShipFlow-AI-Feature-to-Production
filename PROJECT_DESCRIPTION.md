@@ -373,3 +373,12 @@ To fully self-host or develop on this monorepo, a wide array of secrets must be 
 ### Billing (Razorpay)
 - `RAZORPAY_KEY_ID`: Public key for frontend checkout initialization.
 - `RAZORPAY_KEY_SECRET`: Private key for verifying webhook signatures on subscription upgrades.
+
+---
+
+## Stay Connected
+
+Follow the project and join the community on our social channels:
+- [X (formerly Twitter) 🐦](#)
+- [Instagram 📸](#)
+- [Facebook 📘](#)
