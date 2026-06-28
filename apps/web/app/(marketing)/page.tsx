@@ -1,4 +1,5 @@
 import { MarketingHeader } from "@/components/marketing-header";
+import { CoreLoop } from "@/components/core-loop";
 import Link from "next/link";
 
 /* ShipFlow landing — ported from the UIUX design (gold accent on dark).
@@ -163,6 +164,9 @@ export default function MarketingPage() {
           </div>
         </div>
       </section>
+
+      {/* The Core Loop Redesign */}
+      <CoreLoop />
 
       {/* final CTA */}
       <section className="relative z-[2] mx-auto mt-20 max-w-[760px] px-7 pb-[90px] text-center">
