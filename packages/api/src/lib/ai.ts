@@ -8,7 +8,7 @@ import { decryptSecret } from "./crypto";
 
 export const STRONG_MODEL_ID = "claude-3-opus-20240229"; 
 export const WEAK_MODEL_ID = "claude-3-haiku-20240307"; 
-export const GEMINI_MODEL_ID = "gemini-1.5-flash-latest"; 
+export const GEMINI_MODEL_ID = "gemini-pro"; 
 export const OPENAI_MODEL_ID = "gpt-4o-mini"; 
 export const OPENROUTER_MODEL_ID = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
 
