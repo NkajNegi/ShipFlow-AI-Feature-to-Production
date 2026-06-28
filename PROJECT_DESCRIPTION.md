@@ -209,3 +209,94 @@ MetroFlow is designed to be highly available and globally distributed, relying h
 - **GitHub App**: Hosted on GitHub, authenticating via rotating private keys to fetch diffs and post comments.
 - **Anthropic / OpenAI**: The LLM APIs executing the `generateObject` calls.
 - **Razorpay**: The payment gateway handling subscription webhooks and invoicing.
+
+---
+
+## 9. The AI Multi-Model Synthesis Engine (How many AIs are we using?)
+
+A common problem with single-model AI agents is hallucinations and logic blindness. To solve this, MetroFlow AI employs a **Multi-Model Synthesis Engine**. We do not rely on a single AI; instead, we orchestrate a committee of state-of-the-art models working in tandem.
+
+### The "Committee of Experts" Architecture
+Depending on the user's workspace configuration, the system concurrently queries multiple models using the Vercel AI SDK:
+1. **Anthropic Claude 3.5 Sonnet**: The primary driver for code review and PRD generation due to its massive context window and reasoning capabilities.
+2. **OpenAI GPT-4o**: Used for rapid categorization, intent extraction, and fallback reasoning.
+3. **Google Gemini 1.5 Pro**: Used for synthesizing massive amounts of codebase context and documentation.
+4. **OpenRouter**: Integrated for routing to specialized models (like Llama 3) if the primary providers rate limit or fail.
+
+### How The Synthesis Works
+During highly complex operations (like defining the initial PRD):
+1. **Drafting Phase**: The system fires concurrent requests to Anthropic, OpenAI, and Gemini. Each model generates its own "draft" of the PRD based on the same user input.
+2. **Synthesis Phase**: A powerful synthesizer model (usually Claude 3.5 Sonnet) takes the drafts from all three underlying models, evaluates the strengths of each, removes hallucinations, and produces the final, mathematically validated JSON structure via Zod. This guarantees unparalleled accuracy.
+
+---
+
+## 10. End-to-End System Handoff (The Granular Flow)
+
+How exactly does data move through the system without dropping? Here is the exact lifecycle of a request:
+
+1. **Client Action (React)**: User clicks "Create Feature". A React Server Action or tRPC mutation is triggered.
+2. **tRPC Validation**: The `api` package validates the request using Zod. It verifies the user's JWT (via BetterAuth) and confirms they have `LEAD` or `ADMIN` access to the workspace in PostgreSQL.
+3. **Database Pre-Flight**: The feature is created in PostgreSQL with status `GENERATING_PRD`. The UI immediately reflects this loading state.
+4. **The Webhook Fire-and-Forget**: The tRPC endpoint calls `inngest.send("prd/generate.requested", { featureId })`. The HTTP request terminates, freeing up the Vercel serverless function.
+5. **Inngest Orchestration**: The Inngest engine picks up the event. It orchestrates the AI Synthesis (described in Section 9). It has automatic exponential backoff—if OpenAI returns a 429 Rate Limit error, Inngest pauses the function and retries it 3 minutes later. The process never dies.
+6. **Database Fulfillment**: The Inngest worker saves the generated PRD to PostgreSQL and fires a new event to generate Tasks.
+7. **Client Hydration**: The user's browser, which has been polling via TanStack React Query, sees the database update and visually reveals the Kanban board.
+8. **GitHub Handshake**: Weeks later, a developer pushes code. GitHub fires an HTTP POST to `/api/webhooks/github`. 
+9. **Octokit Translation**: The Next.js webhook handler verifies the cryptographic signature from GitHub. It extracts the commit SHA, maps it to the Feature ID via regex, and fires `inngest.send("review/run.requested")`.
+10. **The Block**: Inngest fetches the diff, the AI reviews it, and if it fails, Octokit uses the GitHub App token to submit a `REQUEST_CHANGES` review, actively blocking the merge button on GitHub.
+
+---
+
+## 11. Local Development Setup & How to Run
+
+MetroFlow AI is a massive monorepo. To run it locally, you must orchestrate the frontend, the database, and the background job runner.
+
+### Prerequisites
+- **Node.js**: v18 or v20
+- **Package Manager**: npm (v10+)
+- **Database**: PostgreSQL (Docker, Neon, or local install)
+
+### Step-by-Step Setup
+
+1. **Clone & Install dependencies**:
+   ```bash
+   git clone <repo_url>
+   cd ShipFlow-AI-Feature-to-Production
+   npm install
+   ```
+
+2. **Environment Variables**:
+   Copy the example environment files in `apps/web`.
+   ```bash
+   cp apps/web/.env.example apps/web/.env
+   ```
+   *Crucial variables to fill in:*
+   - `DATABASE_URL`: Your local or remote PostgreSQL connection string.
+   - `BETTER_AUTH_SECRET`: A random 32-character string.
+   - `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`: Required for the AI generation to work.
+   - `INNGEST_EVENT_KEY`: Can be set to `local` for dev.
+
+3. **Database Push**:
+   Sync the Prisma schema to your PostgreSQL database.
+   ```bash
+   npm run db:push --workspace=@repo/db
+   ```
+
+4. **Start the Inngest Dev Server**:
+   In a separate terminal tab, you must run the Inngest local engine. Without this, no background jobs (like AI PRD generation) will ever execute.
+   ```bash
+   npx inngest-cli@latest dev
+   ```
+
+5. **Start the Turborepo Application**:
+   In your main terminal, start the entire monorepo stack.
+   ```bash
+   npm run dev
+   ```
+   *This command leverages Turborepo to simultaneously start the Next.js frontend (`localhost:3001`), the tRPC router, and watch the local packages for changes.*
+
+### How to test GitHub Webhooks locally?
+Because GitHub cannot send webhooks to `localhost`, you must use a tunneling service like **ngrok** or **Cloudflare Tunnels**.
+1. Run `ngrok http 3001`
+2. Go to your GitHub App settings on GitHub.com and set the Webhook URL to `https://<your-ngrok-url>.ngrok.app/api/webhooks/github`.
+3. Push code to a linked test repository to watch the Inngest worker pick up the webhook in real-time!
