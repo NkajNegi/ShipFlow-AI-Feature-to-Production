@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { assertWorkspaceMember } from "../lib/access";
 import { encryptSecret, decryptSecret, maskKey } from "../lib/crypto";
@@ -137,7 +138,27 @@ export const workspaceRouter = createTRPCRouter({
         where: { id: input.workspaceId },
         data: { anthropicApiKeyEnc: null },
       });
-      return { ok: true };
+      return { success: true };
+    }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const member = await ctx.prisma.workspaceMember.findUnique({
+        where: {
+          userId_workspaceId: { userId: ctx.session.user.id, workspaceId: input.id },
+        },
+      });
+
+      if (!member || (member.role !== "ADMIN" && member.role !== "LEAD")) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only an Admin or Lead can delete the workspace.",
+        });
+      }
+
+      await ctx.prisma.workspace.delete({ where: { id: input.id } });
+      return { success: true };
     }),
 
   /** Recent audit entries (approvals, role changes, removals, invites). */

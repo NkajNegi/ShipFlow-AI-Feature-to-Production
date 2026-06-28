@@ -48,4 +48,29 @@ export const projectRouter = createTRPCRouter({
         orderBy: { createdAt: "desc" },
       });
     }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const project = await ctx.prisma.project.findUnique({
+        where: { id: input.id },
+      });
+      if (!project) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const member = await ctx.prisma.workspaceMember.findUnique({
+        where: {
+          userId_workspaceId: { userId: ctx.session.user.id, workspaceId: project.workspaceId },
+        },
+      });
+
+      if (!member || (member.role !== "ADMIN" && member.role !== "LEAD")) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only an Admin or Lead can delete a project.",
+        });
+      }
+
+      await ctx.prisma.project.delete({ where: { id: input.id } });
+      return { success: true };
+    }),
 });

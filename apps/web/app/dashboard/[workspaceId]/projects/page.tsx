@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Plus, Sparkles, Folder, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Trash2 } from "lucide-react";
 
 export default function ProjectsPage({ params }: { params: Promise<{ workspaceId: string }> }) {
   const resolvedParams = use(params);
@@ -116,6 +117,17 @@ function ProjectCard({ project, workspaceId }: { project: any; workspaceId: stri
     }
   });
 
+  const deleteProject = trpc.project.delete.useMutation({
+    onSuccess: () => {
+      // Need to tell the parent to refetch projects.
+      window.location.reload();
+    }
+  });
+
+  const deleteFeature = trpc.featureRequest.delete.useMutation({
+    onSuccess: () => refetch(),
+  });
+
   return (
     <Card className="border-border">
       <CardHeader className="flex flex-row justify-between items-start pb-4 border-b">
@@ -123,43 +135,58 @@ function ProjectCard({ project, workspaceId }: { project: any; workspaceId: stri
           <CardTitle className="text-xl">{project.name}</CardTitle>
           <CardDescription>Manage feature requests for this project</CardDescription>
         </div>
-        <Dialog open={isFeatureModalOpen} onOpenChange={setIsFeatureModalOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Plus className="mr-2 h-4 w-4" /> Add Feature
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>New Feature Request</DialogTitle>
-              <DialogDescription>
-                Describe what you want to build. Our AI will generate a PRD and tasks for you.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <Input
-                placeholder="Feature Title (e.g. Dark Mode)"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-              <Textarea
-                placeholder="Provide details about the feature, user needs, and context..."
-                className="h-32"
-                value={context}
-                onChange={(e) => setContext(e.target.value)}
-              />
-            </div>
-            <DialogFooter>
-              <Button 
-                onClick={() => createFeature.mutate({ projectId: project.id, title, context })}
-                disabled={!title || !context || createFeature.isPending}
-              >
-                {createFeature.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Submit Request
+        <div className="flex items-center gap-2">
+          <Dialog open={isFeatureModalOpen} onOpenChange={setIsFeatureModalOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Plus className="mr-2 h-4 w-4" /> Add Feature
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>New Feature Request</DialogTitle>
+                <DialogDescription>
+                  Describe what you want to build. Our AI will generate a PRD and tasks for you.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <Input
+                  placeholder="Feature Title (e.g. Dark Mode)"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+                <Textarea
+                  placeholder="Provide details about the feature, user needs, and context..."
+                  className="h-32"
+                  value={context}
+                  onChange={(e) => setContext(e.target.value)}
+                />
+              </div>
+              <DialogFooter>
+                <Button 
+                  onClick={() => createFeature.mutate({ projectId: project.id, title, context })}
+                  disabled={!title || !context || createFeature.isPending}
+                >
+                  {createFeature.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Submit Request
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+            disabled={deleteProject.isPending}
+            onClick={() => {
+              if (confirm("Are you sure you want to delete this project and all its feature requests? This cannot be undone.")) {
+                deleteProject.mutate({ id: project.id });
+              }
+            }}
+          >
+            {deleteProject.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="pt-6">
         <details className="mb-4 rounded-lg border border-border bg-muted/30 p-3">
@@ -212,6 +239,19 @@ function ProjectCard({ project, workspaceId }: { project: any; workspaceId: stri
                         </>
                       )}
                     </Link>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                    disabled={deleteFeature.isPending && deleteFeature.variables?.id === fr.id}
+                    onClick={() => {
+                      if (confirm("Are you sure you want to delete this feature request and its tasks?")) {
+                        deleteFeature.mutate({ id: fr.id });
+                      }
+                    }}
+                  >
+                    {deleteFeature.isPending && deleteFeature.variables?.id === fr.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>

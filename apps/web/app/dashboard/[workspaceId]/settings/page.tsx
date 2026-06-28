@@ -183,6 +183,9 @@ export default function SettingsPage({
 
       {/* Audit log */}
       <AuditCard workspaceId={workspaceId} />
+
+      {/* Danger Zone */}
+      <DangerZoneCard workspaceId={workspaceId} />
     </div>
   );
 }
@@ -674,6 +677,46 @@ function AiKeyCard({ workspaceId }: { workspaceId: string }) {
         {save.error && (
           <p className="text-sm text-red-400">{save.error.message}</p>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function DangerZoneCard({ workspaceId }: { workspaceId: string }) {
+  const ws = trpc.workspace.getById.useQuery({ workspaceId });
+  const role = (ws.data as any)?.currentUserRole as string | undefined;
+  const canManage = role === "ADMIN" || role === "LEAD";
+  const deleteWorkspace = trpc.workspace.delete.useMutation({
+    onSuccess: () => {
+      window.location.href = "/dashboard";
+    }
+  });
+
+  if (!canManage) return null;
+
+  return (
+    <Card className="border-red-500/50 bg-red-500/5 mt-8">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg text-red-500">
+          <Trash2 className="h-5 w-5" /> Danger Zone
+        </CardTitle>
+        <CardDescription className="text-red-500/80">
+          Permanently delete this workspace and all its projects, feature requests, tasks, and data.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button 
+          variant="destructive"
+          disabled={deleteWorkspace.isPending}
+          onClick={() => {
+            if (confirm("DANGER: Are you absolutely sure you want to permanently delete this workspace and ALL of its data? This action CANNOT be undone.")) {
+              deleteWorkspace.mutate({ id: workspaceId });
+            }
+          }}
+        >
+          {deleteWorkspace.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Delete Workspace
+        </Button>
       </CardContent>
     </Card>
   );

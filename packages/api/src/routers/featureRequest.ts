@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { assertProjectAccess, assertWorkspaceMember } from "../lib/access";
 
@@ -62,5 +63,28 @@ export const featureRequestRouter = createTRPCRouter({
           _count: { select: { pullRequests: true } },
         },
       });
+    }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const fr = await ctx.prisma.featureRequest.findUnique({
+        where: { id: input.id },
+        include: { project: true },
+      });
+      if (!fr) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const member = await ctx.prisma.workspaceMember.findUnique({
+        where: {
+          userId_workspaceId: { userId: ctx.session.user.id, workspaceId: fr.project.workspaceId },
+        },
+      });
+
+      if (!member) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not a member of this workspace." });
+      }
+
+      await ctx.prisma.featureRequest.delete({ where: { id: input.id } });
+      return { success: true };
     }),
 });
