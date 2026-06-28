@@ -11,7 +11,13 @@ type Events = {
   "prd/generate.requested": {
     data: { featureRequestId: string; userId?: string };
   };
+  "prd/generate.canceled": {
+    data: { featureRequestId: string };
+  };
   "review/run.requested": {
+    data: { pullRequestId: string; reviewId?: string };
+  };
+  "review/run.canceled": {
     data: { pullRequestId: string };
   };
   "repo/analyze.requested": {
@@ -27,7 +33,9 @@ type Events = {
 
 export const EVENTS = {
   PRD_GENERATE: "prd/generate.requested",
+  PRD_CANCEL: "prd/generate.canceled",
   REVIEW_RUN: "review/run.requested",
+  REVIEW_CANCEL: "review/run.canceled",
   REPO_ANALYZE: "repo/analyze.requested",
   COMMIT_REVIEW: "commit/review.requested",
   READINESS_CHECK: "readiness/check.requested",

@@ -44,6 +44,29 @@ export const prdRouter = createTRPCRouter({
       return { queued: true };
     }),
 
+  /** Cancel a running PRD generation job and revert to DISCOVERY. */
+  cancel: protectedProcedure
+    .input(z.object({ featureRequestId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await assertFeatureRequestAccess(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.featureRequestId
+      );
+
+      await ctx.prisma.featureRequest.update({
+        where: { id: input.featureRequestId },
+        data: { status: "DISCOVERY" },
+      });
+
+      await inngest.send({
+        name: EVENTS.PRD_CANCEL,
+        data: { featureRequestId: input.featureRequestId },
+      });
+
+      return { canceled: true };
+    }),
+
   /** Manually edit the generated PRD (PRD Editor). */
   update: protectedProcedure
     .input(

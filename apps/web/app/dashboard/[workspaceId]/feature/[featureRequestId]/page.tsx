@@ -76,7 +76,13 @@ export default function FeatureCommandCenter({
   const generatePRD = trpc.prd.generate.useMutation({
     onSuccess: () => featureQuery.refetch(),
   });
+  const cancelPrd = trpc.prd.cancel.useMutation({
+    onSuccess: () => featureQuery.refetch(),
+  });
   const runReview = trpc.review.runReview.useMutation({
+    onSuccess: () => featureQuery.refetch(),
+  });
+  const cancelReview = trpc.review.cancel.useMutation({
     onSuccess: () => featureQuery.refetch(),
   });
   const approve = trpc.review.approveAndShip.useMutation({
@@ -246,15 +252,25 @@ export default function FeatureCommandCenter({
       {/* Async PRD generation in progress */}
       {isGenerating && (
         <Card className="border-border">
-          <CardContent className="flex items-center gap-3 p-6">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <div>
-              <p className="font-medium">Drafting your PRD…</p>
-              <p className="text-sm text-muted-foreground">
-                Running as a background workflow. This page updates
-                automatically.
-              </p>
+          <CardContent className="pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <div>
+                <p className="font-medium">Drafting your PRD…</p>
+                <p className="text-sm text-muted-foreground">
+                  Running as a background workflow. This page updates
+                  automatically.
+                </p>
+              </div>
             </div>
+            <Button 
+              variant="outline" 
+              onClick={() => cancelPrd.mutate({ featureRequestId: feature.id })}
+              disabled={cancelPrd.isPending}
+            >
+              {cancelPrd.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Cancel Generation
+            </Button>
           </CardContent>
         </Card>
       )}
@@ -299,23 +315,44 @@ export default function FeatureCommandCenter({
                       >
                         #{pr.number} {pr.title}
                       </a>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={runReview.isPending}
-                        onClick={() => runReview.mutate({ pullRequestId: pr.id })}
-                      >
-                        {runReview.isPending &&
-                        runReview.variables?.pullRequestId === pr.id ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : null}
-                        Run AI Review
-                      </Button>
+                      {(!latest || latest.status !== "PENDING") && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={runReview.isPending}
+                          onClick={() => runReview.mutate({ pullRequestId: pr.id })}
+                        >
+                          {runReview.isPending &&
+                          runReview.variables?.pullRequestId === pr.id ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : null}
+                          Run AI Review
+                        </Button>
+                      )}
                     </div>
 
                     {latest ? (
-                      <div className="mt-3 space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
+                      latest.status === "PENDING" ? (
+                        <div className="mt-3 flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-muted/20 rounded-md border border-border gap-3">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                            Running AI review...
+                          </div>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            disabled={cancelReview.isPending}
+                            onClick={() => cancelReview.mutate({ reviewId: latest.id })}
+                          >
+                            {cancelReview.isPending && cancelReview.variables?.reviewId === latest.id ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : null}
+                            Cancel Review
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="mt-3 space-y-2">
+                          <div className="flex items-center gap-2 text-sm">
                           {latest.blockingCount > 0 ? (
                             <span className="inline-flex items-center gap-1 text-red-400">
                               <ShieldAlert className="h-4 w-4" />
@@ -355,7 +392,8 @@ export default function FeatureCommandCenter({
                             </div>
                           ))}
                         </div>
-                      </div>
+                        </div>
+                      )
                     ) : (
                       <p className="mt-2 text-sm text-muted-foreground">
                         Queued / not yet reviewed.

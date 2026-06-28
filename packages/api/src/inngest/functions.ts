@@ -16,7 +16,17 @@ import { runReadinessCheck } from "../lib/readiness";
  */
 
 export const generatePrdFn = inngest.createFunction(
-  { id: "generate-prd", name: "Generate PRD", retries: 2 },
+  { 
+    id: "generate-prd", 
+    name: "Generate PRD", 
+    retries: 2,
+    cancelOn: [
+      {
+        event: EVENTS.PRD_CANCEL,
+        match: "data.featureRequestId",
+      },
+    ],
+  },
   { event: EVENTS.PRD_GENERATE },
   async ({ event, step }) => {
     const { featureRequestId } = event.data;
@@ -28,14 +38,24 @@ export const generatePrdFn = inngest.createFunction(
 );
 
 export const runReviewFn = inngest.createFunction(
-  { id: "run-ai-review", name: "Run AI Code Review", retries: 2 },
+  { 
+    id: "run-ai-review", 
+    name: "Run AI Code Review", 
+    retries: 2,
+    cancelOn: [
+      {
+        event: EVENTS.REVIEW_CANCEL,
+        match: "data.pullRequestId",
+      },
+    ],
+  },
   { event: EVENTS.REVIEW_RUN },
   async ({ event, step }) => {
-    const { pullRequestId } = event.data;
-    const reviewId = await step.run("run-review", () =>
-      runReviewForPullRequest(pullRequestId)
+    const { pullRequestId, reviewId } = event.data;
+    const finalReviewId = await step.run("run-review", () =>
+      runReviewForPullRequest(pullRequestId, reviewId)
     );
-    return { reviewId };
+    return { reviewId: finalReviewId };
   }
 );
 

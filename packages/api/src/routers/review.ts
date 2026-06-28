@@ -57,11 +57,48 @@ export const reviewRouter = createTRPCRouter({
       // Inngest workflow actually runs, in runReviewForPullRequest.)
       await enforceRateLimit(ctx.prisma, `ai:review:${ctx.session.user.id}`, 20, 60);
 
+      // Create a PENDING review immediately so the UI shows it's running
+      const review = await ctx.prisma.review.create({
+        data: {
+          pullRequestId: input.pullRequestId,
+          status: "PENDING",
+        },
+      });
+
       await inngest.send({
         name: EVENTS.REVIEW_RUN,
-        data: { pullRequestId: input.pullRequestId },
+        data: { pullRequestId: input.pullRequestId, reviewId: review.id },
       });
       return { queued: true };
+    }),
+
+  /** Cancel a running AI code review. */
+  cancel: protectedProcedure
+    .input(z.object({ reviewId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const review = await ctx.prisma.review.findUnique({
+        where: { id: input.reviewId },
+        include: { pullRequest: true },
+      });
+      if (!review) throw new TRPCError({ code: "NOT_FOUND", message: "Review not found" });
+
+      await assertFeatureRequestAccess(
+        ctx.prisma,
+        ctx.session.user.id,
+        review.pullRequest.featureRequestId
+      );
+
+      // Delete the pending review row so the UI returns to the "Run Review" state
+      await ctx.prisma.review.delete({
+        where: { id: input.reviewId },
+      });
+
+      await inngest.send({
+        name: EVENTS.REVIEW_CANCEL,
+        data: { pullRequestId: review.pullRequest.id },
+      });
+
+      return { canceled: true };
     }),
 
   /** Queue an AI release-readiness check for a feature (async Inngest). */

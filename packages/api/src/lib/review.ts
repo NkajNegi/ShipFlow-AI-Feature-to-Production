@@ -166,7 +166,8 @@ Return the corrected, validated review (full result).`,
  * Returns the created Review id, or null if prerequisites are missing.
  */
 export async function runReviewForPullRequest(
-  pullRequestId: string
+  pullRequestId: string,
+  reviewId?: string
 ): Promise<string | null> {
   const pr = await prisma.pullRequest.findUnique({
     where: { id: pullRequestId },
@@ -251,15 +252,28 @@ export async function runReviewForPullRequest(
     ).length;
     const status = blockingCount > 0 ? "CHANGES_REQUESTED" : "APPROVED";
 
-    const review = await prisma.review.create({
-      data: {
-        pullRequestId: pr.id,
-        status,
-        summary: result.summary,
-        issuesJson: result.issues as object,
-        blockingCount,
-      },
-    });
+    let review;
+    if (reviewId) {
+      review = await prisma.review.update({
+        where: { id: reviewId },
+        data: {
+          status,
+          summary: result.summary,
+          issuesJson: result.issues as object,
+          blockingCount,
+        },
+      });
+    } else {
+      review = await prisma.review.create({
+        data: {
+          pullRequestId: pr.id,
+          status,
+          summary: result.summary,
+          issuesJson: result.issues as object,
+          blockingCount,
+        },
+      });
+    }
 
     await prisma.featureRequest.update({
       where: { id: pr.featureRequestId },
