@@ -13,7 +13,6 @@ import {
   ArrowRight,
   Users,
   Search,
-  Bell,
   CheckCircle2,
   AlertTriangle,
   ClipboardList,
@@ -41,6 +40,16 @@ export default function WorkspaceDashboard({
   // Math for the distribution bar (mocked for new UI layout if data missing)
   const tCounts = taskMetrics.data?.statusCounts || {};
   const tTotal = taskMetrics.data?.totalTasks || 0; 
+  
+  const cTodo = tCounts["TODO"] || 0;
+  const cInProgress = tCounts["IN_PROGRESS"] || 0;
+  const cReview = tCounts["IN_REVIEW"] || 0;
+  const cDone = tCounts["DONE"] || 0;
+  
+  const getStroke = (count: number) => {
+    if (tTotal === 0) return "0 251";
+    return `${(count / tTotal) * 251} ${251 - (count / tTotal) * 251}`;
+  };
   
   // Custom Sparkline SVG Component
   const Sparkline = ({ color }: { color: string }) => (
@@ -83,15 +92,10 @@ export default function WorkspaceDashboard({
           </div>
           
           {/* Notifications */}
-          <button className="relative w-9 h-9 rounded-full bg-[#111] border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">
-            <Bell className="h-4 w-4 text-muted-foreground" />
-            <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 border-2 border-black rounded-full flex items-center justify-center text-[8px] font-bold text-white">3</span>
-          </button>
+          <NotificationPopover />
           
           {/* Avatar */}
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#c084fc] to-[#60a5fa] flex items-center justify-center border border-white/20 font-bold text-white text-[12px] shadow-[0_0_10px_rgba(192,132,252,0.3)]">
-            TE
-          </div>
+          <UserProfileDropdown />
         </div>
       </div>
 
@@ -205,16 +209,16 @@ export default function WorkspaceDashboard({
             {/* Chart Legends */}
             <div className="flex gap-4 mb-8">
               <div className="flex items-center gap-2 px-2 py-1 rounded bg-[#111] border border-white/5 text-[10px] font-bold text-muted-foreground">
-                <div className="w-2 h-2 rounded-full bg-slate-500 shadow-[0_0_8px_rgba(100,116,139,0.8)]" /> TODO 0
+                <div className="w-2 h-2 rounded-full bg-slate-500 shadow-[0_0_8px_rgba(100,116,139,0.8)]" /> TODO {cTodo}
               </div>
               <div className="flex items-center gap-2 px-2 py-1 rounded bg-[#111] border border-white/5 text-[10px] font-bold text-muted-foreground">
-                <div className="w-2 h-2 rounded-full bg-[#f97316] shadow-[0_0_8px_rgba(249,115,22,0.8)]" /> IN PROGRESS 0
+                <div className="w-2 h-2 rounded-full bg-[#f97316] shadow-[0_0_8px_rgba(249,115,22,0.8)]" /> IN PROGRESS {cInProgress}
               </div>
               <div className="flex items-center gap-2 px-2 py-1 rounded bg-[#111] border border-white/5 text-[10px] font-bold text-muted-foreground">
-                <div className="w-2 h-2 rounded-full bg-[#0ea5e9] shadow-[0_0_8px_rgba(14,165,233,0.8)]" /> REVIEW 0
+                <div className="w-2 h-2 rounded-full bg-[#0ea5e9] shadow-[0_0_8px_rgba(14,165,233,0.8)]" /> REVIEW {cReview}
               </div>
               <div className="flex items-center gap-2 px-2 py-1 rounded bg-[#111] border border-white/5 text-[10px] font-bold text-muted-foreground">
-                <div className="w-2 h-2 rounded-full bg-[#22c55e] shadow-[0_0_8px_rgba(34,197,94,0.8)]" /> DONE 0
+                <div className="w-2 h-2 rounded-full bg-[#22c55e] shadow-[0_0_8px_rgba(34,197,94,0.8)]" /> DONE {cDone}
               </div>
             </div>
 
@@ -223,7 +227,12 @@ export default function WorkspaceDashboard({
                <div className="relative w-40 h-40 flex-shrink-0 flex items-center justify-center">
                   <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                     <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="#0ea5e9" strokeWidth="12" strokeDasharray="0 251" strokeLinecap="round" className="opacity-80 drop-shadow-[0_0_10px_rgba(14,165,233,0.5)]" />
+                    {/* Done */}
+                    {cDone > 0 && <circle cx="50" cy="50" r="40" fill="none" stroke="#22c55e" strokeWidth="12" strokeDasharray={getStroke(cDone)} strokeLinecap="round" className="opacity-80 drop-shadow-[0_0_10px_rgba(34,197,94,0.5)]" />}
+                    {/* Review (offset by Done) */}
+                    {cReview > 0 && <circle cx="50" cy="50" r="40" fill="none" stroke="#0ea5e9" strokeWidth="12" strokeDasharray={getStroke(cReview)} strokeDashoffset={-(cDone / tTotal) * 251} strokeLinecap="round" className="opacity-80 drop-shadow-[0_0_10px_rgba(14,165,233,0.5)]" />}
+                    {/* In Progress (offset by Done+Review) */}
+                    {cInProgress > 0 && <circle cx="50" cy="50" r="40" fill="none" stroke="#f97316" strokeWidth="12" strokeDasharray={getStroke(cInProgress)} strokeDashoffset={-((cDone + cReview) / tTotal) * 251} strokeLinecap="round" className="opacity-80 drop-shadow-[0_0_10px_rgba(249,115,22,0.5)]" />}
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                     <span className="text-2xl font-bold text-white">{tTotal}</span>
@@ -284,18 +293,45 @@ export default function WorkspaceDashboard({
               </button>
             </div>
             
-            <div className="flex-1 flex flex-col items-center justify-center text-center px-4 py-8">
-               <div className="relative w-24 h-24 flex items-center justify-center mb-6">
-                 {/* Glowing Isometric Box representation */}
-                 <div className="absolute inset-0 bg-[#c084fc]/10 blur-[20px] rounded-full" />
-                 <div className="relative w-16 h-12 bg-gradient-to-br from-[#c084fc]/40 to-[#c084fc]/10 border border-[#c084fc]/50 rounded-lg transform -rotate-12 skew-x-12 shadow-[0_0_30px_rgba(192,132,252,0.3)] backdrop-blur-sm flex items-center justify-center">
-                    <Activity className="text-white/80 h-6 w-6 transform rotate-12 -skew-x-12" />
-                 </div>
-               </div>
-               <h3 className="text-[15px] font-bold text-white mb-2">No recent activity yet</h3>
-               <p className="text-[12px] text-muted-foreground leading-relaxed">
-                 Once your team starts moving,<br />you'll see updates here.
-               </p>
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+              {comments.isLoading ? (
+                <div className="text-center py-8 text-sm text-muted-foreground">Loading...</div>
+              ) : comments.data?.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center px-4 py-8">
+                  <div className="relative w-24 h-24 flex items-center justify-center mb-6">
+                    <div className="absolute inset-0 bg-[#c084fc]/10 blur-[20px] rounded-full" />
+                    <div className="relative w-16 h-12 bg-gradient-to-br from-[#c084fc]/40 to-[#c084fc]/10 border border-[#c084fc]/50 rounded-lg transform -rotate-12 skew-x-12 shadow-[0_0_30px_rgba(192,132,252,0.3)] backdrop-blur-sm flex items-center justify-center">
+                       <Activity className="text-white/80 h-6 w-6 transform rotate-12 -skew-x-12" />
+                    </div>
+                  </div>
+                  <h3 className="text-[15px] font-bold text-white mb-2">No recent activity yet</h3>
+                  <p className="text-[12px] text-muted-foreground leading-relaxed">
+                    Once your team starts moving,<br />you'll see updates here.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {comments.data?.slice(0, 5).map((comment) => (
+                    <div key={comment.id} className="flex gap-3">
+                       {comment.author.image ? (
+                         <img src={comment.author.image} alt={comment.author.name || "User"} className="w-8 h-8 rounded-full border border-white/10" />
+                       ) : (
+                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#c084fc] to-[#60a5fa] border border-white/20 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                           {comment.author.name?.slice(0, 2).toUpperCase() || "U"}
+                         </div>
+                       )}
+                       <div className="flex-1 min-w-0">
+                         <div className="text-[12px]">
+                           <span className="font-bold text-white">{comment.author.name}</span> <span className="text-muted-foreground">commented on</span> <Link href={`/dashboard/${workspaceId}/board?task=${comment.task.id}`} className="text-[#c084fc] hover:underline font-medium">{comment.task.ref || comment.task.title}</Link>
+                         </div>
+                         <p className="text-[12px] text-muted-foreground mt-1 line-clamp-2 leading-snug break-words">
+                           "{comment.content}"
+                         </p>
+                       </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
          </div>
       </div>
@@ -353,36 +389,76 @@ export default function WorkspaceDashboard({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pb-12">
         
         {/* My Active Tasks */}
-        <div className="lg:col-span-1 bg-transparent border border-white/5 rounded-2xl p-5 border-dashed flex flex-col">
+        <div className="lg:col-span-1 bg-transparent border border-white/5 rounded-2xl p-5 border-dashed flex flex-col max-h-[300px]">
           <div className="flex items-center gap-2 mb-6">
             <CheckCircle2 className="h-5 w-5 text-[#c084fc]" />
             <span className="font-semibold text-[14px]">My Active Tasks</span>
           </div>
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-2 py-4">
-            <div className="w-12 h-12 mb-4 relative">
-              <div className="absolute inset-0 bg-[#c084fc]/10 blur-[15px] rounded-full" />
-              <ClipboardList className="w-full h-full text-[#c084fc] relative drop-shadow-[0_0_10px_rgba(192,132,252,0.5)]" />
-            </div>
-            <p className="text-[12px] font-medium text-white">You have no assigned tasks.</p>
-            <p className="text-[12px] text-muted-foreground mt-1">Grab some coffee! ☕</p>
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+            {taskMetrics.isLoading ? (
+              <div className="text-center py-4 text-sm text-muted-foreground">Loading...</div>
+            ) : taskMetrics.data?.myTasks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center px-2 py-4 h-full">
+                <div className="w-12 h-12 mb-4 relative">
+                  <div className="absolute inset-0 bg-[#c084fc]/10 blur-[15px] rounded-full" />
+                  <ClipboardList className="w-full h-full text-[#c084fc] relative drop-shadow-[0_0_10px_rgba(192,132,252,0.5)]" />
+                </div>
+                <p className="text-[12px] font-medium text-white">You have no assigned tasks.</p>
+                <p className="text-[12px] text-muted-foreground mt-1">Grab some coffee! ☕</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {taskMetrics.data?.myTasks.map((t) => (
+                  <Link key={t.id} href={`/dashboard/${workspaceId}/board?task=${t.id}`} className="block group">
+                    <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/5 hover:border-white/10 transition-colors">
+                      <div className="text-[12px] font-bold text-white mb-1 truncate group-hover:text-[#c084fc] transition-colors">{t.title}</div>
+                      <div className="text-[10px] text-muted-foreground truncate">{t.project.name} {t.prd?.featureRequest.title ? `• ${t.prd.featureRequest.title}` : ""}</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Recent Feature Requests */}
-        <div className="lg:col-span-2 bg-transparent border border-white/5 rounded-2xl p-5 border-dashed flex flex-col">
+        <div className="lg:col-span-2 bg-transparent border border-white/5 rounded-2xl p-5 border-dashed flex flex-col max-h-[300px]">
           <div className="flex items-center gap-2 mb-6">
             <Lightbulb className="h-5 w-5 text-[#facc15]" />
             <span className="font-semibold text-[14px]">Recent Feature Requests</span>
           </div>
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-2 py-4">
-            <div className="w-12 h-12 mb-4 relative">
-              <div className="absolute inset-0 bg-[#facc15]/10 blur-[15px] rounded-full" />
-              <Lightbulb className="w-full h-full text-[#facc15] relative drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]" />
-            </div>
-            <p className="text-[12px] text-muted-foreground">
-              Nothing yet — <br/>
-              create one from <Link href={`/dashboard/${workspaceId}/projects`} className="text-[#c084fc] hover:underline font-medium">Projects</Link>.
-            </p>
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+            {features.isLoading ? (
+              <div className="text-center py-4 text-sm text-muted-foreground">Loading...</div>
+            ) : features.data?.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center px-2 py-4 h-full">
+                <div className="w-12 h-12 mb-4 relative">
+                  <div className="absolute inset-0 bg-[#facc15]/10 blur-[15px] rounded-full" />
+                  <Lightbulb className="w-full h-full text-[#facc15] relative drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]" />
+                </div>
+                <p className="text-[12px] text-muted-foreground">
+                  Nothing yet — <br/>
+                  create one from <Link href={`/dashboard/${workspaceId}/projects`} className="text-[#c084fc] hover:underline font-medium">Projects</Link>.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {features.data?.slice(0, 4).map((f) => (
+                  <Link key={f.id} href={`/dashboard/${workspaceId}/projects/${f.project.id}/features/${f.id}`} className="block group">
+                     <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/5 hover:border-white/10 transition-colors h-full flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                             <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-white/5 border border-white/10 text-muted-foreground">{f.status}</span>
+                             <span className="text-[10px] text-muted-foreground">{new Date(f.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <div className="text-[13px] font-bold text-white line-clamp-2 leading-snug group-hover:text-[#facc15] transition-colors">{f.title}</div>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground mt-3 truncate">{f.project.name}</div>
+                     </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -397,20 +473,26 @@ export default function WorkspaceDashboard({
             <div className="relative w-20 h-20 shrink-0">
                <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                  <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
-                 <circle cx="50" cy="50" r="40" fill="none" stroke="#4ade80" strokeWidth="12" strokeDasharray="251 0" strokeLinecap="round" className="drop-shadow-[0_0_10px_rgba(74,222,128,0.4)]" />
+                 <circle cx="50" cy="50" r="40" fill="none" stroke={taskMetrics.data?.overdueTasks?.length ? "#f97316" : "#4ade80"} strokeWidth="12" strokeDasharray={taskMetrics.data?.overdueTasks?.length ? "180 251" : "251 0"} strokeLinecap="round" className={`drop-shadow-[0_0_10px_${taskMetrics.data?.overdueTasks?.length ? 'rgba(249,115,22,0.4)' : 'rgba(74,222,128,0.4)'}] transition-all duration-1000`} />
                </svg>
                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                 <span className="text-[16px] font-bold text-white leading-none">100%</span>
-                 <span className="text-[8px] font-semibold text-muted-foreground mt-0.5">On Track</span>
+                 <span className="text-[16px] font-bold text-white leading-none">{taskMetrics.data?.overdueTasks?.length ? "80%" : "100%"}</span>
+                 <span className="text-[8px] font-semibold text-muted-foreground mt-0.5">{taskMetrics.data?.overdueTasks?.length ? "Needs Attn" : "On Track"}</span>
                </div>
             </div>
             
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="w-3.5 h-3.5 rounded-full border border-[#4ade80]/50 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="h-2 w-2 text-[#4ade80]" />
+                <div className={`w-3.5 h-3.5 rounded-full border ${taskMetrics.data?.overdueTasks?.length ? "border-[#f97316]/50 bg-[#f97316]/10" : "border-[#4ade80]/50"} flex items-center justify-center shrink-0`}>
+                  {taskMetrics.data?.overdueTasks?.length ? (
+                    <AlertTriangle className="h-2 w-2 text-[#f97316]" />
+                  ) : (
+                    <CheckCircle2 className="h-2 w-2 text-[#4ade80]" />
+                  )}
                 </div>
-                <span className="text-[10px] text-muted-foreground font-medium">No overdue tasks</span>
+                <span className="text-[10px] text-muted-foreground font-medium">
+                  {taskMetrics.data?.overdueTasks?.length ? `${taskMetrics.data.overdueTasks.length} overdue task(s)` : "No overdue tasks"}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3.5 h-3.5 rounded-full border border-[#4ade80]/50 flex items-center justify-center shrink-0">
@@ -427,9 +509,9 @@ export default function WorkspaceDashboard({
             </div>
           </div>
         </div>
+        </div>
 
       </div>
-
     </div>
   );
 }
