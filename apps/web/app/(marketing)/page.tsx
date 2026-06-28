@@ -1,5 +1,6 @@
 import { MarketingHeader } from "@/components/marketing-header";
 import { CoreLoop } from "@/components/core-loop";
+import { HeroOrbitalGraphic } from "@/components/hero-orbital-graphic";
 import Link from "next/link";
 
 /* ShipFlow landing — ported from the UIUX design (gold accent on dark).
@@ -101,6 +102,10 @@ export default function MarketingPage() {
             <span className="flex items-center gap-2"><span className="text-purple-400">✓</span> Setup in 2 minutes</span>
             <span className="flex items-center gap-2"><span className="text-yellow-400">✓</span> Cancel anytime</span>
           </div>
+        </div>
+
+        <div className="relative hidden lg:block h-full min-h-[600px] w-full pl-8">
+          <HeroOrbitalGraphic />
         </div>
 
       </section>
