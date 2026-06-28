@@ -359,8 +359,8 @@ export default function KanbanBoardPage({ params }: { params: Promise<{ workspac
                     const droppableId = `${swimlane.id}|${colId}`;
                     
                     return (
-                      <div key={colId} className="w-80 flex flex-col bg-card/50 rounded-lg border border-border">
-                        <div className="p-4 border-b border-border bg-card/95 rounded-t-lg">
+                      <div key={colId} className="w-80 flex flex-col bg-sidebar/50 backdrop-blur-xl rounded-xl border border-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.15)]">
+                        <div className="p-4 border-b border-white/5 bg-background/40 rounded-t-xl backdrop-blur-xl">
                           <h3 className="font-semibold text-foreground flex items-center justify-between">
                             {COLUMN_LABELS[colId]}
                             <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
@@ -388,8 +388,8 @@ export default function KanbanBoardPage({ params }: { params: Promise<{ workspac
                                       {...provided.draggableProps}
                                       {...provided.dragHandleProps}
                                       onClick={() => openEditTask(task)}
-                                      className={`bg-card p-4 rounded-md shadow-sm border transition-all cursor-grab active:cursor-grabbing hover:border-primary/50 group ${
-                                        snapshot.isDragging ? "border-primary shadow-lg scale-[1.02] z-50" : "border-border"
+                                      className={`glass p-4 rounded-lg shadow-sm border transition-all duration-300 cursor-grab active:cursor-grabbing hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 group ${
+                                        snapshot.isDragging ? "border-primary shadow-xl scale-[1.05] z-50 ring-2 ring-primary/20" : "border-white/10"
                                       }`}
                                       style={provided.draggableProps.style}
                                     >

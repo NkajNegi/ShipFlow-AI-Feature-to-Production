@@ -70,8 +70,8 @@ export function DashboardShell({
   const navLink = (seg: "projects" | "board" | "commits" | "reviews" | "settings", label: string, Icon: any) => {
     const href = activeId ? `/dashboard/${activeId}/${seg}` : "#";
     const activeCls = is(seg)
-      ? "text-primary bg-primary/10 border-l-2 border-primary"
-      : "text-foreground hover:bg-muted/80 hover:text-primary border-l-2 border-transparent";
+      ? "text-primary bg-primary/10 border-l-2 border-primary shadow-[inset_4px_0_10px_rgba(var(--primary),0.2)]"
+      : "text-foreground hover:bg-white/5 hover:text-primary border-l-2 border-transparent";
       
     const content = (
       <>
@@ -96,8 +96,8 @@ export function DashboardShell({
   return (
     <div className="flex h-screen bg-background text-foreground flex-col md:flex-row overflow-hidden">
       {/* Desktop sidebar */}
-      <aside 
-        className={`hidden md:flex flex-col border-r border-border bg-card/50 backdrop-blur-sm transition-all duration-300 ease-in-out relative
+      <aside
+        className={`hidden md:flex flex-col border-r border-white/5 bg-sidebar/60 backdrop-blur-xl transition-all duration-300 ease-in-out relative shadow-[4px_0_24px_rgba(0,0,0,0.2)]
         ${isCollapsed ? 'w-20' : 'w-64'}`}
       >
         <div className="h-14 flex items-center justify-between px-4 border-b border-border/50">
