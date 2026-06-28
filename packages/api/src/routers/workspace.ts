@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { assertWorkspaceMember } from "../lib/access";
 import { encryptSecret, decryptSecret, maskKey } from "../lib/crypto";
-import { assertAnthropicKeyHasOpus } from "../lib/ai";
+import { assertAnthropicKeyHasStrongModel } from "../lib/ai";
 
 export const workspaceRouter = createTRPCRouter({
   getUserWorkspaces: protectedProcedure.query(async ({ ctx }) => {
@@ -114,7 +114,7 @@ export const workspaceRouter = createTRPCRouter({
 
       const key = input.apiKey.trim();
       // Validates the key live and confirms Claude Opus access (Opus-only policy).
-      await assertAnthropicKeyHasOpus(key);
+      await assertAnthropicKeyHasStrongModel(key);
 
       await ctx.prisma.workspace.update({
         where: { id: input.workspaceId },

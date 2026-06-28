@@ -1,13 +1,11 @@
 import { z } from "zod";
-import { generateObject } from "ai";
 import { prisma } from "@repo/db";
-import { resolveModel } from "./ai";
+import { generateEnsembleObject } from "./ai";
 import { getInstallationOctokit } from "./github";
 import { consumeAiCreditIfPlatform } from "./credits";
 import { startRun, addStep, finishRun } from "./workflow";
 import { notifyWorkspace } from "./notify";
 
-type AiModel = ReturnType<typeof resolveModel>;
 
 /**
  * AI Review Loop (Phase 4).
@@ -49,7 +47,7 @@ export async function generateReview(args: {
   tasks: { title: string; description: string }[];
   prTitle: string;
   diff: string;
-  model?: AiModel;
+  workspaceKeyEnc?: string | null;
 }): Promise<ReviewResult> {
   // Guard against enormous diffs blowing the context window.
   const diff =
@@ -57,8 +55,8 @@ export async function generateReview(args: {
       ? args.diff.slice(0, 60_000) + "\n...[diff truncated]..."
       : args.diff;
 
-  const { object } = await generateObject({
-    model: args.model ?? resolveModel(),
+  return generateEnsembleObject({
+    workspaceKeyEnc: args.workspaceKeyEnc,
     schema: ReviewResultSchema,
     system:
       "You are a meticulous Staff Engineer acting as an automated QA reviewer. " +
@@ -94,8 +92,6 @@ ${diff}
 
 Return structured findings based only on your own analysis.`,
   });
-
-  return object;
 }
 
 /**
@@ -112,15 +108,15 @@ export async function qaValidateReview(args: {
   prTitle: string;
   diff: string;
   reviewerResult: ReviewResult;
-  model?: AiModel;
+  workspaceKeyEnc?: string | null;
 }): Promise<ReviewResult> {
   const diff =
     args.diff.length > 60_000
       ? args.diff.slice(0, 60_000) + "\n...[diff truncated]..."
       : args.diff;
 
-  const { object } = await generateObject({
-    model: args.model ?? resolveModel(),
+  return generateEnsembleObject({
+    workspaceKeyEnc: args.workspaceKeyEnc,
     schema: ReviewResultSchema,
     system:
       "You are an independent senior QA validator auditing another reviewer's " +
@@ -160,8 +156,6 @@ ${JSON.stringify(args.reviewerResult, null, 2)}
 
 Return the corrected, validated review (full result).`,
   });
-
-  return object;
 }
 
 /**
@@ -220,7 +214,7 @@ export async function runReviewForPullRequest(
     const diff = diffResp.data as unknown as string;
 
     // Bill the workspace's own Anthropic key when provided.
-    const model = resolveModel(workspace.anthropicApiKeyEnc);
+    const workspaceKeyEnc = workspace.anthropicApiKeyEnc;
     const tasks = prd.tasks.map((t) => ({
       title: t.title,
       description: t.description,
@@ -232,19 +226,25 @@ export async function runReviewForPullRequest(
       tasks,
       prTitle: pr.title,
       diff,
-      model,
+      workspaceKeyEnc,
     });
 
+    let result = draft;
+
     // Second AI: QA validation pass auditing the first reviewer's findings.
-    await addStep(runId, "QA validation — auditing review findings");
-    const result = await qaValidateReview({
-      prdContent: prd.contentJson,
-      tasks,
-      prTitle: pr.title,
-      diff,
-      reviewerResult: draft,
-      model,
-    });
+    // We skip this redundant pass for the Free Tier because the Ensemble architecture
+    // already performs an internal synthesis and validation pass.
+    if (workspaceKeyEnc) {
+      await addStep(runId, "QA validation — auditing review findings");
+      result = await qaValidateReview({
+        prdContent: prd.contentJson,
+        tasks,
+        prTitle: pr.title,
+        diff,
+        reviewerResult: draft,
+        workspaceKeyEnc,
+      });
+    }
 
     const blockingCount = result.issues.filter(
       (i) => i.severity === "BLOCKING"

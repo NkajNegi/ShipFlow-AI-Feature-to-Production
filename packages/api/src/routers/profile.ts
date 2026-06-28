@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { encryptSecret, decryptSecret, maskKey } from "../lib/crypto";
-import { assertAnthropicKeyHasOpus } from "../lib/ai";
+import { assertAnthropicKeyHasStrongModel } from "../lib/ai";
 
 /**
  * Personal profile: view/edit the signed-in user's display name and avatar, and
@@ -84,7 +84,7 @@ export const profileRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const key = input.apiKey.trim();
       // Validates the key live and confirms Claude Opus access.
-      await assertAnthropicKeyHasOpus(key);
+      await assertAnthropicKeyHasStrongModel(key);
 
       await ctx.prisma.user.update({
         where: { id: ctx.session.user.id },

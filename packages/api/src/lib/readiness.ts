@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { generateObject } from "ai";
 import { prisma } from "@repo/db";
-import { resolveModel } from "./ai";
+import { generateEnsembleObject } from "./ai";
 import { consumeAiCreditIfPlatform } from "./credits";
 import { startRun, addStep, finishRun } from "./workflow";
 
@@ -90,8 +89,8 @@ export async function runReadinessCheck(
     );
 
     await addStep(runId, "Assessing production readiness with AI");
-    const { object } = await generateObject({
-      model: resolveModel(feature.project.workspace.anthropicApiKeyEnc),
+    const object = await generateEnsembleObject({
+      workspaceKeyEnc: feature.project.workspace.anthropicApiKeyEnc,
       schema: ReadinessSchema,
       system:
         "You are a senior engineering + QA lead making a go/no-go release " +

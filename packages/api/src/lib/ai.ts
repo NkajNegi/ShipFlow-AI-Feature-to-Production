@@ -1,4 +1,8 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
+import { generateObject, generateText } from "ai";
+import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { decryptSecret } from "./crypto";
 
@@ -14,7 +18,8 @@ import { decryptSecret } from "./crypto";
  * overrides the optional platform `ANTHROPIC_API_KEY`. None is strictly
  * required — if no key is available we raise a clear, actionable error.
  */
-export const AI_MODEL_ID = "claude-opus-4-8";
+export const STRONG_MODEL_ID = "claude-3-opus-20240229";
+export const WEAK_MODEL_ID = "claude-3-haiku-20240307";
 
 /**
  * Build a Claude (Opus) model. Pass the workspace key (highest priority) and/or
@@ -26,9 +31,19 @@ export function resolveModel(
   userKeyEnc?: string | null
 ) {
   const enc = workspaceKeyEnc || userKeyEnc;
-  const apiKey = enc ? decryptSecret(enc) : process.env.ANTHROPIC_API_KEY;
+  
+  let apiKey: string;
+  let modelId: string;
 
-  if (!apiKey) {
+  if (enc) {
+    // If user brings their own key, they unlock the STRONG model.
+    apiKey = decryptSecret(enc);
+    modelId = STRONG_MODEL_ID;
+  } else if (process.env.ANTHROPIC_API_KEY) {
+    // If the platform subsidizes it, restrict them to the WEAK/FREE model.
+    apiKey = process.env.ANTHROPIC_API_KEY;
+    modelId = WEAK_MODEL_ID;
+  } else {
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
       message:
@@ -38,7 +53,105 @@ export function resolveModel(
   }
 
   const provider = createAnthropic({ apiKey });
-  return provider(AI_MODEL_ID);
+  return provider(modelId);
+}
+
+/**
+ * Execute a structured AI workflow using the Ensemble Architecture.
+ * - BYOK Tier: Just calls Claude Opus directly.
+ * - Free Tier: Orchestrates Gemini and GPT-4o-mini as junior drafts, and 
+ *   uses Claude Haiku to synthesize the final structured JSON.
+ */
+export async function generateEnsembleObject<T>({
+  workspaceKeyEnc,
+  userKeyEnc,
+  schema,
+  system,
+  prompt,
+}: {
+  workspaceKeyEnc?: string | null;
+  userKeyEnc?: string | null;
+  schema: z.ZodType<T>;
+  system: string;
+  prompt: string;
+}): Promise<T> {
+  const enc = workspaceKeyEnc || userKeyEnc;
+
+  // BYOK Tier: Just run Claude Opus directly. No ensemble needed for top-tier.
+  if (enc) {
+    const apiKey = decryptSecret(enc);
+    const provider = createAnthropic({ apiKey });
+    const model = provider(STRONG_MODEL_ID);
+
+    const { object } = await generateObject({
+      model,
+      schema,
+      system,
+      prompt,
+    });
+    return object;
+  }
+
+  // Free Tier (Platform Key Fallback):
+  // Ensure the platform has provided all necessary keys.
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const googleKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY;
+
+  if (!anthropicKey || !googleKey || !openaiKey) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message:
+        "Ensemble mode requires platform keys for Anthropic, Google, and OpenAI. " +
+        "Please provide your own BYOK in Settings to continue.",
+    });
+  }
+
+  const anthropic = createAnthropic({ apiKey: anthropicKey });
+  const google = createGoogleGenerativeAI({ apiKey: googleKey });
+  const openai = createOpenAI({ apiKey: openaiKey });
+
+  // 1. Run Junior Agents in parallel to get textual drafts
+  const [geminiResult, openaiResult] = await Promise.all([
+    generateText({
+      model: google("gemini-1.5-flash"),
+      system: system + "\n\nProvide a comprehensive draft analysis. Do not output JSON, just your raw observations.",
+      prompt,
+    }).catch(e => ({ text: `[Gemini failed: ${e.message}]` })),
+    
+    generateText({
+      model: openai("gpt-4o-mini"),
+      system: system + "\n\nProvide a comprehensive draft analysis. Do not output JSON, just your raw observations.",
+      prompt,
+    }).catch(e => ({ text: `[GPT-4o-mini failed: ${e.message}]` }))
+  ]);
+
+  // 2. Synthesis by Senior Agent (Claude Haiku)
+  const synthesisPrompt = `
+You are the Senior Synthesizer. You must fulfill the original request by outputting structured JSON according to the schema.
+I have provided the raw input data below, along with two draft analyses from Junior Agents.
+Use the Junior Agents' drafts to catch things you might have missed, but you make the final call on correctness.
+
+--- ORIGINAL USER PROMPT ---
+${prompt}
+
+--- DRAFT 1 (Gemini) ---
+${geminiResult.text}
+
+--- DRAFT 2 (GPT-4o-mini) ---
+${openaiResult.text}
+
+Now, output the final structured JSON.
+`;
+
+  const { object } = await generateObject({
+    model: anthropic(WEAK_MODEL_ID),
+    schema,
+    system,
+    prompt: synthesisPrompt,
+  });
+
+  return object;
 }
 
 /**
@@ -47,7 +160,7 @@ export function resolveModel(
  * is useless here. Uses the Models API (no token cost). Throws a TRPCError with
  * an actionable message on any failure. Safe to call from any router.
  */
-export async function assertAnthropicKeyHasOpus(key: string): Promise<void> {
+export async function assertAnthropicKeyHasStrongModel(key: string): Promise<void> {
   if (!key.startsWith("sk-ant-")) {
     throw new TRPCError({
       code: "BAD_REQUEST",
@@ -58,7 +171,7 @@ export async function assertAnthropicKeyHasOpus(key: string): Promise<void> {
 
   let res: Response;
   try {
-    res = await fetch(`https://api.anthropic.com/v1/models/${AI_MODEL_ID}`, {
+    res = await fetch(`https://api.anthropic.com/v1/models/${STRONG_MODEL_ID}`, {
       headers: { "x-api-key": key, "anthropic-version": "2023-06-01" },
     });
   } catch {
@@ -82,8 +195,8 @@ export async function assertAnthropicKeyHasOpus(key: string): Promise<void> {
     throw new TRPCError({
       code: "BAD_REQUEST",
       message:
-        "This key doesn't have access to Claude Opus (claude-opus-4-8). " +
-        "ShipFlow only runs Opus — use a key with Opus access.",
+        `This key doesn't have access to Claude Opus (${STRONG_MODEL_ID}). ` +
+        "BYOK requires a key with Opus access.",
     });
   }
   throw new TRPCError({

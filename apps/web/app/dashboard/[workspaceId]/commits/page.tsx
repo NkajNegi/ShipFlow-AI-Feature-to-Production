@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useState } from "react";
+import { use, useMemo, useState, useEffect, useRef } from "react";
 import { trpc } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +18,7 @@ import {
   Lightbulb,
   CheckCircle2,
   ExternalLink,
+  RefreshCw,
 } from "lucide-react";
 
 type Finding = {
@@ -42,16 +43,40 @@ export default function CommitsPage({
   // Default to the first linked repo once loaded.
   const activeRepoId = repositoryId ?? repos.data?.[0]?.id ?? null;
 
+  const syncPRs = trpc.github.syncPullRequests.useMutation({
+    onSuccess: (data) => {
+      alert(`Successfully synced ${data.syncedCount} pull requests from GitHub! Check your Kanban board.`);
+    },
+    onError: (err) => {
+      alert(`Failed to sync PRs: ${err.message}`);
+    }
+  });
+
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-          Commit Review
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Run an AI review over a commit’s diff to surface flaws and
-          improvements. Runs on Claude Opus.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+            Commit Review
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Run an AI review over a commit’s diff to surface flaws and
+            improvements. Runs on Claude Opus.
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          disabled={syncPRs.isPending}
+          onClick={() => syncPRs.mutate({ workspaceId })}
+          className="shrink-0"
+        >
+          {syncPRs.isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="mr-2 h-4 w-4" />
+          )}
+          Sync GitHub PRs
+        </Button>
       </div>
 
       {repos.isLoading ? (
@@ -109,6 +134,32 @@ function RepoCommits({ repositoryId }: { repositoryId: string }) {
     for (const r of reviews.data ?? []) m[r.sha] = { status: r.status };
     return m;
   }, [reviews.data]);
+
+  const hasAutoReviewed = useRef(false);
+
+  // Reset auto-review flag when repository changes
+  useEffect(() => {
+    hasAutoReviewed.current = false;
+  }, [repositoryId]);
+
+  // Automatically review or select the latest commit
+  useEffect(() => {
+    if (commits.data && commits.data.length > 0 && !hasAutoReviewed.current) {
+      const latestSha = commits.data[0]?.sha;
+      if (!latestSha) return;
+      const latestStored = reviewBySha[latestSha];
+      
+      // If we haven't reviewed the latest commit, automatically review it
+      if (!latestStored) {
+        hasAutoReviewed.current = true;
+        review.mutate({ repositoryId, sha: latestSha });
+      } else if (!activeSha) {
+        // If it's already reviewed, just auto-select it to show the panel
+        hasAutoReviewed.current = true;
+        setActiveSha(latestSha);
+      }
+    }
+  }, [commits.data, reviewBySha, activeSha, repositoryId, review]);
 
   if (commits.isLoading) {
     return <Loader2 className="h-5 w-5 animate-spin text-primary" />;

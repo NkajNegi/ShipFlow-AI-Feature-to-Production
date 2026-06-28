@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { generateObject } from "ai";
+import { generateEnsembleObject } from "./ai";
 import { prisma } from "@repo/db";
-import { resolveModel } from "./ai";
 import { getInstallationOctokit } from "./github";
 import { consumeAiCreditIfPlatform } from "./credits";
 import { startRun, addStep, finishRun } from "./workflow";
@@ -40,19 +39,20 @@ export const CommitReviewSchema = z.object({
 
 export type CommitReviewResult = z.infer<typeof CommitReviewSchema>;
 
-/** Pure AI call: review a commit diff. No I/O. */
 export async function generateCommitReview(args: {
   message: string;
   diff: string;
-  model: ReturnType<typeof resolveModel>;
+  workspaceKeyEnc?: string | null;
+  userKeyEnc?: string | null;
 }): Promise<CommitReviewResult> {
   const diff =
     args.diff.length > 60_000
       ? args.diff.slice(0, 60_000) + "\n...[diff truncated]..."
       : args.diff;
 
-  const { object } = await generateObject({
-    model: args.model,
+  return generateEnsembleObject({
+    workspaceKeyEnc: args.workspaceKeyEnc,
+    userKeyEnc: args.userKeyEnc,
     schema: CommitReviewSchema,
     system:
       "You are a meticulous Staff Engineer reviewing a single Git commit. " +
@@ -79,8 +79,6 @@ ${diff}
 
 Return structured findings based only on your own analysis.`,
   });
-
-  return object;
 }
 
 /**
@@ -141,7 +139,8 @@ export async function runCommitReview(
     const result = await generateCommitReview({
       message: cr.message,
       diff,
-      model: resolveModel(workspace.anthropicApiKeyEnc, userKeyEnc),
+      workspaceKeyEnc: workspace.anthropicApiKeyEnc,
+      userKeyEnc,
     });
 
     await prisma.commitReview.update({

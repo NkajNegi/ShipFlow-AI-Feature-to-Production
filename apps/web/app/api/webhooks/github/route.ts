@@ -48,7 +48,7 @@ export async function POST(req: Request) {
 
   if (event === "pull_request") {
     const action = payload.action as string;
-    if (["opened", "reopened", "synchronize", "ready_for_review"].includes(action)) {
+    if (["opened", "reopened", "synchronize", "ready_for_review", "closed"].includes(action)) {
       try {
         await handlePullRequest(payload);
       } catch (err) {

@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { generateObject } from "ai";
 import { prisma } from "@repo/db";
-import { resolveModel } from "./ai";
+import { generateEnsembleObject } from "./ai";
 import { getInstallationOctokit } from "./github";
 import { consumeAiCreditIfPlatform } from "./credits";
 import { startRun, addStep, finishRun } from "./workflow";
@@ -61,8 +60,8 @@ export async function analyzeRepository(
       readme.length > 12000 ? readme.slice(0, 12000) + "\n...[truncated]" : readme;
 
     await addStep(runId, "Summarizing with AI");
-    const { object } = await generateObject({
-      model: resolveModel(workspace.anthropicApiKeyEnc),
+    const object = await generateEnsembleObject({
+      workspaceKeyEnc: workspace.anthropicApiKeyEnc,
       schema: RepoAnalysisSchema,
       system:
         "You are a staff engineer onboarding to a codebase. Summarize the " +

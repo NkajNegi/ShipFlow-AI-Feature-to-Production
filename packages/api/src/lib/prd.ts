@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { generateObject } from "ai";
 import { prisma } from "@repo/db";
-import { resolveModel } from "./ai";
+import { generateEnsembleObject } from "./ai";
 import { startRun, addStep, finishRun } from "./workflow";
 import { notifyWorkspace } from "./notify";
 
@@ -44,7 +43,6 @@ export async function generatePrdForFeature(featureRequestId: string) {
     throw new Error("Feature request not found");
   }
 
-  const model = resolveModel(featureRequest.project.workspace.anthropicApiKeyEnc);
   const workspaceId = featureRequest.project.workspaceId;
   const runId = await startRun("PRD_GENERATION", {
     label: `PRD · ${featureRequest.title}`,
@@ -53,8 +51,8 @@ export async function generatePrdForFeature(featureRequestId: string) {
 
   try {
     await addStep(runId, "Analyzing the request");
-    const { object: prdContent } = await generateObject({
-      model,
+    const prdContent = await generateEnsembleObject({
+      workspaceKeyEnc: featureRequest.project.workspace.anthropicApiKeyEnc,
       schema: PRDSchema,
       system:
         "You are an expert Product Manager and Staff Software Engineer. " +
