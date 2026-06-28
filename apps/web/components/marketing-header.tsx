@@ -33,7 +33,7 @@ export function MarketingHeader() {
         <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
           Pricing
         </Link>
-        <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
           Docs
         </Link>
       </nav>
