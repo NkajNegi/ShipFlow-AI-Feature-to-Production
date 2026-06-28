@@ -61,7 +61,10 @@ export async function analyzeRepository(
 
     await addStep(runId, "Summarizing with AI");
     const object = await generateEnsembleObject({
-      workspaceKeyEnc: workspace.anthropicApiKeyEnc,
+      keys: {
+        anthropicWorkspace: workspace.anthropicApiKeyEnc,
+        openRouterWorkspace: workspace.openRouterApiKeyEnc,
+      },
       schema: RepoAnalysisSchema,
       system:
         "You are a staff engineer onboarding to a codebase. Summarize the " +

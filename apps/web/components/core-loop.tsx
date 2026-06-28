@@ -34,7 +34,7 @@ export function CoreLoop() {
           Ship better software, <span className="bg-gradient-to-r from-[#c084fc] to-[#facc15] bg-clip-text text-transparent">every time.</span>
         </h2>
         <p className="text-muted-foreground mt-4 text-[17px]">
-          ShipFlow AI runs the entire software delivery process — end to end.
+          MetroFlow AI runs the entire software delivery process — end to end.
         </p>
       </div>
 
@@ -132,7 +132,7 @@ export function CoreLoop() {
           <div className="relative z-10 mt-2">
             <div className="inline-block px-3 py-1 rounded-md text-[10px] font-bold tracking-widest text-[#60a5fa] bg-[#60a5fa]/10 mb-3 border border-[#60a5fa]/20">PHASE 3</div>
             <h3 className="text-[20px] font-bold text-white mb-2">Development</h3>
-            <p className="text-[13.5px] text-muted-foreground leading-relaxed">Connect GitHub. Reference a task (Closes SF-123) in your PR and ShipFlow maps it automatically.</p>
+            <p className="text-[13.5px] text-muted-foreground leading-relaxed">Connect GitHub. Reference a task (Closes SF-123) in your PR and MetroFlow maps it automatically.</p>
           </div>
         </div>
 

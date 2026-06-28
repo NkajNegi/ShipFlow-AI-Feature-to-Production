@@ -84,7 +84,7 @@ export const workspaceRouter = createTRPCRouter({
       );
       const ws = await ctx.prisma.workspace.findUnique({
         where: { id: input.workspaceId },
-        select: { anthropicApiKeyEnc: true },
+        select: { anthropicApiKeyEnc: true, openRouterApiKeyEnc: true },
       });
       const enc = ws?.anthropicApiKeyEnc;
       let masked: string | null = null;
@@ -95,7 +95,21 @@ export const workspaceRouter = createTRPCRouter({
           masked = "••••";
         }
       }
-      return { hasKey: Boolean(enc), maskedKey: masked };
+      const orEnc = ws?.openRouterApiKeyEnc;
+      let orMasked: string | null = null;
+      if (orEnc) {
+        try {
+          orMasked = maskKey(decryptSecret(orEnc));
+        } catch {
+          orMasked = "••••";
+        }
+      }
+      return { 
+        hasKey: Boolean(enc), 
+        maskedKey: masked,
+        hasOpenRouterKey: Boolean(orEnc),
+        openRouterMaskedKey: orMasked
+      };
     }),
 
   setAnthropicKey: protectedProcedure
@@ -137,6 +151,46 @@ export const workspaceRouter = createTRPCRouter({
       await ctx.prisma.workspace.update({
         where: { id: input.workspaceId },
         data: { anthropicApiKeyEnc: null },
+      });
+      return { success: true };
+    }),
+
+  setOpenRouterKey: protectedProcedure
+    .input(
+      z.object({
+        workspaceId: z.string(),
+        apiKey: z.string().min(10),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertWorkspaceMember(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.workspaceId,
+        ["ADMIN"]
+      );
+
+      const key = input.apiKey.trim();
+      await ctx.prisma.workspace.update({
+        where: { id: input.workspaceId },
+        data: { openRouterApiKeyEnc: encryptSecret(key) },
+      });
+
+      return { ok: true, maskedKey: maskKey(key) };
+    }),
+
+  removeOpenRouterKey: protectedProcedure
+    .input(z.object({ workspaceId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await assertWorkspaceMember(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.workspaceId,
+        ["ADMIN"]
+      );
+      await ctx.prisma.workspace.update({
+        where: { id: input.workspaceId },
+        data: { openRouterApiKeyEnc: null },
       });
       return { success: true };
     }),

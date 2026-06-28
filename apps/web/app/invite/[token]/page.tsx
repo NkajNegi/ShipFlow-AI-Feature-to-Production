@@ -33,7 +33,7 @@ export default function InvitePage({
           <CardTitle className="text-2xl font-bold text-primary">
             Workspace invitation
           </CardTitle>
-          <CardDescription>You've been invited to join a ShipFlow workspace.</CardDescription>
+          <CardDescription>You've been invited to join a MetroFlow workspace.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {isPending ? (

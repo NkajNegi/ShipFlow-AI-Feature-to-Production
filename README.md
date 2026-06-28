@@ -1,6 +1,6 @@
-# ShipFlow AI
+# MetroFlow AI
 
-**Your AI Operator for Software Delivery.** ShipFlow moves features from idea to
+**Your AI Operator for Software Delivery.** MetroFlow moves features from idea to
 production through a disciplined, review-driven workflow:
 
 > Feature Request → Product Thinking → PRD → Tasks → Implementation → Review → Fixes → Re-Review → Human Approval → Ship
@@ -8,7 +8,7 @@ production through a disciplined, review-driven workflow:
 ## Project Overview
 
 AI can write code faster, but great software is not shipped by code generation
-alone. ShipFlow AI is a multi-tenant SaaS platform that manages the **entire**
+alone. MetroFlow AI is a multi-tenant SaaS platform that manages the **entire**
 software delivery lifecycle. An AI Product Manager clarifies the request and
 writes a structured PRD, the agent breaks it into engineering tasks on a Kanban
 board, GitHub pull requests are synced and reviewed by an AI QA engineer against
@@ -165,7 +165,7 @@ row-level security.
    Subscribe to the **Pull request** event.
 3. Webhook URL → `https://<domain>/api/webhooks/github`.
 4. Setup/callback URL → `https://<domain>/api/github/setup`.
-5. In ShipFlow → **Settings → Connect GitHub**. The `installation_id` is saved to
+5. In MetroFlow → **Settings → Connect GitHub**. The `installation_id` is saved to
    your workspace; Octokit then acts on its behalf (list repos, read diffs, post
    reviews). No PR data is hardcoded.
 6. In a PR body, reference the task you're implementing, e.g. `Closes SF-12`. The

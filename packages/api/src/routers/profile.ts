@@ -6,7 +6,7 @@ import { assertAnthropicKeyHasStrongModel } from "../lib/ai";
 /**
  * Personal profile: view/edit the signed-in user's display name and avatar, and
  * manage their per-user Anthropic (Claude) key. The user key is the default for
- * their AI usage; a workspace key overrides it. ShipFlow runs Claude Opus only,
+ * their AI usage; a workspace key overrides it. MetroFlow runs Claude Opus only,
  * so a saved key is verified to have Opus access.
  */
 export const profileRouter = createTRPCRouter({
@@ -50,7 +50,7 @@ export const profileRouter = createTRPCRouter({
   getAiKeyStatus: protectedProcedure.query(async ({ ctx }) => {
     const user = await ctx.prisma.user.findUnique({
       where: { id: ctx.session.user.id },
-      select: { anthropicApiKeyEnc: true, aiKeyEnabled: true },
+      select: { anthropicApiKeyEnc: true, openRouterApiKeyEnc: true, aiKeyEnabled: true },
     });
     const enc = user?.anthropicApiKeyEnc;
     let masked: string | null = null;
@@ -61,9 +61,20 @@ export const profileRouter = createTRPCRouter({
         masked = "••••";
       }
     }
+    const orEnc = user?.openRouterApiKeyEnc;
+    let orMasked: string | null = null;
+    if (orEnc) {
+      try {
+        orMasked = maskKey(decryptSecret(orEnc));
+      } catch {
+        orMasked = "••••";
+      }
+    }
     return {
       hasKey: Boolean(enc),
       maskedKey: masked,
+      hasOpenRouterKey: Boolean(orEnc),
+      openRouterMaskedKey: orMasked,
       enabled: user?.aiKeyEnabled ?? true,
     };
   }),
@@ -97,6 +108,25 @@ export const profileRouter = createTRPCRouter({
     await ctx.prisma.user.update({
       where: { id: ctx.session.user.id },
       data: { anthropicApiKeyEnc: null },
+    });
+    return { ok: true };
+  }),
+
+  setOpenRouterKey: protectedProcedure
+    .input(z.object({ apiKey: z.string().min(10) }))
+    .mutation(async ({ ctx, input }) => {
+      const key = input.apiKey.trim();
+      await ctx.prisma.user.update({
+        where: { id: ctx.session.user.id },
+        data: { openRouterApiKeyEnc: encryptSecret(key) },
+      });
+      return { ok: true, maskedKey: maskKey(key) };
+    }),
+
+  removeOpenRouterKey: protectedProcedure.mutation(async ({ ctx }) => {
+    await ctx.prisma.user.update({
+      where: { id: ctx.session.user.id },
+      data: { openRouterApiKeyEnc: null },
     });
     return { ok: true };
   }),

@@ -127,7 +127,7 @@ export default function LoginPage() {
               )}
             </h1>
             <p className="text-[14.5px] text-muted-foreground">
-              {isSignUp ? "Sign up for your ShipFlow AI account" : "Sign in to your ShipFlow AI account"}
+              {isSignUp ? "Sign up for your MetroFlow AI account" : "Sign in to your MetroFlow AI account"}
             </p>
           </div>
 

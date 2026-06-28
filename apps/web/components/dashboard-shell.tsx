@@ -97,7 +97,7 @@ export function DashboardShell({
   };
 
   return (
-    <div className="flex h-screen bg-[#000000] text-foreground flex-col md:flex-row overflow-hidden">
+    <div className="flex h-[100dvh] bg-[#000000] text-foreground flex-col md:flex-row overflow-hidden">
       
       {/* Background Radial Glow in the main layout */}
       <div className="absolute inset-0 pointer-events-none z-0">
@@ -119,7 +119,7 @@ export function DashboardShell({
               </div>
               
               <span className={`font-bold text-white text-[15px] whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 hidden' : 'w-auto opacity-100'}`}>
-                ShipFlow AI
+                MetroFlow AI
               </span>
             </div>
 
@@ -248,7 +248,7 @@ export function DashboardShell({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 relative flex flex-col min-w-0 overflow-y-auto scrollbar-hide bg-[#000000] z-10">
+      <main className="flex-1 relative flex flex-col min-w-0 min-h-0 overflow-y-auto scrollbar-hide bg-[#000000] z-10">
         
         {/* Mobile header */}
         <div className="md:hidden h-14 flex items-center justify-between px-4 border-b border-white/5 bg-[#0a0a0c] sticky top-0 z-40">
@@ -256,7 +256,7 @@ export function DashboardShell({
             <div className="w-7 h-7 rounded-md flex items-center justify-center bg-gradient-to-br from-[#222] to-[#111] border border-white/10">
               <span className="text-[14px] font-extrabold text-[#facc15]">S</span>
             </div>
-            <span className="font-bold text-white">ShipFlow</span>
+            <span className="font-bold text-white">MetroFlow</span>
           </div>
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

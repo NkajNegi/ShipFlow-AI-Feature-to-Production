@@ -9,5 +9,5 @@ export function captureError(
   context?: Record<string, unknown>
 ) {
   // eslint-disable-next-line no-console
-  console.error("[shipflow:error]", context ?? {}, err);
+  console.error("[metroflow:error]", context ?? {}, err);
 }

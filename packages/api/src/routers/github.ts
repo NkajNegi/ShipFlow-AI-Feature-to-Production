@@ -11,7 +11,7 @@ import { enforceRateLimit } from "../lib/ratelimit";
 import { assertRepoLimit } from "../lib/plan";
 
 export const githubRouter = createTRPCRouter({
-  /** URL to send the user to in order to install the ShipFlow GitHub App. */
+  /** URL to send the user to in order to install the MetroFlow GitHub App. */
   getInstallUrl: protectedProcedure
     .input(z.object({ workspaceId: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -216,7 +216,7 @@ export const githubRouter = createTRPCRouter({
       return { queued: true };
     }),
 
-  /** Sync existing open pull requests from GitHub into ShipFlow. */
+  /** Sync existing open pull requests from GitHub into MetroFlow. */
   syncPullRequests: protectedProcedure
     .input(z.object({ workspaceId: z.string() }))
     .mutation(async ({ ctx, input }) => {

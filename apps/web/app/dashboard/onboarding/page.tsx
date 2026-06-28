@@ -30,7 +30,7 @@ export default function OnboardingPage() {
     <div className="flex-1 flex items-center justify-center p-4">
       <Card className="w-full max-w-md border-border bg-card">
         <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-2xl font-bold text-primary">Welcome to ShipFlow AI</CardTitle>
+          <CardTitle className="text-2xl font-bold text-primary">Welcome to MetroFlow AI</CardTitle>
           <CardDescription>Let's set up your first workspace to get started.</CardDescription>
         </CardHeader>
         <CardContent>

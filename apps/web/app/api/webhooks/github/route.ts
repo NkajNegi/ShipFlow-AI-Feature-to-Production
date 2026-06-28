@@ -8,7 +8,7 @@ export const runtime = "nodejs";
  * GitHub webhook listener (Phase 3 + 4).
  *
  * Verifies the payload signature, maps incoming pull_request events to the
- * ShipFlow feature (via "Closes SF-123" task references in the PR body), stores
+ * MetroFlow feature (via "Closes SF-123" task references in the PR body), stores
  * the PR, and kicks off the AI Review Loop.
  *
  * NOTE: In production the review should be offloaded to Inngest to bypass
@@ -66,7 +66,7 @@ async function handlePullRequest(payload: any) {
   const refs = parseTaskRefs(pr?.body);
   if (refs.length === 0) return;
 
-  // Map the first referenced ShipFlow task -> its feature request.
+  // Map the first referenced MetroFlow task -> its feature request.
   const task = await prisma.task.findFirst({
     where: { ref: { in: refs } },
     select: { prd: { select: { featureRequestId: true } } },

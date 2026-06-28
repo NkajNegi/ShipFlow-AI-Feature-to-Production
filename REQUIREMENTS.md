@@ -1,10 +1,10 @@
-# ShipFlow AI - Product Requirements Document (PRD)
+# MetroFlow AI - Product Requirements Document (PRD)
 
 ## Project Overview
-ShipFlow AI is a complete AI-assisted product delivery platform that helps software teams move features from idea to production through a structured workflow. It acts as an "AI Operator for Software Development," managing the entire software delivery lifecycle and replacing pure code-generation with a disciplined, review-driven workflow.
+MetroFlow AI is a complete AI-assisted product delivery platform that helps software teams move features from idea to production through a structured workflow. It acts as an "AI Operator for Software Development," managing the entire software delivery lifecycle and replacing pure code-generation with a disciplined, review-driven workflow.
 
 ## The Core Loop
-The fundamental workflow of ShipFlow is:
+The fundamental workflow of MetroFlow is:
 **Feature Request → Product Thinking → PRD → Tasks → Implementation → Review → Fixes → Approval → Release**
 
 ## Workflow Phases
@@ -21,7 +21,7 @@ The fundamental workflow of ShipFlow is:
   - User stories, Acceptance criteria, Edge cases, and Success metrics
 
 ### Phase 2: Planning
-- **Task Breakdown:** The ShipFlow Agent converts the PRD into actionable engineering tasks.
+- **Task Breakdown:** The MetroFlow Agent converts the PRD into actionable engineering tasks.
 - **Task Management:** Tasks are organized and tracked on a Kanban board.
 - **Approval:** Software teams review and approve the plan to move to the next phase.
 
@@ -64,7 +64,7 @@ To implement the end-to-end workflow technically, we will leverage the **Vercel 
 - **UI & State:** A drag-and-drop Kanban board built with Shadcn UI. Moving a task triggers a tRPC mutation to instantly update the task status in the database.
 
 ### Phase 3 Strategy (Development)
-- **Repo Mapping:** The GitHub App handles authentication. Developers include the ShipFlow Task ID in the PR description (e.g., `Closes SF-123`).
+- **Repo Mapping:** The GitHub App handles authentication. Developers include the MetroFlow Task ID in the PR description (e.g., `Closes SF-123`).
 - **Webhook Sync:** Our GitHub webhook listener reads the PR description and maps the PR in GitHub to the specific PRD and Tasks in our PostgreSQL database.
 
 ### Phase 4 Strategy (AI Review Loop)
@@ -80,7 +80,7 @@ To implement the end-to-end workflow technically, we will leverage the **Vercel 
 ## NEW: Extended Ideas & Platform Upgrades 🚀
 
 ### 1. Advanced DevTool Integrations
-- **Issue Tracking (Internal):** The ShipFlow Kanban board serves as the single source of truth for the MVP. No external sync to Jira/Linear is required at this stage.
+- **Issue Tracking (Internal):** The MetroFlow Kanban board serves as the single source of truth for the MVP. No external sync to Jira/Linear is required at this stage.
 - **Communication:** Slack/Discord bot integrations. The AI sends a message when a PRD is ready for review, or when a PR fails the AI Review Loop.
 - **CI/CD Triggers:** Hook into Vercel/GitHub Actions so the AI Review only runs after the CI build passes.
 
@@ -89,7 +89,7 @@ To implement the end-to-end workflow technically, we will leverage the **Vercel 
 - **Security Vulnerability Scanning:** Deep integration with AI models to detect OWASP top 10 vulnerabilities during the AI Review Loop.
 - **Context-Aware Memory:** The AI remembers past PRDs and codebases, ensuring that new features don't conflict with older ones.
 
-### 3. Modern SaaS Landing Page (Inspired by shipflow.ai/air)
+### 3. Modern SaaS Landing Page (Inspired by metroflow.ai/air)
 The landing page should be built to convert developers and CTOs:
 - **Hero Section:** "Your AI Operator for Software Delivery. Move from idea to production 10x faster with AI-driven PRDs and automated QA."
 - **Interactive Terminal/Dashboard Demo:** A live, Framer-style interactive mock of the AI generating a PRD right on the hero section.
@@ -114,7 +114,7 @@ The platform must support multi-tenant organizations. Each workspace will have i
 GitHub integration via **Octokit** is mandatory. Hardcoded PR data is not allowed. The implementation strategy involves building a GitHub App:
 
 1. **GitHub App Configuration:** Create a GitHub App in Developer Settings to obtain a Private Key and Webhook Secret.
-2. **Installation Flow:** Redirect users to the GitHub App installation URL so they can grant ShipFlow access to specific repositories. Save the `installation_id` to their Workspace in PostgreSQL.
+2. **Installation Flow:** Redirect users to the GitHub App installation URL so they can grant MetroFlow access to specific repositories. Save the `installation_id` to their Workspace in PostgreSQL.
 3. **Repository Sync (Octokit):** Use `@octokit/auth-app` and the `installation_id` to act on behalf of the user, fetching accessible repositories.
 4. **Webhook Listener:** A Next.js API route (`/api/webhooks/github`) to listen for `pull_request` events, validating the payload signature.
 5. **AI Review Trigger (Inngest):** Webhooks trigger an Inngest background job to fetch code diffs via Octokit, pass them alongside the PRD to the AI SDK, and post structured feedback (blocking vs. non-blocking) directly as a PR comment.

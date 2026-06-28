@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 /**
  * GitHub App installation callback.
  *
- * After the user installs the ShipFlow GitHub App, GitHub redirects here with
+ * After the user installs the MetroFlow GitHub App, GitHub redirects here with
  * `installation_id` and the `state` we passed (the workspaceId). We persist the
  * installation on the workspace so Octokit can act on its behalf.
  */

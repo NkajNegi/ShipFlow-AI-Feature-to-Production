@@ -42,6 +42,6 @@ export const EVENTS = {
 } as const;
 
 export const inngest = new Inngest({
-  id: "shipflow-ai",
+  id: "metroflow-ai",
   schemas: new EventSchemas().fromRecord<Events>(),
 });

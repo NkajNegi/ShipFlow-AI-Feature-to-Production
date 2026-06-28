@@ -5,7 +5,7 @@ type Db = PrismaClient;
 
 /**
  * Enforce that a user belongs to a workspace, optionally with one of the given
- * roles. This is the core of ShipFlow's multi-tenant data isolation. Every
+ * roles. This is the core of MetroFlow's multi-tenant data isolation. Every
  * router that reads or writes workspace-scoped data must call this.
  */
 export async function assertWorkspaceMember(

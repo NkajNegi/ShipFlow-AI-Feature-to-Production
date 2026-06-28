@@ -4,7 +4,7 @@ import { HeroOrbitalGraphic } from "@/components/hero-orbital-graphic";
 import Link from "next/link";
 import { Zap, CheckSquare, ShieldCheck, BarChart, Users } from "lucide-react";
 
-/* ShipFlow landing — ported from the UIUX design (gold accent on dark).
+/* MetroFlow landing — ported from the UIUX design (gold accent on dark).
    Accent maps to the theme's --primary (oklch(0.82 0.14 85)). */
 const ACCENT = "var(--primary)";
 const ACCENT_SOFT = "oklch(0.82 0.14 85 / 0.14)";
@@ -69,7 +69,7 @@ export default function MarketingPage() {
             software <span className="sf-shine-text">delivery</span>
           </h1>
           <p className="mt-5 max-w-[500px] text-[18.5px] leading-relaxed text-muted-foreground text-pretty">
-            ShipFlow runs the whole loop — clarifies the request, writes the PRD,
+            MetroFlow runs the whole loop — clarifies the request, writes the PRD,
             plans the tasks, reviews every pull request against the spec, and gates
             the release on a human.
             <br /><br />
@@ -197,7 +197,7 @@ export default function MarketingPage() {
           className="mt-[60px] border-t pt-6 text-[13px] text-muted-foreground/70"
           style={{ borderColor: "oklch(1 0 0 / 0.07)" }}
         >
-          ShipFlow AI — Your AI operator for software delivery · Builder Mode On
+          MetroFlow AI — Your AI operator for software delivery · Builder Mode On
         </div>
       </section>
     </div>

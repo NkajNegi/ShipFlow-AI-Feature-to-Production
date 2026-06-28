@@ -26,7 +26,7 @@ export function MarketingHeader() {
       <Link href="/" className="flex items-center gap-2.5">
         <LogoBadge />
         <span className="text-lg font-extrabold tracking-tight">
-          ShipFlow<span style={{ color: ACCENT }}> AI</span>
+          MetroFlow<span style={{ color: ACCENT }}> AI</span>
         </span>
       </Link>
       <nav className="ml-6 hidden gap-[22px] sm:flex">

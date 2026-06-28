@@ -6,139 +6,133 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { decryptSecret } from "./crypto";
 
-/**
- * Central AI model resolution.
- *
- * Tiering:
- *  - BYOK (a workspace or user supplies their own Anthropic key) → Claude Opus,
- *    the flagship model, billed to their own account.
- *  - Default / free tier → Google Gemini and OpenAI working together. NO
- *    Anthropic key is required here.
- *  - Anthropic is used on the platform only if an optional ANTHROPIC_API_KEY is
- *    set (last-resort fallback) — never required for the free tier.
- *
- * Precedence: workspace key → user key → Gemini → OpenAI → platform Anthropic.
- */
-export const STRONG_MODEL_ID = "claude-3-opus-20240229"; // BYOK (Anthropic)
-export const WEAK_MODEL_ID = "claude-3-haiku-20240307"; // optional platform Anthropic
-export const GEMINI_MODEL_ID = "gemini-1.5-flash"; // free-tier default
-export const OPENAI_MODEL_ID = "gpt-4o-mini"; // free-tier secondary
+export const STRONG_MODEL_ID = "claude-3-opus-20240229"; 
+export const WEAK_MODEL_ID = "claude-3-haiku-20240307"; 
+export const GEMINI_MODEL_ID = "gemini-1.5-flash"; 
+export const OPENAI_MODEL_ID = "gpt-4o-mini"; 
+export const OPENROUTER_MODEL_ID = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
 
-/**
- * Build a model for a single (non-ensemble) call such as the discovery chat.
- * BYOK → Claude Opus. Otherwise the free tier: Gemini, then OpenAI, then an
- * optional platform Anthropic key. Throws a friendly error when nothing is set.
- */
-export function resolveModel(
-  workspaceKeyEnc?: string | null,
-  userKeyEnc?: string | null
-) {
-  const enc = workspaceKeyEnc || userKeyEnc;
+function googleKey() {
+  return process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY;
+}
 
-  // BYOK: user/workspace brought their own Anthropic key → unlock Opus.
-  if (enc) {
-    return createAnthropic({ apiKey: decryptSecret(enc) })(STRONG_MODEL_ID);
+function openRouterProvider(apiKey: string) {
+  return createOpenAI({ apiKey, baseURL: "https://openrouter.ai/api/v1" });
+}
+
+export type AiKeys = {
+  anthropicWorkspace?: string | null;
+  anthropicUser?: string | null;
+  openRouterWorkspace?: string | null;
+  openRouterUser?: string | null;
+};
+
+export function resolveModel(keys: AiKeys) {
+  const antEnc = keys.anthropicWorkspace || keys.anthropicUser;
+  if (antEnc) {
+    return createAnthropic({ apiKey: decryptSecret(antEnc) })(STRONG_MODEL_ID);
   }
 
-  // Free tier: Gemini first, then OpenAI (no Anthropic required).
-  const googleKey =
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY;
-  if (googleKey) {
-    return createGoogleGenerativeAI({ apiKey: googleKey })(GEMINI_MODEL_ID);
+  const orEnc = keys.openRouterWorkspace || keys.openRouterUser;
+  if (orEnc) {
+    return openRouterProvider(decryptSecret(orEnc))(OPENROUTER_MODEL_ID);
+  }
+
+  const gKey = googleKey();
+  if (gKey) {
+    return createGoogleGenerativeAI({ apiKey: gKey })(GEMINI_MODEL_ID);
   }
   if (process.env.OPENAI_API_KEY) {
     return createOpenAI({ apiKey: process.env.OPENAI_API_KEY })(OPENAI_MODEL_ID);
   }
+  if (process.env.OPENROUTER_API_KEY) {
+    return openRouterProvider(process.env.OPENROUTER_API_KEY)(OPENROUTER_MODEL_ID);
+  }
 
-  // Optional last-resort platform Anthropic key.
   if (process.env.ANTHROPIC_API_KEY) {
-    return createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY })(
-      WEAK_MODEL_ID
-    );
+    return createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY })(WEAK_MODEL_ID);
   }
 
   throw new TRPCError({
     code: "PRECONDITION_FAILED",
-    message:
-      "No AI provider configured. Set a platform GOOGLE_GENERATIVE_AI_API_KEY " +
-      "and/or OPENAI_API_KEY, or add your own Anthropic key in your Profile " +
-      "(or Workspace Settings) to enable AI features.",
+    message: "No AI provider configured.",
   });
 }
 
 /**
- * Execute a structured AI workflow using the Ensemble Architecture.
- * - BYOK Tier: Just calls Claude Opus directly.
- * - Free Tier: Orchestrates Gemini and GPT-4o-mini as junior drafts, and 
- *   uses Claude Haiku to synthesize the final structured JSON.
+ * Ensures we strictly get an OpenRouter model (defaulting to the Critic) for the dual-agent review flow.
  */
+export function resolveCriticModel(keys: AiKeys) {
+  const orEnc = keys.openRouterWorkspace || keys.openRouterUser;
+  if (orEnc) {
+    return openRouterProvider(decryptSecret(orEnc))(OPENROUTER_MODEL_ID);
+  }
+  if (process.env.OPENROUTER_API_KEY) {
+    return openRouterProvider(process.env.OPENROUTER_API_KEY)(OPENROUTER_MODEL_ID);
+  }
+  
+  // Fallback to OpenAI if OpenRouter isn't set, as it acts similarly for critic
+  if (process.env.OPENAI_API_KEY) {
+    return createOpenAI({ apiKey: process.env.OPENAI_API_KEY })(OPENAI_MODEL_ID);
+  }
+
+  throw new TRPCError({
+    code: "PRECONDITION_FAILED",
+    message: "No OpenRouter/OpenAI provider configured for the Critic agent.",
+  });
+}
+
 export async function generateEnsembleObject<T>({
-  workspaceKeyEnc,
-  userKeyEnc,
+  keys,
   schema,
   system,
   prompt,
 }: {
-  workspaceKeyEnc?: string | null;
-  userKeyEnc?: string | null;
+  keys: AiKeys;
   schema: z.ZodType<T>;
   system: string;
   prompt: string;
 }): Promise<T> {
-  const enc = workspaceKeyEnc || userKeyEnc;
-
-  // BYOK Tier: Just run Claude Opus directly. No ensemble needed for top-tier.
-  if (enc) {
-    const apiKey = decryptSecret(enc);
+  const antEnc = keys.anthropicWorkspace || keys.anthropicUser;
+  if (antEnc) {
+    const apiKey = decryptSecret(antEnc);
     const provider = createAnthropic({ apiKey });
     const model = provider(STRONG_MODEL_ID);
-
-    const { object } = await generateObject({
-      model,
-      schema,
-      system,
-      prompt,
-    });
+    const { object } = await generateObject({ model, schema, system, prompt });
     return object;
   }
 
-  // Free Tier: Gemini + OpenAI working together. No Anthropic key required.
-  const googleKey =
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY;
-  const openaiKey = process.env.OPENAI_API_KEY;
-
-  if (!googleKey && !openaiKey) {
-    throw new TRPCError({
-      code: "PRECONDITION_FAILED",
-      message:
-        "No AI provider configured. Set a platform GOOGLE_GENERATIVE_AI_API_KEY " +
-        "and/or OPENAI_API_KEY, or add your own Anthropic key in Settings.",
-    });
+  const orEnc = keys.openRouterWorkspace || keys.openRouterUser;
+  if (orEnc) {
+    const apiKey = decryptSecret(orEnc);
+    const provider = openRouterProvider(apiKey);
+    const model = provider(OPENROUTER_MODEL_ID);
+    const { object } = await generateObject({ model, schema, system, prompt });
+    return object;
   }
 
-  const google = googleKey ? createGoogleGenerativeAI({ apiKey: googleKey }) : null;
-  const openai = openaiKey ? createOpenAI({ apiKey: openaiKey }) : null;
+  const gKey = googleKey();
+  const openaiKey = process.env.OPENAI_API_KEY;
+  const openrouterKey = process.env.OPENROUTER_API_KEY;
 
-  // 1. Junior agents draft in parallel (whichever keys are configured).
-  const draftSystem =
-    system +
-    "\n\nProvide a comprehensive draft analysis. Do not output JSON, just your raw observations.";
-  const [geminiDraft, openaiDraft] = await Promise.all([
-    google
-      ? generateText({ model: google(GEMINI_MODEL_ID), system: draftSystem, prompt })
-          .then((r) => r.text)
-          .catch((e) => `[Gemini draft failed: ${e.message}]`)
-      : Promise.resolve(""),
-    openai
-      ? generateText({ model: openai(OPENAI_MODEL_ID), system: draftSystem, prompt })
-          .then((r) => r.text)
-          .catch((e) => `[GPT-4o-mini draft failed: ${e.message}]`)
-      : Promise.resolve(""),
+  if (!gKey && !openaiKey && !openrouterKey) {
+    throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No AI provider configured." });
+  }
+
+  const google = gKey ? createGoogleGenerativeAI({ apiKey: gKey }) : null;
+  const openai = openaiKey ? createOpenAI({ apiKey: openaiKey }) : null;
+  const openrouter = openrouterKey ? openRouterProvider(openrouterKey) : null;
+
+  const draftSystem = system + "\n\nProvide a comprehensive draft analysis. Do not output JSON, just your raw observations.";
+  const draft = (label: string, p: Promise<{ text: string }>) => p.then((r) => r.text).catch((e) => `[${label} draft failed: ${e.message}]`);
+  
+  const [geminiDraft, openaiDraft, openrouterDraft] = await Promise.all([
+    google ? draft("Gemini", generateText({ model: google(GEMINI_MODEL_ID), system: draftSystem, prompt })) : Promise.resolve(""),
+    openai ? draft("GPT-4o-mini", generateText({ model: openai(OPENAI_MODEL_ID), system: draftSystem, prompt })) : Promise.resolve(""),
+    openrouter ? draft("OpenRouter", generateText({ model: openrouter(OPENROUTER_MODEL_ID), system: draftSystem, prompt })) : Promise.resolve(""),
   ]);
 
-  // 2. Senior synthesizer produces the final structured JSON. Prefer Gemini;
-  //    fall back to OpenAI. No Anthropic involved on the free tier.
-  const synthModel = google ? google(GEMINI_MODEL_ID) : openai!(OPENAI_MODEL_ID);
+  const synthModel = google ? google(GEMINI_MODEL_ID) : openai ? openai(OPENAI_MODEL_ID) : openrouter!(OPENROUTER_MODEL_ID);
 
   const synthesisPrompt = `You are the Senior Synthesizer. Fulfill the original request by outputting structured data that matches the schema. Use the Junior Agents' drafts below to catch things you might miss, but you make the final call on correctness.
 
@@ -146,6 +140,7 @@ export async function generateEnsembleObject<T>({
 ${prompt}
 ${geminiDraft ? `\n--- DRAFT (Gemini) ---\n${geminiDraft}` : ""}
 ${openaiDraft ? `\n--- DRAFT (GPT-4o-mini) ---\n${openaiDraft}` : ""}
+${openrouterDraft ? `\n--- DRAFT (OpenRouter) ---\n${openrouterDraft}` : ""}
 `;
 
   const { object } = await generateObject({
@@ -158,53 +153,18 @@ ${openaiDraft ? `\n--- DRAFT (GPT-4o-mini) ---\n${openaiDraft}` : ""}
   return object;
 }
 
-/**
- * Validate an Anthropic key live AND confirm it can access Claude Opus
- * (`claude-opus-4-8`) — MetroFlow runs Opus only, so a key without Opus access
- * is useless here. Uses the Models API (no token cost). Throws a TRPCError with
- * an actionable message on any failure. Safe to call from any router.
- */
 export async function assertAnthropicKeyHasStrongModel(key: string): Promise<void> {
   if (!key.startsWith("sk-ant-")) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message:
-        "Only Anthropic (Claude) API keys are allowed. They start with 'sk-ant-'.",
-    });
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Only Anthropic (Claude) API keys are allowed." });
   }
-
   let res: Response;
   try {
     res = await fetch(`https://api.anthropic.com/v1/models/${STRONG_MODEL_ID}`, {
       headers: { "x-api-key": key, "anthropic-version": "2023-06-01" },
     });
   } catch {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "Could not reach Anthropic to verify the key. Please try again.",
-    });
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Could not reach Anthropic." });
   }
-
   if (res.ok) return;
-
-  if (res.status === 401) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message:
-        "That Anthropic API key was rejected. Please check it and try again.",
-    });
-  }
-  // 403 (no permission) or 404 (model not visible to this key) → no Opus access.
-  if (res.status === 403 || res.status === 404) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message:
-        `This key doesn't have access to Claude Opus (${STRONG_MODEL_ID}). ` +
-        "BYOK requires a key with Opus access.",
-    });
-  }
-  throw new TRPCError({
-    code: "BAD_REQUEST",
-    message: "Could not verify the Anthropic API key. Please try again.",
-  });
+  throw new TRPCError({ code: "BAD_REQUEST", message: "That Anthropic API key was rejected." });
 }

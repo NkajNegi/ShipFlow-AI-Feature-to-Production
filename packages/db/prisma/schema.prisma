@@ -19,6 +19,8 @@ model User {
   // Per-user bring-your-own Anthropic (Claude) key, encrypted at rest. Used as
   // the default for the user's AI usage; a workspace key overrides it when set.
   anthropicApiKeyEnc String? @map("anthropic_api_key_enc") @db.Text
+  // Per-user bring-your-own OpenRouter key, encrypted at rest.
+  openRouterApiKeyEnc String? @map("openrouter_api_key_enc") @db.Text
   // Toggle: when false the saved key is kept but ignored (falls back to the
   // workspace/platform key) so the user can switch BYOK off without deleting it.
   aiKeyEnabled       Boolean @default(true) @map("ai_key_enabled")
@@ -79,7 +81,7 @@ model Verification {
 }
 
 // -----------------------------
-// ShipFlow SaaS Schema
+// MetroFlow SaaS Schema
 // -----------------------------
 model Workspace {
   id        String @id @default(cuid())
@@ -97,6 +99,9 @@ model Workspace {
 
   // Bring-your-own AI key (Anthropic/Claude only), encrypted at rest
   anthropicApiKeyEnc String? @map("anthropic_api_key_enc")
+
+  // Bring-your-own OpenRouter key, encrypted at rest
+  openRouterApiKeyEnc String? @map("openrouter_api_key_enc")
 
   // Notifications (Slack / Discord incoming webhook)
   notifyWebhookUrl String? @map("notify_webhook_url")

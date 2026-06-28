@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 
 /**
  * Slack intake (Phase 1, "any mode"). Configure a Slack slash command (e.g.
- * `/shipflow`) whose Request URL is:
+ * `/metroflow`) whose Request URL is:
  *   https://<app>/api/ingest/slack/<project ingest token>
  * The command text becomes a feature request on that project. Requests are
  * verified with the Slack signing secret (SLACK_SIGNING_SECRET).
@@ -56,7 +56,7 @@ export async function POST(
 
   if (!text) {
     return ephemeral(
-      "Usage: `/shipflow <describe the feature you want>`"
+      "Usage: `/metroflow <describe the feature you want>`"
     );
   }
   if (text.length > 10000) {
@@ -87,6 +87,6 @@ export async function POST(
 
   return ephemeral(
     `✅ Feature request created in *${project.name}* and queued for AI discovery.\n` +
-      `Track it in ShipFlow (id \`${fr.id}\`).`
+      `Track it in MetroFlow (id \`${fr.id}\`).`
   );
 }

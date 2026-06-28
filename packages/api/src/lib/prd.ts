@@ -52,7 +52,10 @@ export async function generatePrdForFeature(featureRequestId: string) {
   try {
     await addStep(runId, "Analyzing the request");
     const prdContent = await generateEnsembleObject({
-      workspaceKeyEnc: featureRequest.project.workspace.anthropicApiKeyEnc,
+      keys: {
+        anthropicWorkspace: featureRequest.project.workspace.anthropicApiKeyEnc,
+        openRouterWorkspace: featureRequest.project.workspace.openRouterApiKeyEnc,
+      },
       schema: PRDSchema,
       system:
         "You are an expert Product Manager and Staff Software Engineer. " +

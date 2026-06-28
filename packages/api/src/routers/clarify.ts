@@ -52,15 +52,20 @@ export const clarifyRouter = createTRPCRouter({
       // Honour the user's BYOK on/off toggle.
       const actingUser = await ctx.prisma.user.findUnique({
         where: { id: ctx.session.user.id },
-        select: { anthropicApiKeyEnc: true, aiKeyEnabled: true },
+        select: { anthropicApiKeyEnc: true, openRouterApiKeyEnc: true, aiKeyEnabled: true },
       });
       const userKey = actingUser?.aiKeyEnabled
         ? actingUser.anthropicApiKeyEnc
         : null;
-      const model = resolveModel(
-        feature.project.workspace.anthropicApiKeyEnc,
-        userKey
-      );
+      const userOrKey = actingUser?.aiKeyEnabled
+        ? actingUser.openRouterApiKeyEnc
+        : null;
+      const model = resolveModel({
+        anthropicWorkspace: feature.project.workspace.anthropicApiKeyEnc,
+        anthropicUser: userKey,
+        openRouterWorkspace: feature.project.workspace.openRouterApiKeyEnc,
+        openRouterUser: userOrKey,
+      });
 
       // Abuse + cost guardrails.
       await enforceRateLimit(ctx.prisma, `ai:clarify:${ctx.session.user.id}`, 15, 60);

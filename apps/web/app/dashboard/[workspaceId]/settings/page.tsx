@@ -90,7 +90,7 @@ export default function SettingsPage({
             <GitBranch className="h-5 w-5" /> GitHub Integration
           </CardTitle>
           <CardDescription>
-            Connect the ShipFlow GitHub App to enable PR sync and the AI review
+            Connect the MetroFlow GitHub App to enable PR sync and the AI review
             loop.
           </CardDescription>
         </CardHeader>
@@ -123,6 +123,7 @@ export default function SettingsPage({
 
       {/* Bring your own AI key */}
       <AiKeyCard workspaceId={workspaceId} />
+      <WorkspaceOpenRouterKeyCard workspaceId={workspaceId} />
 
       {/* Billing */}
       <Card className="border-border">
@@ -662,7 +663,7 @@ function AiKeyCard({ workspaceId }: { workspaceId: string }) {
         </CardTitle>
         <CardDescription>
           Use a workspace Anthropic (Claude) API key so AI usage is billed here.
-          This overrides each member’s personal key. ShipFlow runs Claude Opus
+          This overrides each member’s personal key. MetroFlow runs Claude Opus
           only, so the key must have access to{" "}
           <code className="text-primary">claude-opus-4-8</code> (verified on
           save). Keys start with{" "}
@@ -723,6 +724,99 @@ function AiKeyCard({ workspaceId }: { workspaceId: string }) {
         {invalidFormat && (
           <p className="text-sm text-red-400">
             Only Anthropic keys are allowed (must start with sk-ant-).
+          </p>
+        )}
+        {save.error && (
+          <p className="text-sm text-red-400">{save.error.message}</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function WorkspaceOpenRouterKeyCard({ workspaceId }: { workspaceId: string }) {
+  const status = trpc.workspace.getAiKeyStatus.useQuery({ workspaceId });
+  const utils = trpc.useUtils();
+  const [apiKey, setApiKey] = useState("");
+
+  const save = trpc.workspace.setOpenRouterKey.useMutation({
+    onSuccess: () => {
+      setApiKey("");
+      utils.workspace.getAiKeyStatus.invalidate({ workspaceId });
+    },
+  });
+  const remove = trpc.workspace.removeOpenRouterKey.useMutation({
+    onSuccess: () => utils.workspace.getAiKeyStatus.invalidate({ workspaceId }),
+  });
+
+  const invalidFormat = apiKey.length > 0 && !apiKey.trim().startsWith("sk-or-v1-");
+
+  return (
+    <Card className="border-border">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <KeyRound className="h-5 w-5 text-primary" /> OpenRouter Provider Key (BYOK)
+        </CardTitle>
+        <CardDescription>
+          Use a workspace OpenRouter API key so AI usage (like critic review) is billed here.
+          This overrides each member’s personal key. Keys typically start with{" "}
+          <code className="text-primary">sk-or-v1-</code> and are stored encrypted.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {status.isLoading ? (
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        ) : status.data?.hasOpenRouterKey ? (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-emerald-400">
+              <CheckCircle2 className="h-5 w-5" />
+              <span className="text-sm">
+                Using your key{" "}
+                <code className="text-muted-foreground">
+                  {status.data.openRouterMaskedKey}
+                </code>
+              </span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={remove.isPending}
+              onClick={() => remove.mutate({ workspaceId })}
+            >
+              {remove.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-2 h-4 w-4" />
+              )}
+              Remove
+            </Button>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Currently using the platform OpenRouter key. Add your own to control cost.
+          </p>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Input
+            type="password"
+            placeholder="sk-or-v1-..."
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            className="font-mono"
+          />
+          <Button
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            disabled={!apiKey.trim() || invalidFormat || save.isPending}
+            onClick={() => save.mutate({ workspaceId, apiKey: apiKey.trim() })}
+          >
+            {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {status.data?.hasOpenRouterKey ? "Replace key" : "Save key"}
+          </Button>
+        </div>
+        {invalidFormat && (
+          <p className="text-sm text-red-400">
+            OpenRouter keys typically start with sk-or-v1-.
           </p>
         )}
         {save.error && (

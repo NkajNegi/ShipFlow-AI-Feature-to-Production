@@ -90,7 +90,10 @@ export async function runReadinessCheck(
 
     await addStep(runId, "Assessing production readiness with AI");
     const object = await generateEnsembleObject({
-      workspaceKeyEnc: feature.project.workspace.anthropicApiKeyEnc,
+      keys: {
+        anthropicWorkspace: feature.project.workspace.anthropicApiKeyEnc,
+        openRouterWorkspace: feature.project.workspace.openRouterApiKeyEnc,
+      },
       schema: ReadinessSchema,
       system:
         "You are a senior engineering + QA lead making a go/no-go release " +

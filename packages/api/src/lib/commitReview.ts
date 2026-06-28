@@ -39,20 +39,27 @@ export const CommitReviewSchema = z.object({
 
 export type CommitReviewResult = z.infer<typeof CommitReviewSchema>;
 
-export async function generateCommitReview(args: {
+export async function generateCommitReview({
+  message,
+  diff,
+  keys,
+}: {
   message: string;
   diff: string;
-  workspaceKeyEnc?: string | null;
-  userKeyEnc?: string | null;
+  keys: {
+    anthropicWorkspace?: string | null;
+    anthropicUser?: string | null;
+    openRouterWorkspace?: string | null;
+    openRouterUser?: string | null;
+  };
 }): Promise<CommitReviewResult> {
-  const diff =
-    args.diff.length > 60_000
-      ? args.diff.slice(0, 60_000) + "\n...[diff truncated]..."
-      : args.diff;
+  const truncatedDiff =
+    diff.length > 60_000
+      ? diff.slice(0, 60_000) + "\n...[diff truncated]..."
+      : diff;
 
   return generateEnsembleObject({
-    workspaceKeyEnc: args.workspaceKeyEnc,
-    userKeyEnc: args.userKeyEnc,
+    keys,
     schema: CommitReviewSchema,
     system:
       "You are a meticulous Staff Engineer reviewing a single Git commit. " +
@@ -116,13 +123,15 @@ export async function runCommitReview(
 
     // Per-user key is the default; the workspace key overrides it when set.
     let userKeyEnc: string | null = null;
+    let userOrKeyEnc: string | null = null;
     if (cr.requestedById) {
       const user = await prisma.user.findUnique({
         where: { id: cr.requestedById },
-        select: { anthropicApiKeyEnc: true, aiKeyEnabled: true },
+        select: { anthropicApiKeyEnc: true, openRouterApiKeyEnc: true, aiKeyEnabled: true },
       });
       // Honour the user's BYOK on/off toggle.
       userKeyEnc = user?.aiKeyEnabled ? (user.anthropicApiKeyEnc ?? null) : null;
+      userOrKeyEnc = user?.aiKeyEnabled ? (user.openRouterApiKeyEnc ?? null) : null;
     }
 
     const [owner, repo] = cr.repository.fullName.split("/") as [string, string];
@@ -139,8 +148,12 @@ export async function runCommitReview(
     const result = await generateCommitReview({
       message: cr.message,
       diff,
-      workspaceKeyEnc: workspace.anthropicApiKeyEnc,
-      userKeyEnc,
+      keys: {
+        anthropicWorkspace: workspace.anthropicApiKeyEnc,
+        anthropicUser: userKeyEnc,
+        openRouterWorkspace: workspace.openRouterApiKeyEnc,
+        openRouterUser: userOrKeyEnc,
+      }
     });
 
     await prisma.commitReview.update({

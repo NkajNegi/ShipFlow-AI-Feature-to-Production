@@ -36,6 +36,7 @@ export default function ProfilePage() {
 
       <ProfileCard />
       <UserAiKeyCard />
+      <UserOpenRouterKeyCard />
     </div>
   );
 }
@@ -211,7 +212,7 @@ function UserAiKeyCard() {
         <div className="flex items-start gap-2 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">
           <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
           <span className="text-muted-foreground">
-            ShipFlow runs <span className="text-primary font-medium">Claude
+            MetroFlow runs <span className="text-primary font-medium">Claude
             Opus</span> only (high-tier models). Your key must have access to{" "}
             <code className="text-primary">claude-opus-4-8</code> — we verify
             this when you save it.
@@ -311,6 +312,101 @@ function UserAiKeyCard() {
         {invalidFormat && (
           <p className="text-sm text-red-400">
             Only Anthropic keys are allowed (must start with sk-ant-).
+          </p>
+        )}
+        {save.error && (
+          <p className="text-sm text-red-400">{save.error.message}</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function UserOpenRouterKeyCard() {
+  const status = trpc.profile.getAiKeyStatus.useQuery();
+  const utils = trpc.useUtils();
+  const [apiKey, setApiKey] = useState("");
+
+  const save = trpc.profile.setOpenRouterKey.useMutation({
+    onSuccess: () => {
+      setApiKey("");
+      utils.profile.getAiKeyStatus.invalidate();
+    },
+  });
+  const remove = trpc.profile.removeOpenRouterKey.useMutation({
+    onSuccess: () => utils.profile.getAiKeyStatus.invalidate(),
+  });
+
+  const invalidFormat =
+    apiKey.length > 0 && !apiKey.trim().startsWith("sk-or-v1-");
+
+  return (
+    <Card className="border-border">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <KeyRound className="h-5 w-5 text-primary" /> Use your own OpenRouter key
+        </CardTitle>
+        <CardDescription>
+          Add your own OpenRouter API key so AI usage (like critic review) is billed to your
+          account. Stored encrypted.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {status.isLoading ? (
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        ) : status.data?.hasOpenRouterKey ? (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-emerald-400">
+                <CheckCircle2 className="h-5 w-5" />
+                <span className="text-sm">
+                  Using your key{" "}
+                  <code className="text-muted-foreground">
+                    {status.data.openRouterMaskedKey}
+                  </code>
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={remove.isPending}
+                onClick={() => remove.mutate()}
+              >
+                {remove.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-2 h-4 w-4" />
+                )}
+                Remove
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            No personal OpenRouter key set — your workspace or the platform key is used.
+          </p>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Input
+            type="password"
+            placeholder="sk-or-v1-..."
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            className="font-mono"
+          />
+          <Button
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            disabled={!apiKey.trim() || invalidFormat || save.isPending}
+            onClick={() => save.mutate({ apiKey: apiKey.trim() })}
+          >
+            {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {status.data?.hasOpenRouterKey ? "Replace key" : "Save key"}
+          </Button>
+        </div>
+        {invalidFormat && (
+          <p className="text-sm text-red-400">
+            OpenRouter keys typically start with sk-or-v1-.
           </p>
         )}
         {save.error && (

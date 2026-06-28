@@ -214,7 +214,7 @@ function ProjectCard({ project, workspaceId }: { project: any; workspaceId: stri
   -d '{"token":"${project.ingestToken}","title":"...","context":"...","source":"EMAIL"}'`}</pre>
             <p className="text-muted-foreground pt-2">
               <span className="font-medium">Slack:</span> create a slash command
-              (e.g. <code className="text-primary">/shipflow</code>) with this
+              (e.g. <code className="text-primary">/metroflow</code>) with this
               Request URL — the command text becomes a feature request:
             </p>
             <code className="block break-all rounded bg-background border border-border p-2">

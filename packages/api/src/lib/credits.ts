@@ -17,11 +17,11 @@ export async function consumeAiCreditIfPlatform(
 ): Promise<void> {
   const ws = await prisma.workspace.findUnique({
     where: { id: workspaceId },
-    select: { anthropicApiKeyEnc: true },
+    select: { anthropicApiKeyEnc: true, openRouterApiKeyEnc: true },
   });
 
-  // BYOK: the user pays Anthropic directly, so don't spend a platform credit.
-  if (ws?.anthropicApiKeyEnc) return;
+  // BYOK: the user pays their own API provider directly, so don't spend a platform credit.
+  if (ws?.anthropicApiKeyEnc || ws?.openRouterApiKeyEnc) return;
 
   const res = await prisma.workspace.updateMany({
     where: { id: workspaceId, aiReviewCredits: { gt: 0 } },

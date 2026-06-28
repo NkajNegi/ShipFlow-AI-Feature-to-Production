@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ShipFlow AI",
+  title: "MetroFlow AI",
   description: "Your AI Operator for Software Delivery",
 };
 

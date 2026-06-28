@@ -2,8 +2,8 @@ import Link from "next/link";
 import { ChevronRight, Terminal, BookOpen, GitPullRequest, Rocket, ShieldCheck, Zap, Search, ArrowLeft, ArrowRight, ListTree } from "lucide-react";
 
 export const metadata = {
-  title: "Documentation - ShipFlow AI",
-  description: "Learn how to use ShipFlow AI, the AI operator for software delivery.",
+  title: "Documentation - MetroFlow AI",
+  description: "Learn how to use MetroFlow AI, the AI operator for software delivery.",
 };
 
 export default function DocsPage() {
@@ -76,10 +76,10 @@ export default function DocsPage() {
 
           <article className="prose prose-invert prose-p:text-muted-foreground prose-headings:text-white max-w-none">
             <h1 id="introduction" className="text-4xl font-extrabold tracking-tight mb-4">
-              Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#c084fc] to-[#60a5fa]">ShipFlow AI</span>
+              Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#c084fc] to-[#60a5fa]">MetroFlow AI</span>
             </h1>
             <p className="text-lg leading-relaxed mb-8 text-white/80">
-              ShipFlow AI is not just a code generator—it is a fully autonomous <strong>AI Operator</strong> for your software delivery lifecycle. It sits in your codebase, clarifies requirements, writes Product Requirements Documents (PRDs), plans engineering tasks, and stringently reviews pull requests before they hit production.
+              MetroFlow AI is not just a code generator—it is a fully autonomous <strong>AI Operator</strong> for your software delivery lifecycle. It sits in your codebase, clarifies requirements, writes Product Requirements Documents (PRDs), plans engineering tasks, and stringently reviews pull requests before they hit production.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-12">
@@ -87,13 +87,13 @@ export default function DocsPage() {
                 <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
                    <Terminal className="h-5 w-5 text-[#c084fc]" /> Developer First
                 </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">ShipFlow integrates natively with GitHub. It comments on PRs, requests changes, and enforces architectural standards just like a Senior Staff Engineer.</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">MetroFlow integrates natively with GitHub. It comments on PRs, requests changes, and enforces architectural standards just like a Senior Staff Engineer.</p>
               </div>
               <div className="p-6 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent hover:border-[#4ade80]/50 transition-colors">
                 <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
                    <ShieldCheck className="h-5 w-5 text-[#4ade80]" /> Spec-Driven
                 </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">Everything starts with a PRD. ShipFlow generates the spec from your rough ideas, and ensures every line of code written strictly adheres to it.</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">Everything starts with a PRD. MetroFlow generates the spec from your rough ideas, and ensures every line of code written strictly adheres to it.</p>
               </div>
             </div>
 
@@ -102,7 +102,7 @@ export default function DocsPage() {
             <h2 id="quickstart" className="text-2xl font-bold mb-4 flex items-center gap-3">
               <Zap className="h-6 w-6 text-[#facc15]" /> Quickstart
             </h2>
-            <p className="mb-6">Get up and running with ShipFlow AI in less than two minutes. Follow these steps to connect your workspace.</p>
+            <p className="mb-6">Get up and running with MetroFlow AI in less than two minutes. Follow these steps to connect your workspace.</p>
             
             <div className="space-y-6">
               <div className="pl-6 border-l-2 border-white/10 relative">
@@ -114,16 +114,16 @@ export default function DocsPage() {
               <div className="pl-6 border-l-2 border-white/10 relative">
                 <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-[#111] border-2 border-[#c084fc]" />
                 <h3 className="text-lg font-bold text-white mb-2">2. Install the GitHub App</h3>
-                <p className="text-sm text-muted-foreground mb-4">Navigate to your workspace settings and click <em>Install GitHub App</em>. Select the repositories you want ShipFlow to operate on.</p>
+                <p className="text-sm text-muted-foreground mb-4">Navigate to your workspace settings and click <em>Install GitHub App</em>. Select the repositories you want MetroFlow to operate on.</p>
                 <div className="bg-[#111] border border-white/10 rounded-lg p-4 font-mono text-sm text-[#4ade80]">
-                  $ shipflow connect --repo my-org/my-repo
+                  $ metroflow connect --repo my-org/my-repo
                 </div>
               </div>
               
               <div className="pl-6 border-l-2 border-transparent relative">
                 <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-[#111] border-2 border-[#c084fc]" />
                 <h3 className="text-lg font-bold text-white mb-2">3. Write your first idea</h3>
-                <p className="text-sm text-muted-foreground mb-4">Go to the Projects tab and submit a rough feature idea. Watch as ShipFlow clarifies it and drafts a technical PRD!</p>
+                <p className="text-sm text-muted-foreground mb-4">Go to the Projects tab and submit a rough feature idea. Watch as MetroFlow clarifies it and drafts a technical PRD!</p>
               </div>
             </div>
 
@@ -132,7 +132,7 @@ export default function DocsPage() {
                <div>
                  <strong className="block mb-2 text-[16px] text-[#c084fc]">Pro Tip: Issue Invocation</strong>
                  <p className="text-[14px] text-white/80 leading-relaxed">
-                   You can invoke ShipFlow directly from a GitHub issue by commenting <code className="bg-black/50 text-[#c084fc] px-1.5 py-0.5 rounded border border-[#c084fc]/20 font-mono text-xs">@shipflow-ai plan this</code>. The AI will instantly read the issue context and begin drafting a PRD directly in your dashboard.
+                   You can invoke MetroFlow directly from a GitHub issue by commenting <code className="bg-black/50 text-[#c084fc] px-1.5 py-0.5 rounded border border-[#c084fc]/20 font-mono text-xs">@metroflow-ai plan this</code>. The AI will instantly read the issue context and begin drafting a PRD directly in your dashboard.
                  </p>
                </div>
             </div>
@@ -140,14 +140,14 @@ export default function DocsPage() {
             <hr className="border-white/10 my-12" />
 
             <h2 id="the-loop" className="text-2xl font-bold mb-4">The AI Loop</h2>
-            <p className="mb-8">ShipFlow operates on a deterministic, 5-step autonomous loop. It never jumps straight to code without understanding the requirements first.</p>
+            <p className="mb-8">MetroFlow operates on a deterministic, 5-step autonomous loop. It never jumps straight to code without understanding the requirements first.</p>
             
             <div className="grid grid-cols-1 gap-4">
               <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
                  <div className="w-10 h-10 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(34,197,94,0.15)]">1</div>
                  <div>
                    <strong className="text-white block mb-1 text-lg">Clarify</strong>
-                   <span className="text-sm text-muted-foreground leading-relaxed block">ShipFlow ingests your rough feature request and asks clarifying questions if requirements are ambiguous.</span>
+                   <span className="text-sm text-muted-foreground leading-relaxed block">MetroFlow ingests your rough feature request and asks clarifying questions if requirements are ambiguous.</span>
                  </div>
               </div>
               <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
@@ -161,7 +161,7 @@ export default function DocsPage() {
                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(192,132,252,0.15)]">3</div>
                  <div>
                    <strong className="text-white block mb-1 text-lg">Build</strong>
-                   <span className="text-sm text-muted-foreground leading-relaxed block">ShipFlow (or your human engineers) executes the tasks and opens Pull Requests against the repository.</span>
+                   <span className="text-sm text-muted-foreground leading-relaxed block">MetroFlow (or your human engineers) executes the tasks and opens Pull Requests against the repository.</span>
                  </div>
               </div>
               <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
