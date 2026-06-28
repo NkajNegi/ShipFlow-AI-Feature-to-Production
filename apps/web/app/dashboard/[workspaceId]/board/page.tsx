@@ -9,6 +9,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 
 const COLUMNS = ["TODO", "IN_PROGRESS", "REVIEW", "DONE"];
 const COLUMN_LABELS: Record<string, string> = {
@@ -89,7 +90,11 @@ export default function KanbanBoardPage({ params }: { params: Promise<{ workspac
   });
 
   const deleteTask = trpc.task.delete.useMutation({
-    onSuccess: () => { refetch(); setIsModalOpen(false); }
+    onSuccess: () => {
+      setTaskToDelete(null);
+      setIsModalOpen(false);
+      refetch();
+    },
   });
 
   const createComment = trpc.comment.create.useMutation({
@@ -105,6 +110,7 @@ export default function KanbanBoardPage({ params }: { params: Promise<{ workspac
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<{ id: string; title: string } | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const editingTask = useMemo(() => tasks?.find(t => t.id === editingTaskId) || null, [tasks, editingTaskId]);
 
@@ -463,9 +469,12 @@ export default function KanbanBoardPage({ params }: { params: Promise<{ workspac
           <DialogHeader className="flex flex-row justify-between items-start">
             <DialogTitle className="text-xl">{editingTask ? "Edit Task" : "New Task"}</DialogTitle>
             {editingTask && (
-              <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-500/10 mr-4" onClick={() => {
-                if (confirm("Are you sure you want to delete this task?")) deleteTask.mutate({ taskId: editingTask.id });
-              }}>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-red-500 hover:text-red-600 hover:bg-red-500/10 mr-4" 
+                onClick={() => setTaskToDelete({ id: editingTask.id, title: editingTask.title })}
+              >
                 <Trash2 className="h-4 w-4" />
               </Button>
             )}
@@ -616,6 +625,20 @@ export default function KanbanBoardPage({ params }: { params: Promise<{ workspac
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmModal
+        isOpen={!!taskToDelete}
+        onClose={() => setTaskToDelete(null)}
+        title="Delete Task"
+        description="Are you sure you want to delete this task? This action cannot be undone."
+        confirmText="Delete Task"
+        onConfirm={() => {
+          if (taskToDelete) {
+            deleteTask.mutate({ taskId: taskToDelete.id });
+          }
+        }}
+        isPending={deleteTask.isPending}
+      />
     </div>
   );
 }

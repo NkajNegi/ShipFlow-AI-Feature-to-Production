@@ -9,7 +9,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Plus, Sparkles, Folder, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from "@/components/ui/dialog";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Trash2 } from "lucide-react";
 
 export default function ProjectsPage({ params }: { params: Promise<{ workspaceId: string }> }) {
@@ -107,6 +116,8 @@ function ProjectCard({ project, workspaceId }: { project: any; workspaceId: stri
   const [isFeatureModalOpen, setIsFeatureModalOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [context, setContext] = useState("");
+  const [isDeletingProject, setIsDeletingProject] = useState(false);
+  const [featureToDelete, setFeatureToDelete] = useState<{ id: string; title: string } | null>(null);
 
   const createFeature = trpc.featureRequest.create.useMutation({
     onSuccess: () => {
@@ -125,7 +136,10 @@ function ProjectCard({ project, workspaceId }: { project: any; workspaceId: stri
   });
 
   const deleteFeature = trpc.featureRequest.delete.useMutation({
-    onSuccess: () => refetch(),
+    onSuccess: () => {
+      setFeatureToDelete(null);
+      refetch();
+    },
   });
 
   return (
@@ -177,12 +191,7 @@ function ProjectCard({ project, workspaceId }: { project: any; workspaceId: stri
             variant="ghost" 
             size="sm"
             className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
-            disabled={deleteProject.isPending}
-            onClick={() => {
-              if (confirm("Are you sure you want to delete this project and all its feature requests? This cannot be undone.")) {
-                deleteProject.mutate({ id: project.id });
-              }
-            }}
+            onClick={() => setIsDeletingProject(true)}
           >
             {deleteProject.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
           </Button>
@@ -244,12 +253,7 @@ function ProjectCard({ project, workspaceId }: { project: any; workspaceId: stri
                     variant="outline" 
                     size="sm"
                     className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                    disabled={deleteFeature.isPending && deleteFeature.variables?.id === fr.id}
-                    onClick={() => {
-                      if (confirm("Are you sure you want to delete this feature request and its tasks?")) {
-                        deleteFeature.mutate({ id: fr.id });
-                      }
-                    }}
+                    onClick={() => setFeatureToDelete({ id: fr.id, title: fr.title })}
                   >
                     {deleteFeature.isPending && deleteFeature.variables?.id === fr.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                   </Button>
@@ -259,6 +263,36 @@ function ProjectCard({ project, workspaceId }: { project: any; workspaceId: stri
           </div>
         )}
       </CardContent>
+
+      <ConfirmModal
+        isOpen={isDeletingProject}
+        onClose={() => setIsDeletingProject(false)}
+        title="Delete Project"
+        description="Are you sure you want to delete this project and all its feature requests? This cannot be undone."
+        confirmText="Delete Project"
+        requireInput={project.name}
+        onConfirm={() => deleteProject.mutate({ id: project.id })}
+        isPending={deleteProject.isPending}
+      />
+
+      <ConfirmModal
+        isOpen={!!featureToDelete}
+        onClose={() => setFeatureToDelete(null)}
+        title="Delete Feature Request"
+        description={
+          featureToDelete
+            ? `Are you sure you want to delete the feature request "${featureToDelete.title}" and its tasks?`
+            : ""
+        }
+        confirmText="Delete Feature"
+        requireInput={featureToDelete?.title}
+        onConfirm={() => {
+          if (featureToDelete) {
+            deleteFeature.mutate({ id: featureToDelete.id });
+          }
+        }}
+        isPending={deleteFeature.isPending}
+      />
     </Card>
   );
 }

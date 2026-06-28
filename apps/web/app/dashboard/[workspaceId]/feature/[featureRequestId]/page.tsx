@@ -6,6 +6,7 @@ import { trpc } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import {
   Loader2,
   ArrowLeft,
@@ -941,6 +942,7 @@ function TasksSection({ prd, projectId, onSaved }: { prd: any; projectId: string
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState({ title: "", description: "" });
+  const [taskToDelete, setTaskToDelete] = useState<{ id: string; title: string } | null>(null);
 
   const createTask = trpc.task.create.useMutation({
     onSuccess: () => {
@@ -957,7 +959,10 @@ function TasksSection({ prd, projectId, onSaved }: { prd: any; projectId: string
   });
 
   const deleteTask = trpc.task.delete.useMutation({
-    onSuccess: () => onSaved(),
+    onSuccess: () => {
+      setTaskToDelete(null);
+      onSaved();
+    },
   });
 
   const handleSaveAdd = () => {
@@ -1046,9 +1051,7 @@ function TasksSection({ prd, projectId, onSaved }: { prd: any; projectId: string
                   <Pencil className="h-4 w-4" />
                 </Button>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-400 hover:text-red-500 hover:bg-red-500/10" onClick={() => {
-                  if (confirm("Delete this task?")) {
-                    deleteTask.mutate({ taskId: t.id });
-                  }
+                  setTaskToDelete({ id: t.id, title: t.title });
                 }}>
                   {deleteTask.isPending && deleteTask.variables?.taskId === t.id ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -1064,6 +1067,20 @@ function TasksSection({ prd, projectId, onSaved }: { prd: any; projectId: string
           <p className="text-sm text-muted-foreground">No tasks generated yet. Add one manually or regenerate the PRD.</p>
         )}
       </CardContent>
+
+      <ConfirmModal
+        isOpen={!!taskToDelete}
+        onClose={() => setTaskToDelete(null)}
+        title="Delete Task"
+        description="Are you sure you want to delete this task? This action cannot be undone."
+        confirmText="Delete Task"
+        onConfirm={() => {
+          if (taskToDelete) {
+            deleteTask.mutate({ taskId: taskToDelete.id });
+          }
+        }}
+        isPending={deleteTask.isPending}
+      />
     </Card>
   );
 }

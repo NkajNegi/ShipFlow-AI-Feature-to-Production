@@ -1,9 +1,11 @@
 "use client";
 
 import { use, useState } from "react";
+import { useRouter } from "next/navigation";
 import { trpc } from "@/trpc/client";
 import { RepoLinker } from "@/components/repo-linker";
 import { Button } from "@/components/ui/button";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -278,6 +280,7 @@ function TeamCard({ workspaceId }: { workspaceId: string }) {
   const [inviteRole, setInviteRole] = useState("MEMBER");
   const [link, setLink] = useState("");
   const [copied, setCopied] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<{id: string; name: string} | null>(null);
 
   const refresh = () => {
     members.refetch();
@@ -298,6 +301,7 @@ function TeamCard({ workspaceId }: { workspaceId: string }) {
   const updateRole = trpc.member.updateRole.useMutation({ onSuccess: refresh });
   const removeMember = trpc.member.remove.useMutation({ 
     onSuccess: (data) => {
+      setMemberToRemove(null);
       if (data.isSelf) {
         window.location.href = "/dashboard";
       } else {
@@ -356,11 +360,7 @@ function TeamCard({ workspaceId }: { workspaceId: string }) {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        if (confirm(`Are you sure you want to remove ${m.user.name} from the workspace?`)) {
-                          removeMember.mutate({ memberId: m.id });
-                        }
-                      }}
+                      onClick={() => setMemberToRemove({ id: m.id, name: m.user.name || "Unknown User" })}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -456,6 +456,24 @@ function TeamCard({ workspaceId }: { workspaceId: string }) {
           </div>
         )}
       </CardContent>
+
+      <ConfirmModal
+        isOpen={!!memberToRemove}
+        onClose={() => setMemberToRemove(null)}
+        title="Remove Member"
+        description={
+          memberToRemove
+            ? `Are you sure you want to remove ${memberToRemove.name} from the workspace?`
+            : ""
+        }
+        confirmText="Remove"
+        onConfirm={() => {
+          if (memberToRemove) {
+            removeMember.mutate({ memberId: memberToRemove.id });
+          }
+        }}
+        isPending={removeMember.isPending}
+      />
     </Card>
   );
 }
@@ -716,13 +734,16 @@ function AiKeyCard({ workspaceId }: { workspaceId: string }) {
 }
 
 function DangerZoneCard({ workspaceId }: { workspaceId: string }) {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
   const ws = trpc.workspace.getById.useQuery({ workspaceId });
   const role = (ws.data as any)?.currentUserRole as string | undefined;
   const canManage = role === "ADMIN" || role === "LEAD";
+  const workspaceName = (ws.data as any)?.name || "this workspace";
   const deleteWorkspace = trpc.workspace.delete.useMutation({
     onSuccess: () => {
-      window.location.href = "/dashboard";
-    }
+      router.push("/dashboard");
+    },
   });
 
   if (!canManage) return null;
@@ -740,16 +761,22 @@ function DangerZoneCard({ workspaceId }: { workspaceId: string }) {
       <CardContent>
         <Button 
           variant="destructive"
-          disabled={deleteWorkspace.isPending}
-          onClick={() => {
-            if (confirm("DANGER: Are you absolutely sure you want to permanently delete this workspace and ALL of its data? This action CANNOT be undone.")) {
-              deleteWorkspace.mutate({ id: workspaceId });
-            }
-          }}
+          onClick={() => setIsDeleting(true)}
         >
-          {deleteWorkspace.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Delete Workspace
         </Button>
+        <ConfirmModal
+          isOpen={isDeleting}
+          onClose={() => setIsDeleting(false)}
+          title="Delete Workspace"
+          description="DANGER: Are you absolutely sure you want to permanently delete this workspace and ALL of its data? This action CANNOT be undone."
+          confirmText="Delete Workspace"
+          requireInput={workspaceName}
+          onConfirm={() => {
+            deleteWorkspace.mutate({ id: workspaceId });
+          }}
+          isPending={deleteWorkspace.isPending}
+        />
       </CardContent>
     </Card>
   );

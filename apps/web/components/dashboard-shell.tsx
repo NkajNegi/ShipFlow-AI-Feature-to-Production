@@ -21,6 +21,8 @@ import {
   X
 } from "lucide-react";
 import { signOut } from "@/lib/auth-client";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { Button } from "@/components/ui/button";
 
 type WorkspaceLite = { id: string; name: string };
 
@@ -36,6 +38,8 @@ export function DashboardShell({
   const [open, setOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isSigningOutModalOpen, setIsSigningOutModalOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   // Active workspace = the id in the URL (/dashboard/<id>/...), else the first.
   const parts = pathname.split("/").filter(Boolean); // ["dashboard", "<id>", ...]
@@ -47,11 +51,18 @@ export function DashboardShell({
   const is = (seg: string) => pathname.includes(`/${seg}`);
 
   const handleSignOut = async () => {
+    setIsSigningOut(true);
     await signOut({
       fetchOptions: {
         onSuccess: () => {
+          setIsSigningOut(false);
+          setIsSigningOutModalOpen(false);
           router.push("/login");
         },
+        onError: () => {
+          setIsSigningOut(false);
+          setIsSigningOutModalOpen(false);
+        }
       },
     });
   };
@@ -194,7 +205,7 @@ export function DashboardShell({
             </span>
           </Link>
           <button
-            onClick={handleSignOut}
+            onClick={() => setIsSigningOutModalOpen(true)}
             title={isCollapsed ? "Log out" : undefined}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
           >
@@ -283,7 +294,7 @@ export function DashboardShell({
                   <User className="h-5 w-5 text-muted-foreground" /> Profile
                 </Link>
                 <button
-                  onClick={handleSignOut}
+                  onClick={() => setIsSigningOutModalOpen(true)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
                 >
                   <LogOut className="h-5 w-5 shrink-0" /> Log out
@@ -325,6 +336,17 @@ export function DashboardShell({
           );
         })}
       </nav>
+      {/* Logout Modal */}
+      <ConfirmModal
+        isOpen={isSigningOutModalOpen}
+        onClose={() => setIsSigningOutModalOpen(false)}
+        title="Sign out"
+        description="Are you sure you want to sign out?"
+        confirmText="Sign out"
+        confirmVariant="destructive"
+        onConfirm={handleSignOut}
+        isPending={isSigningOut}
+      />
     </div>
   );
 }
