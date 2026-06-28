@@ -29,8 +29,12 @@ export default function RootLayout({
     <html
       lang="en"
       className={cn("dark font-sans", inter.variable, jetbrainsMono.variable)}
+      suppressHydrationWarning
     >
-      <body className={cn(inter.className, "bg-black text-foreground min-h-screen relative overflow-x-hidden antialiased")}>
+      <body
+        className={cn(inter.className, "bg-black text-foreground min-h-screen relative overflow-x-hidden antialiased")}
+        suppressHydrationWarning
+      >
         {/* Ambient Grid Background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10 bg-black">
           {/* Subtle Dot Matrix */}

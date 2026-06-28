@@ -2,6 +2,7 @@ import { MarketingHeader } from "@/components/marketing-header";
 import { CoreLoop } from "@/components/core-loop";
 import { HeroOrbitalGraphic } from "@/components/hero-orbital-graphic";
 import Link from "next/link";
+import { Zap, CheckSquare, ShieldCheck, BarChart, Users } from "lucide-react";
 
 /* ShipFlow landing — ported from the UIUX design (gold accent on dark).
    Accent maps to the theme's --primary (oklch(0.82 0.14 85)). */
@@ -110,61 +111,67 @@ export default function MarketingPage() {
 
       </section>
 
-      {/* trusted by */}
-      <section className="relative z-[2] mx-auto mt-16 max-w-[1200px] px-7">
-        <p className="text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/55">
-          Trusted by engineering teams
-        </p>
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
-          {["GitHub", "AWS", "Docker", "Kubernetes", "Jenkins", "Terraform", "Prometheus", "Grafana"].map(
-            (name) => (
-              <span
-                key={name}
-                className="text-[15px] font-semibold text-muted-foreground/60 grayscale transition-colors duration-200 hover:text-foreground"
-              >
-                {name}
-              </span>
-            )
-          )}
-        </div>
-      </section>
 
       {/* bottom features */}
       <section className="relative z-[2] mx-auto mt-20 max-w-[1200px] px-7 pb-32">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="p-5 rounded-2xl bg-[#0c0c0c]/80 border border-white/5 shadow-xl glass spotlight-card flex flex-col gap-4">
-            <div className="w-10 h-10 rounded-xl bg-yellow-500/10 text-yellow-500 flex items-center justify-center">⚡</div>
-            <div>
-              <h3 className="text-[13px] font-bold text-white">End-to-end automation</h3>
-              <p className="text-[12px] text-muted-foreground mt-1 leading-snug">From idea to production with human-in-the-loop safety.</p>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
+          {/* Card 1 */}
+          <div className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.04] to-transparent p-6 border border-white/[0.05] hover:border-white/[0.08] transition-colors">
+            <div className="absolute inset-x-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 shadow-[0_0_20px_rgba(234,179,8,0.15)]">
+              <Zap className="h-5 w-5" fill="currentColor" />
+            </div>
+            <div className="flex flex-col gap-1.5 mt-1">
+              <h3 className="text-[14px] font-semibold text-white">End-to-end automation</h3>
+              <p className="text-[13px] leading-[1.6] text-muted-foreground/80">From idea to production with human-in-the-loop safety.</p>
             </div>
           </div>
-          <div className="p-5 rounded-2xl bg-[#0c0c0c]/80 border border-white/5 shadow-xl glass spotlight-card flex flex-col gap-4">
-            <div className="w-10 h-10 rounded-xl bg-green-500/10 text-green-500 flex items-center justify-center">✅</div>
-            <div>
-              <h3 className="text-[13px] font-bold text-white">Spec-driven delivery</h3>
-              <p className="text-[12px] text-muted-foreground mt-1 leading-snug">Every PR is checked against the spec, not assumptions.</p>
+
+          {/* Card 2 */}
+          <div className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.04] to-transparent p-6 border border-white/[0.05] hover:border-white/[0.08] transition-colors">
+            <div className="absolute inset-x-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+              <CheckSquare className="h-5 w-5" fill="currentColor" />
+            </div>
+            <div className="flex flex-col gap-1.5 mt-1">
+              <h3 className="text-[14px] font-semibold text-white">Spec-driven delivery</h3>
+              <p className="text-[13px] leading-[1.6] text-muted-foreground/80">Every PR is checked against the spec, not assumptions.</p>
             </div>
           </div>
-          <div className="p-5 rounded-2xl bg-[#0c0c0c]/80 border border-white/5 shadow-xl glass spotlight-card flex flex-col gap-4">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">🛡️</div>
-            <div>
-              <h3 className="text-[13px] font-bold text-white">Built-in quality gates</h3>
-              <p className="text-[12px] text-muted-foreground mt-1 leading-snug">Automated reviews, tests, security scans, and performance checks.</p>
+
+          {/* Card 3 */}
+          <div className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.04] to-transparent p-6 border border-white/[0.05] hover:border-white/[0.08] transition-colors">
+            <div className="absolute inset-x-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-purple-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]">
+              <ShieldCheck className="h-5 w-5" fill="currentColor" />
+            </div>
+            <div className="flex flex-col gap-1.5 mt-1">
+              <h3 className="text-[14px] font-semibold text-white">Built-in quality gates</h3>
+              <p className="text-[13px] leading-[1.6] text-muted-foreground/80">Automated reviews, tests, security scans, and performance checks.</p>
             </div>
           </div>
-          <div className="p-5 rounded-2xl bg-[#0c0c0c]/80 border border-white/5 shadow-xl glass spotlight-card flex flex-col gap-4">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">📊</div>
-            <div>
-              <h3 className="text-[13px] font-bold text-white">Observability first</h3>
-              <p className="text-[12px] text-muted-foreground mt-1 leading-snug">Real-time insights with built-in dashboards and alerts.</p>
+
+          {/* Card 4 */}
+          <div className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.04] to-transparent p-6 border border-white/[0.05] hover:border-white/[0.08] transition-colors">
+            <div className="absolute inset-x-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.15)]">
+              <BarChart className="h-5 w-5" fill="currentColor" />
+            </div>
+            <div className="flex flex-col gap-1.5 mt-1">
+              <h3 className="text-[14px] font-semibold text-white">Observability first</h3>
+              <p className="text-[13px] leading-[1.6] text-muted-foreground/80">Real-time insights with built-in dashboards and alerts.</p>
             </div>
           </div>
-          <div className="p-5 rounded-2xl bg-[#0c0c0c]/80 border border-white/5 shadow-xl glass spotlight-card flex flex-col gap-4">
-            <div className="w-10 h-10 rounded-xl bg-pink-500/10 text-pink-500 flex items-center justify-center">👥</div>
-            <div>
-              <h3 className="text-[13px] font-bold text-white">Collaborate with confidence</h3>
-              <p className="text-[12px] text-muted-foreground mt-1 leading-snug">Clear handoffs, audit trails, and instant context for your team.</p>
+
+          {/* Card 5 */}
+          <div className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.04] to-transparent p-6 border border-white/[0.05] hover:border-white/[0.08] transition-colors">
+            <div className="absolute inset-x-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-pink-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-pink-500/10 text-pink-400 border border-pink-500/20 shadow-[0_0_20px_rgba(236,72,153,0.15)]">
+              <Users className="h-5 w-5" fill="currentColor" />
+            </div>
+            <div className="flex flex-col gap-1.5 mt-1">
+              <h3 className="text-[14px] font-semibold text-white">Collaborate with confidence</h3>
+              <p className="text-[13px] leading-[1.6] text-muted-foreground/80">Clear handoffs, audit trails, and instant context for your team.</p>
             </div>
           </div>
         </div>
