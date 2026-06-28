@@ -3,14 +3,15 @@ import React from "react";
 type ColorKey = "purple" | "blue" | "pink" | "orange" | "yellow" | "green";
 
 const flowSteps: Array<{ id: number; label: string; icon: string; color: ColorKey }> = [
-  { id: 1, label: "Request", icon: "💬", color: "purple" },
+  { id: 1, label: "Feature Request", icon: "💬", color: "purple" },
   { id: 2, label: "PRD", icon: "📋", color: "purple" },
   { id: 3, label: "Tasks", icon: "📝", color: "blue" },
   { id: 4, label: "Code", icon: "</>", color: "blue" },
   { id: 5, label: "AI Review", icon: "✨", color: "pink" },
   { id: 6, label: "Fixes", icon: "🔧", color: "orange" },
-  { id: 7, label: "Approval", icon: "🛡️", color: "yellow" },
-  { id: 8, label: "Ship", icon: "🚀", color: "green" },
+  { id: 7, label: "Re-Review", icon: "🔄", color: "pink" },
+  { id: 8, label: "Human Approval", icon: "🛡️", color: "yellow" },
+  { id: 9, label: "Ship", icon: "🚀", color: "green" },
 ];
 
 const colorMap: Record<ColorKey, { bg: string; border: string; text: string; glow: string }> = {
@@ -40,7 +41,7 @@ export function CoreLoop() {
 
       {/* Flowchart */}
       <div className="relative flex justify-between items-center mb-16 overflow-x-auto pb-6 scrollbar-hide w-full max-w-full">
-        <div className="flex items-center min-w-[900px] w-full justify-between px-2">
+        <div className="flex items-center min-w-[1100px] w-full justify-between px-2">
           {flowSteps.map((step, index) => {
             const styles = colorMap[step.color];
             return (

@@ -3,7 +3,7 @@
 **Your AI Operator for Software Delivery.** MetroFlow moves features from idea to
 production through a disciplined, review-driven workflow:
 
-> Feature Request → Product Thinking → PRD → Tasks → Implementation → Review → Fixes → Re-Review → Human Approval → Ship
+> Feature Request → PRD → Tasks → Code → AI Review → Fixes → Re-Review → Human Approval → Ship
 
 ## Project Overview
 
@@ -238,4 +238,5 @@ npm run check-types   # type-check
 
 ---
 
-*Builder Mode On · #chaicode*
+*Builder Mode On | iPhone Giveaway Hackathon*
+*#chaicode*
