@@ -5,7 +5,7 @@ const ACCENT = "var(--primary)";
 export function LogoBadge({ size = 26 }: { size?: number }) {
   return (
     <div
-      className="flex items-center justify-center font-extrabold"
+      className="flex items-center justify-center font-extrabold relative overflow-hidden group transition-shadow duration-300"
       style={{
         width: size,
         height: size,
@@ -13,9 +13,11 @@ export function LogoBadge({ size = 26 }: { size?: number }) {
         background: ACCENT,
         color: "oklch(0.13 0 0)",
         fontSize: size * 0.58,
+        boxShadow: `0 0 10px ${ACCENT}80`,
       }}
     >
-      S
+      {/* Animated M */}
+      <span className="relative z-10 animate-pulse transform transition-transform duration-500 group-hover:scale-110">M</span>
     </div>
   );
 }
