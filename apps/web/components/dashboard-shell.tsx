@@ -232,7 +232,7 @@ export function DashboardShell({
 
         {/* Mobile Dropdown Menu (Slide-down) */}
         {mobileMenuOpen && (
-          <div className="md:hidden fixed inset-x-0 top-14 bg-card/95 backdrop-blur-md border-b border-border/50 shadow-xl z-40 p-4 animate-in slide-in-from-top-2 duration-200 space-y-4">
+          <div className="md:hidden fixed top-24 inset-x-6 rounded-2xl bg-[#0c0c0c]/95 backdrop-blur-2xl border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.8)] z-50 p-4 animate-in zoom-in-95 duration-200 space-y-4">
             
             {/* Mobile Workspace Switcher */}
             <div>
@@ -240,7 +240,7 @@ export function DashboardShell({
               <div className="relative">
                 <button
                   onClick={() => setOpen((v) => !v)}
-                  className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-md border border-border/60 bg-background/50 shadow-sm text-sm font-medium"
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] shadow-sm text-sm font-medium"
                 >
                   <span className="truncate">{active?.name ?? "Select workspace"}</span>
                   <ChevronsUpDown className="h-4 w-4 text-muted-foreground shrink-0" />
