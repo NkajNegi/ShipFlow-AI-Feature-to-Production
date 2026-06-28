@@ -39,6 +39,12 @@ export function MarketingHeader() {
         <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
           Pricing
         </Link>
+        <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          Docs
+        </Link>
+        <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          Changelog
+        </Link>
       </nav>
       <div className="ml-auto flex items-center gap-2.5">
         <Link href="/login" className="px-3 py-2 text-sm font-semibold text-foreground/85 hover:text-foreground transition-colors">
@@ -46,8 +52,8 @@ export function MarketingHeader() {
         </Link>
         <Link
           href="/login"
-          className="rounded-[9px] px-4 py-[9px] text-sm font-bold transition-opacity hover:opacity-90"
-          style={{ background: ACCENT, color: "oklch(0.13 0 0)" }}
+          className="rounded-full px-5 py-2 text-sm font-bold transition-all hover:brightness-110 hover:shadow-[0_0_20px_rgba(245,165,36,0.4)]"
+          style={{ background: "#FFC250", color: "#111" }}
         >
           Open app →
         </Link>

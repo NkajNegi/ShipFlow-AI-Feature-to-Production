@@ -8,58 +8,6 @@ const ACCENT_SOFT = "oklch(0.82 0.14 85 / 0.14)";
 const ACCENT_LINE = "oklch(0.82 0.14 85 / 0.38)";
 const ACCENT_GLOW = "oklch(0.82 0.14 85 / 0.22)";
 
-const loopChips = [
-  "Request",
-  "PRD",
-  "Tasks",
-  "Code",
-  "AI Review",
-  "Fixes",
-  "Approval",
-  "Ship",
-];
-
-const orbitIcons = ["📝", "📋", "✅", "🧩", "🔍", "🛠️", "🚀"];
-
-const bento = [
-  {
-    phase: "Phase 1 · 2",
-    title: "Discovery → PRD",
-    desc: "An AI PM clarifies the request, checks for duplicates, then writes a strict PRD: problem, goals, user stories, acceptance criteria, edge cases and success metrics.",
-    span: "span 2",
-  },
-  {
-    phase: "Phase 2",
-    title: "Planning",
-    desc: "The PRD becomes engineering tasks on a drag-and-drop Kanban board your team approves.",
-    span: "span 1",
-  },
-  {
-    phase: "Phase 3",
-    title: "Development",
-    desc: "Connect GitHub. Reference a task (Closes SF-123) in your PR and ShipFlow maps it automatically.",
-    span: "span 1",
-  },
-  {
-    phase: "Phase 4",
-    title: "AI Review Loop",
-    desc: "A QA agent reviews each PR against the PRD, acceptance criteria, security (OWASP Top 10), performance and edge cases — flagging issues as blocking or non-blocking.",
-    span: "span 2",
-  },
-  {
-    phase: "Phase 5",
-    title: "Human Approval & Release",
-    desc: "A command center aggregates the PRD, tasks, PR status and full AI review history. Admins and Leads approve, and only green features ship.",
-    span: "span 3",
-  },
-];
-
-const stats = [
-  { value: "9 steps", label: "From request to shipped, one automated loop" },
-  { value: "OWASP", label: "Every PR checked for the Top 10 + performance" },
-  { value: "100%", label: "Releases gated on a human reviewer" },
-];
-
 export default function MarketingPage() {
   return (
     <div className="relative min-h-screen overflow-hidden text-foreground">
@@ -102,156 +50,117 @@ export default function MarketingPage() {
       {/* header */}
       <MarketingHeader />
 
-      {/* hero */}
-      <section className="relative z-[2] mx-auto max-w-[1000px] px-7 pt-16 text-center">
-        <div
-          className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold"
-          style={{ border: `1px solid ${ACCENT_LINE}`, background: ACCENT_SOFT, color: ACCENT }}
-        >
-          <span
-            className="h-1.5 w-1.5 rounded-full"
-            style={{ background: ACCENT, animation: "sf-glow 1.8s infinite" }}
-          />
-          Idea → Production, on autopilot
-        </div>
-        <h1 className="mx-auto mt-6 max-w-[820px] text-[clamp(40px,8vw,64px)] font-extrabold leading-[1.02] tracking-[-0.035em] text-balance">
-          Your AI operator for
-          <br />
-          software <span className="sf-shine-text">delivery</span>
-        </h1>
-        <p className="mx-auto mt-5 max-w-[600px] text-[18.5px] leading-relaxed text-muted-foreground text-pretty">
-          ShipFlow runs the whole loop — clarifies the request, writes the PRD,
-          plans the tasks, reviews every pull request against the spec, and gates
-          the release on a human. Not a code generator. An operator.
-        </p>
-        <div className="mt-9 flex justify-center gap-3">
-          <Link
-            href="/login"
-            className="rounded-[11px] px-6 py-3.5 text-[15.5px] font-bold transition-opacity hover:opacity-90"
-            style={{ background: ACCENT, color: "oklch(0.13 0 0)" }}
+      {/* hero + showcase */}
+      <section className="relative z-[2] mx-auto mt-20 grid max-w-[1200px] grid-cols-1 items-center gap-10 px-7 lg:grid-cols-2">
+        <div className="text-left">
+          <div
+            className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold"
+            style={{ border: `1px solid ${ACCENT_LINE}`, background: ACCENT_SOFT, color: "#fff" }}
           >
-            Start building free →
-          </Link>
-          <a
-            href="#loop"
-            className="rounded-[11px] px-6 py-3.5 text-[15.5px] font-semibold transition-colors"
-            style={{
-              background: "oklch(0.18 0 0)",
-              color: "oklch(0.92 0 0)",
-              border: "1px solid oklch(1 0 0 / 0.1)",
-            }}
-          >
-            See the workflow
-          </a>
-        </div>
-      </section>
-
-      {/* showcase: orbit */}
-      <section className="relative z-[2] mx-auto mt-14 flex max-w-[1120px] flex-col items-center justify-center gap-7 px-7">
-        <OrbitGraphic />
-      </section>
-
-      {/* core loop */}
-      <section id="loop" className="relative z-[2] mx-auto mt-[72px] max-w-[1100px] px-7 text-center">
-        <div
-          className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground/80"
-          style={{ fontFamily: "var(--font-mono)" }}
-        >
-          The core loop
-        </div>
-        <div className="mt-[18px] flex flex-wrap items-center justify-center gap-2">
-          {loopChips.map((label, i) => (
-            <div key={label} className="flex items-center gap-2">
-              <span
-                className="whitespace-nowrap rounded-full px-[17px] py-[9px] text-[13.5px] font-semibold"
-                style={{
-                  border: `1px solid ${ACCENT_LINE}`,
-                  background: "linear-gradient(160deg, oklch(0.2 0 0), oklch(0.155 0 0))",
-                  color: "oklch(0.92 0 0)",
-                  boxShadow: "0 2px 10px -4px oklch(0 0 0 / 0.6), inset 0 1px 0 oklch(1 0 0 / 0.05)",
-                }}
-              >
-                {label}
-              </span>
-              {i < loopChips.length - 1 && (
-                <span className="text-sm opacity-70" style={{ color: ACCENT }}>→</span>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* bento phases */}
-      <section id="features" className="relative z-[2] mx-auto mt-16 max-w-[1100px] px-7">
-        <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
-          {bento.map((b) => (
-            <div
-              key={b.title}
-              className="relative overflow-hidden rounded-[18px] p-6 md:[grid-column:var(--span)]"
-              style={
-                {
-                  "--span": b.span,
-                  border: "1px solid oklch(1 0 0 / 0.09)",
-                  background: "linear-gradient(165deg, oklch(0.185 0 0), oklch(0.15 0 0))",
-                  boxShadow: "0 20px 50px -30px oklch(0 0 0 / 0.9)",
-                } as React.CSSProperties
-              }
+            <span style={{ color: "#F5A524" }}>✨</span>
+            Idea → Production, on autopilot
+          </div>
+          <h1 className="mt-6 max-w-[580px] text-[clamp(40px,5vw,64px)] font-extrabold leading-[1.02] tracking-[-0.035em] text-balance">
+            Your AI operator for
+            <br />
+            software <span className="sf-shine-text">delivery</span>
+          </h1>
+          <p className="mt-5 max-w-[500px] text-[18.5px] leading-relaxed text-muted-foreground text-pretty">
+            ShipFlow runs the whole loop — clarifies the request, writes the PRD,
+            plans the tasks, reviews every pull request against the spec, and gates
+            the release on a human.
+            <br /><br />
+            <span style={{ color: "#F5A524" }}>Not a code generator. An operator.</span>
+          </p>
+          
+          <div className="mt-9 flex flex-wrap gap-4">
+            <Link
+              href="/login"
+              className="rounded-full px-7 py-3.5 text-[15.5px] font-bold transition-all hover:brightness-110 hover:shadow-[0_0_20px_rgba(245,165,36,0.4)]"
+              style={{ background: "#FFC250", color: "#111" }}
             >
-              <div
-                className="pointer-events-none absolute h-[140px] w-[140px] rounded-full opacity-50"
-                style={{
-                  top: -40,
-                  right: -40,
-                  background: `radial-gradient(circle, ${ACCENT_GLOW}, transparent 70%)`,
-                }}
-              />
-              <div className="relative">
-                <div
-                  className="inline-flex items-center whitespace-nowrap rounded-md px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]"
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    color: ACCENT,
-                    border: `1px solid ${ACCENT_LINE}`,
-                    background: ACCENT_SOFT,
-                  }}
-                >
-                  {b.phase}
-                </div>
-                <div className="mt-3.5 text-[19px] font-bold tracking-[-0.01em]">{b.title}</div>
-                <div className="mt-2 text-[14.5px] leading-relaxed text-muted-foreground">{b.desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* stats */}
-      <section className="relative z-[2] mx-auto mt-[54px] max-w-[1100px] px-7">
-        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
-          {stats.map((s) => (
-            <div
-              key={s.value}
-              className="relative overflow-hidden rounded-2xl p-6"
+              Start building free →
+            </Link>
+            <a
+              href="#loop"
+              className="flex items-center gap-2 rounded-full px-6 py-3.5 text-[15.5px] font-semibold transition-colors"
               style={{
-                border: `1px solid ${ACCENT_LINE}`,
-                background: "linear-gradient(165deg, oklch(0.19 0 0), oklch(0.145 0 0))",
-                boxShadow: "0 20px 50px -30px oklch(0 0 0 / 0.9)",
+                background: "rgba(255,255,255,0.03)",
+                color: "#fff",
+                border: "1px solid rgba(255,255,255,0.1)",
               }}
             >
-              <div
-                className="pointer-events-none absolute h-[120px] w-[120px] rounded-full opacity-45"
-                style={{
-                  bottom: -30,
-                  left: -20,
-                  background: `radial-gradient(circle, ${ACCENT_GLOW}, transparent 70%)`,
-                }}
-              />
-              <div className="relative text-[38px] font-extrabold leading-none tracking-[-0.03em]" style={{ color: ACCENT }}>
-                {s.value}
-              </div>
-              <div className="relative mt-[7px] text-[13.5px] text-muted-foreground">{s.label}</div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+              See the workflow
+            </a>
+          </div>
+
+          <div className="mt-8 flex gap-6 text-sm text-muted-foreground">
+            <span className="flex items-center gap-2"><span className="text-emerald-400">✓</span> No credit card</span>
+            <span className="flex items-center gap-2"><span className="text-purple-400">✓</span> Setup in 2 minutes</span>
+            <span className="flex items-center gap-2"><span className="text-yellow-400">✓</span> Cancel anytime</span>
+          </div>
+        </div>
+
+      </section>
+
+      {/* trusted by */}
+      <section className="relative z-[2] mx-auto mt-24 max-w-[1000px] px-7 text-center">
+        <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mb-8">
+          Trusted by engineering teams
+        </div>
+        <div className="flex flex-wrap justify-center gap-8 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+          <div className="flex items-center gap-2 font-bold text-lg"><svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg> GitHub</div>
+          <div className="flex items-center gap-2 font-bold text-lg">aws</div>
+          <div className="flex items-center gap-2 font-bold text-lg">docker</div>
+          <div className="flex items-center gap-2 font-bold text-lg">kubernetes</div>
+          <div className="flex items-center gap-2 font-bold text-lg">Jenkins</div>
+          <div className="flex items-center gap-2 font-bold text-lg">Terraform</div>
+          <div className="flex items-center gap-2 font-bold text-lg">prometheus</div>
+          <div className="flex items-center gap-2 font-bold text-lg">Grafana</div>
+        </div>
+      </section>
+
+
+
+      {/* bottom features */}
+      <section className="relative z-[2] mx-auto mt-20 max-w-[1200px] px-7 pb-32">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="p-5 rounded-2xl bg-[#0c0c0c]/80 border border-white/5 shadow-xl glass spotlight-card flex flex-col gap-4">
+            <div className="w-10 h-10 rounded-xl bg-yellow-500/10 text-yellow-500 flex items-center justify-center">⚡</div>
+            <div>
+              <h3 className="text-[13px] font-bold text-white">End-to-end automation</h3>
+              <p className="text-[12px] text-muted-foreground mt-1 leading-snug">From idea to production with human-in-the-loop safety.</p>
             </div>
-          ))}
+          </div>
+          <div className="p-5 rounded-2xl bg-[#0c0c0c]/80 border border-white/5 shadow-xl glass spotlight-card flex flex-col gap-4">
+            <div className="w-10 h-10 rounded-xl bg-green-500/10 text-green-500 flex items-center justify-center">✅</div>
+            <div>
+              <h3 className="text-[13px] font-bold text-white">Spec-driven delivery</h3>
+              <p className="text-[12px] text-muted-foreground mt-1 leading-snug">Every PR is checked against the spec, not assumptions.</p>
+            </div>
+          </div>
+          <div className="p-5 rounded-2xl bg-[#0c0c0c]/80 border border-white/5 shadow-xl glass spotlight-card flex flex-col gap-4">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">🛡️</div>
+            <div>
+              <h3 className="text-[13px] font-bold text-white">Built-in quality gates</h3>
+              <p className="text-[12px] text-muted-foreground mt-1 leading-snug">Automated reviews, tests, security scans, and performance checks.</p>
+            </div>
+          </div>
+          <div className="p-5 rounded-2xl bg-[#0c0c0c]/80 border border-white/5 shadow-xl glass spotlight-card flex flex-col gap-4">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">📊</div>
+            <div>
+              <h3 className="text-[13px] font-bold text-white">Observability first</h3>
+              <p className="text-[12px] text-muted-foreground mt-1 leading-snug">Real-time insights with built-in dashboards and alerts.</p>
+            </div>
+          </div>
+          <div className="p-5 rounded-2xl bg-[#0c0c0c]/80 border border-white/5 shadow-xl glass spotlight-card flex flex-col gap-4">
+            <div className="w-10 h-10 rounded-xl bg-pink-500/10 text-pink-500 flex items-center justify-center">👥</div>
+            <div>
+              <h3 className="text-[13px] font-bold text-white">Collaborate with confidence</h3>
+              <p className="text-[12px] text-muted-foreground mt-1 leading-snug">Clear handoffs, audit trails, and instant context for your team.</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -280,55 +189,86 @@ export default function MarketingPage() {
 }
 
 function OrbitGraphic() {
-  const radius = 148;
   return (
-    <div className="relative mx-auto flex aspect-square w-full max-w-[360px] items-center justify-center">
-      <div
-        className="absolute inset-0 rounded-full blur-[8px]"
-        style={{ background: `radial-gradient(circle, ${ACCENT_GLOW}, transparent 62%)` }}
-      />
-      <div className="absolute inset-[8%] rounded-full" style={{ border: "1px dashed oklch(1 0 0 / 0.12)" }} />
-      <div className="absolute inset-[24%] rounded-full" style={{ border: "1px solid oklch(1 0 0 / 0.08)" }} />
+    <div className="relative mx-auto flex h-[500px] w-[500px] items-center justify-center">
+      {/* Background glow flares */}
+      <div className="absolute inset-0 rounded-full blur-[60px]" style={{ background: "radial-gradient(circle, rgba(245,165,36,0.15) 0%, transparent 60%)" }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[300px] rounded-full blur-[80px]" style={{ background: "radial-gradient(ellipse, rgba(157,80,187,0.15) 0%, transparent 60%)" }} />
+      
+      {/* Orbit Rings */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full border border-white/5 opacity-50" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[250px] rounded-full border border-white/10 opacity-40 rotate-12" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[350px] rounded-full border border-[#9D50BB]/30 opacity-30 -rotate-12" />
 
-      {/* rotating ring with nodes */}
-      <div className="absolute inset-[8%]" style={{ animation: "sf-orbit 26s linear infinite" }}>
-        {orbitIcons.map((icon, i) => {
-          const deg = (360 / orbitIcons.length) * i;
-          return (
-            <div
-              key={i}
-              className="absolute left-1/2 top-1/2"
-              style={{ transform: `translate(-50%,-50%) rotate(${deg}deg) translateY(-${radius}px)` }}
-            >
-              <div
-                className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] text-[15px]"
-                style={{
-                  transform: `rotate(${-deg}deg)`,
-                  background: "linear-gradient(160deg, oklch(0.22 0 0), oklch(0.16 0 0))",
-                  border: `1px solid ${ACCENT_LINE}`,
-                  boxShadow: "0 6px 18px -6px oklch(0 0 0 / 0.8)",
-                }}
-              >
-                {icon}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* center hub */}
+      {/* Center S Hub */}
       <div
-        className="relative flex h-24 w-24 items-center justify-center rounded-[24px]"
+        className="relative flex h-[100px] w-[100px] items-center justify-center rounded-[28px] z-10"
         style={{
-          background: "linear-gradient(160deg, var(--primary), oklch(0.7 0.13 70))",
-          boxShadow: `0 0 50px -8px ${ACCENT_GLOW}, inset 0 1px 0 oklch(1 0 0 / 0.3)`,
+          background: "linear-gradient(135deg, #FFC250, #E09000)",
+          boxShadow: "0 0 60px rgba(245,165,36,0.5), inset 0 2px 5px rgba(255,255,255,0.5)",
         }}
       >
-        <div
-          className="absolute inset-0 rounded-[24px]"
-          style={{ border: `2px solid ${ACCENT_LINE}`, animation: "sf-pulse-ring 2.6s ease-out infinite" }}
-        />
-        <span className="text-3xl font-extrabold" style={{ color: "oklch(0.13 0 0)" }}>S</span>
+        <span className="text-[50px] font-extrabold text-black/90">S</span>
+      </div>
+
+      {/* Floating Nodes */}
+      {/* Node 1: Clarify */}
+      <div className="absolute top-[5%] right-[15%] w-[200px] p-3 rounded-2xl bg-[#0c0c0c]/80 backdrop-blur-xl border-t-2 border-t-green-500 border-x border-b border-white/10 shadow-2xl z-20">
+        <div className="flex items-start gap-3">
+          <div className="w-6 h-6 shrink-0 rounded-md bg-green-500/20 text-green-500 flex items-center justify-center text-xs">💬</div>
+          <div>
+            <div className="text-[11px] font-bold text-white">1 Clarify</div>
+            <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight">Understands the request and asks the right questions.</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Node 2: Plan */}
+      <div className="absolute top-[25%] -right-[20%] w-[180px] p-3 rounded-2xl bg-[#0c0c0c]/80 backdrop-blur-xl border-t-2 border-t-purple-500 border-x border-b border-white/10 shadow-2xl z-20">
+        <div className="flex items-start gap-3">
+          <div className="w-6 h-6 shrink-0 rounded-md bg-purple-500/20 text-purple-500 flex items-center justify-center text-xs">📋</div>
+          <div>
+            <div className="text-[11px] font-bold text-white">2 Plan</div>
+            <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight">Creates PRD and breaks it down into tasks.</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Node 3: Build */}
+      <div className="absolute bottom-[40%] -right-[15%] w-[180px] p-3 rounded-2xl bg-[#0c0c0c]/80 backdrop-blur-xl border-t-2 border-t-blue-500 border-x border-b border-white/10 shadow-2xl z-20">
+        <div className="flex items-start gap-3">
+          <div className="w-6 h-6 shrink-0 rounded-md bg-blue-500/20 text-blue-500 flex items-center justify-center text-xs">&lt;/&gt;</div>
+          <div>
+            <div className="text-[11px] font-bold text-white">3 Build</div>
+            <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight">Executes tasks and opens pull requests.</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Node 4: Review */}
+      <div className="absolute bottom-[10%] left-[15%] w-[190px] p-3 rounded-2xl bg-[#0c0c0c]/80 backdrop-blur-xl border-t-2 border-t-yellow-500 border-x border-b border-white/10 shadow-2xl z-20">
+        <div className="flex items-start gap-3">
+          <div className="w-6 h-6 shrink-0 rounded-md bg-yellow-500/20 text-yellow-500 flex items-center justify-center text-xs">🛡️</div>
+          <div>
+            <div className="text-[11px] font-bold text-white">4 Review</div>
+            <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight">Reviews every PR against the spec.</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Node 5: Release */}
+      <div className="absolute top-[35%] -left-[15%] w-[170px] p-3 rounded-2xl bg-[#0c0c0c]/80 backdrop-blur-xl border-t-2 border-t-pink-500 border-x border-b border-white/10 shadow-2xl z-20">
+        <div className="flex items-start gap-3">
+          <div className="w-6 h-6 shrink-0 rounded-md bg-pink-500/20 text-pink-500 flex items-center justify-center text-xs">🚀</div>
+          <div>
+            <div className="text-[11px] font-bold text-white">5 Release</div>
+            <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight">Gates the release and ships.</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute bottom-0 right-0 text-[11px] text-muted-foreground font-mono">
+        The whole loop. <span className="text-[#FFC250]">On autopilot.</span>
       </div>
     </div>
   );

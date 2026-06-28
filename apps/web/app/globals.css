@@ -12,8 +12,8 @@
   --card-foreground: oklch(0.98 0 0);
   --popover: oklch(0.12 0 0);
   --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.98 0 0); /* High contrast white primary */
-  --primary-foreground: oklch(0 0 0); /* Black text on white button */
+  --primary: oklch(0.82 0.16 85); /* Premium Gold */
+  --primary-foreground: oklch(0.12 0 0); /* Dark text on gold button */
   --secondary: oklch(0.18 0 0);
   --secondary-foreground: oklch(0.98 0 0);
   --muted: oklch(0.15 0 0);
@@ -222,16 +222,16 @@
   display: inline-block;
   color: transparent;
   background-image: linear-gradient(
-    100deg,
-    var(--primary) 20%,
-    oklch(0.97 0.05 90) 45%,
-    var(--primary) 70%
+    90deg,
+    #F5A524 0%,
+    #9D50BB 50%,
+    #00F2FE 100%
   );
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: sf-shine 4s linear infinite;
+  animation: sf-shine 6s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
