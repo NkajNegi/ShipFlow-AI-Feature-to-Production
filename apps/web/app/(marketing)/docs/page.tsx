@@ -139,43 +139,71 @@ export default function DocsPage() {
 
             <hr className="border-white/10 my-12" />
 
-            <h2 id="the-loop" className="text-2xl font-bold mb-4">The AI Loop</h2>
-            <p className="mb-8">MetroFlow operates on a deterministic, 5-step autonomous loop. It never jumps straight to code without understanding the requirements first.</p>
+            <h2 id="the-loop" className="text-2xl font-bold mb-4">The Core Loop</h2>
+            <p className="mb-8">The most important part of the product implementation is: <strong>Feature Request → PRD → Tasks → Code → AI Review → Fixes → Re-Review → Human Approval → Ship</strong>. Humans remain the final decision makers.</p>
             
             <div className="grid grid-cols-1 gap-4">
               <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
-                 <div className="w-10 h-10 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(34,197,94,0.15)]">1</div>
+                 <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(168,85,247,0.15)]">1</div>
                  <div>
-                   <strong className="text-white block mb-1 text-lg">Clarify</strong>
-                   <span className="text-sm text-muted-foreground leading-relaxed block">MetroFlow ingests your rough feature request and asks clarifying questions if requirements are ambiguous.</span>
+                   <strong className="text-white block mb-1 text-lg">Feature Request</strong>
+                   <span className="text-sm text-muted-foreground leading-relaxed block">MetroFlow ingests your raw feature request and clarifies missing requirements.</span>
                  </div>
               </div>
               <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
-                 <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(59,130,246,0.15)]">2</div>
+                 <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(168,85,247,0.15)]">2</div>
                  <div>
-                   <strong className="text-white block mb-1 text-lg">Plan</strong>
-                   <span className="text-sm text-muted-foreground leading-relaxed block">Once clarified, it authors a highly technical Product Requirements Document (PRD) and breaks it down into actionable tasks.</span>
+                   <strong className="text-white block mb-1 text-lg">PRD</strong>
+                   <span className="text-sm text-muted-foreground leading-relaxed block">The AI Agent generates a rigorous Product Requirements Document including edge cases and success metrics.</span>
                  </div>
               </div>
               <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
-                 <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(192,132,252,0.15)]">3</div>
+                 <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(59,130,246,0.15)]">3</div>
                  <div>
-                   <strong className="text-white block mb-1 text-lg">Build</strong>
-                   <span className="text-sm text-muted-foreground leading-relaxed block">MetroFlow (or your human engineers) executes the tasks and opens Pull Requests against the repository.</span>
+                   <strong className="text-white block mb-1 text-lg">Tasks</strong>
+                   <span className="text-sm text-muted-foreground leading-relaxed block">The PRD is broken down into engineering tasks and tracked on a Kanban board.</span>
                  </div>
               </div>
               <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
-                 <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(249,115,22,0.15)]">4</div>
+                 <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(59,130,246,0.15)]">4</div>
                  <div>
-                   <strong className="text-white block mb-1 text-lg">Review</strong>
-                   <span className="text-sm text-muted-foreground leading-relaxed block">Every PR is intensely reviewed against the original PRD spec, best practices, and security guidelines.</span>
+                   <strong className="text-white block mb-1 text-lg">Code</strong>
+                   <span className="text-sm text-muted-foreground leading-relaxed block">Developers implement the feature and open a Pull Request linked to the tasks.</span>
                  </div>
               </div>
               <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
                  <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(236,72,153,0.15)]">5</div>
                  <div>
-                   <strong className="text-white block mb-1 text-lg">Release</strong>
-                   <span className="text-sm text-muted-foreground leading-relaxed block">Once the code passes the AI Quality Gates, it is safely merged and released to production.</span>
+                   <strong className="text-white block mb-1 text-lg">AI Review</strong>
+                   <span className="text-sm text-muted-foreground leading-relaxed block">The QA Agent reviews the code against the PRD, categorizing issues as Blocking or Non-blocking.</span>
+                 </div>
+              </div>
+              <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
+                 <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(249,115,22,0.15)]">6</div>
+                 <div>
+                   <strong className="text-white block mb-1 text-lg">Fixes</strong>
+                   <span className="text-sm text-muted-foreground leading-relaxed block">If blocking issues are found, the feature is sent back to the developer to implement fixes.</span>
+                 </div>
+              </div>
+              <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
+                 <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(236,72,153,0.15)]">7</div>
+                 <div>
+                   <strong className="text-white block mb-1 text-lg">Re-Review</strong>
+                   <span className="text-sm text-muted-foreground leading-relaxed block">The QA Agent performs another code review cycle until the feature is ready.</span>
+                 </div>
+              </div>
+              <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
+                 <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(234,179,8,0.15)]">8</div>
+                 <div>
+                   <strong className="text-white block mb-1 text-lg">Human Approval</strong>
+                   <span className="text-sm text-muted-foreground leading-relaxed block">A human reviewer verifies the PRD, tasks, PR, and AI review history, then approves the release.</span>
+                 </div>
+              </div>
+              <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
+                 <div className="w-10 h-10 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(34,197,94,0.15)]">9</div>
+                 <div>
+                   <strong className="text-white block mb-1 text-lg">Ship</strong>
+                   <span className="text-sm text-muted-foreground leading-relaxed block">The approved feature is safely merged and released to production.</span>
                  </div>
               </div>
             </div>
