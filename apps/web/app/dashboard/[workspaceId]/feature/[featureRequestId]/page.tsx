@@ -700,6 +700,7 @@ function PrdSection({
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({
+    assumptions: (content.assumptions ?? []).join("\n"),
     problemStatement: content.problemStatement ?? "",
     goals: (content.goals ?? []).join("\n"),
     nonGoals: (content.nonGoals ?? []).join("\n"),
@@ -726,6 +727,7 @@ function PrdSection({
     update.mutate({
       prdId: prd.id,
       content: {
+        assumptions: toLines(draft.assumptions),
         problemStatement: draft.problemStatement,
         goals: toLines(draft.goals),
         nonGoals: toLines(draft.nonGoals),
@@ -768,6 +770,11 @@ function PrdSection({
         {editing ? (
           <div className="space-y-4">
             <EditField
+              label="AI Assumptions"
+              value={draft.assumptions}
+              onChange={(v) => setDraft({ ...draft, assumptions: v })}
+            />
+            <EditField
               label="Problem statement"
               value={draft.problemStatement}
               onChange={(v) => setDraft({ ...draft, problemStatement: v })}
@@ -805,6 +812,7 @@ function PrdSection({
           </div>
         ) : (
           <>
+            <BulletSection title="AI Assumptions" items={content.assumptions} />
             <Section title="Problem">
               <p className="text-muted-foreground">{content.problemStatement}</p>
             </Section>
