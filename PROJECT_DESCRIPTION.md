@@ -326,3 +326,50 @@ AI applications often suffer from prompt injection or cross-tenant data leakage 
 ### 5. Infinite Loop Guardrails (GitHub Webhooks)
 When an AI reviews code and posts a comment on a Pull Request, that comment triggers another GitHub webhook, which could cause the AI to review its own comment in an infinite loop.
 - **Implementation**: The webhook handler at `/api/webhooks/github` explicitly filters out events triggered by the `[bot]` account. The AI only responds to actual human commits and human PR updates, ensuring execution limits and API budgets are protected.
+
+---
+
+## 13. Monetization & SaaS Pricing Model (Razorpay)
+
+MetroFlow AI is structured as a multi-tenant B2B SaaS, monetized via **Razorpay** subscriptions. The billing architecture is deeply integrated into the PostgreSQL schema at the `Workspace` level.
+
+### Tiered Access & AI Credits
+1. **Free Tier**: Workspaces start on a `FREE` plan, granting them a baseline of AI Review Credits (e.g., 20 free reviews) and limited user seats.
+2. **Pro Tier (`PRO`)**: Upgrading to Pro unlocks unlimited PRD generations, unlimited Kanban tasks, and higher thresholds for AI Review Credits.
+3. **Credit Burn Rate**: Because AI Code Review on massive Git Diffs consumes significant LLM tokens (Claude 3.5 Sonnet is expensive), every PR review deducts a credit from the workspace's `aiReviewCredits` balance.
+
+### "Bring Your Own Key" (BYOK)
+To accommodate enterprise users with massive codebases who exceed the Pro tier limits, the platform supports BYOK.
+- Users can input their own Anthropic or OpenRouter API keys.
+- These keys are encrypted at rest (`anthropicApiKeyEnc`) inside PostgreSQL.
+- When BYOK is enabled, the platform routes AI SDK requests using the tenant's API key, completely bypassing the internal credit limit system.
+
+---
+
+## 14. Comprehensive Environment Variables Checklist
+
+To fully self-host or develop on this monorepo, a wide array of secrets must be configured across different service domains. Here is the master list of required `.env` variables:
+
+### Database & Auth
+- `DATABASE_URL`: Connection string to your PostgreSQL instance (e.g., Supabase, Neon).
+- `BETTER_AUTH_SECRET`: A secure 32+ character random string for signing JWTs.
+- `BETTER_AUTH_URL`: The canonical URL of the application (e.g., `http://localhost:3001`).
+
+### AI Providers (Vercel AI SDK)
+- `OPENAI_API_KEY`: For quick classification, synthesis drafting, and fallback tasks.
+- `ANTHROPIC_API_KEY`: The primary engine for complex PRD generation and deep code review.
+- `GEMINI_API_KEY` (Optional): For large-context repository analysis.
+
+### Background Jobs
+- `INNGEST_EVENT_KEY`: For sending events. Use `local` during local development.
+- `INNGEST_SIGNING_KEY`: For Vercel to cryptographically verify incoming Inngest webhooks in production.
+
+### GitHub App Integration
+- `GITHUB_APP_ID`: The numeric ID of your created GitHub App.
+- `GITHUB_CLIENT_ID` & `GITHUB_CLIENT_SECRET`: For OAuth handshakes when users link their repos.
+- `GITHUB_WEBHOOK_SECRET`: Used to cryptographically verify that PR webhooks are actually coming from GitHub and not an attacker.
+- `GITHUB_PRIVATE_KEY`: The RSA private key downloaded from GitHub, used to generate short-lived JWTs to post PR comments on behalf of the user.
+
+### Billing (Razorpay)
+- `RAZORPAY_KEY_ID`: Public key for frontend checkout initialization.
+- `RAZORPAY_KEY_SECRET`: Private key for verifying webhook signatures on subscription upgrades.
