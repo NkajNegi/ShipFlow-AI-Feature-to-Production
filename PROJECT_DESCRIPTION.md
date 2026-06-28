@@ -38,98 +38,87 @@ MetroFlow AI was built to solve the most painful, expensive bottlenecks in moder
 
 ---
 
-## 3. The Core Loop (Detailed Workflow)
+## 3. How It Works Under The Hood (Detailed Technical Workflow)
 
-The MetroFlow AI platform operates on a rigid pipeline, ensuring quality at every step:
+The MetroFlow AI platform operates on a rigid, highly orchestrated pipeline. Every step transitions the state machine forward in the database.
 
 ### Step 1: Discovery & Clarification
-- A user submits a raw, unstructured idea (e.g., "Add SSO login").
-- The **AI Product Manager** intercepts the request. Instead of blindly executing, it cross-references the idea against the existing codebase and active feature requests to prevent duplication.
-- If the request is ambiguous, the AI asks follow-up questions to gather missing context.
+- **The Trigger**: A user submits a raw text string to the `/api/trpc/featureRequest.create` endpoint.
+- **The AI Processing**: The system constructs a strict system prompt instructing the AI to act as a rigorous Product Manager. Using the **Vercel AI SDK**, it feeds the input to Claude/OpenAI and attempts to generate a structured JSON object defining the problem.
+- **Deduplication**: Before confirming, the AI uses vector similarity (or traditional keyword matching on smaller workspaces) to query the PostgreSQL database via Prisma, searching for similar active `FeatureRequest` records. If found, it halts and alerts the user.
+- **Clarification Loop**: If the AI determines the prompt lacks sufficient detail (e.g., missing persona definitions or edge cases), it returns a list of clarifying questions instead of a PRD, pausing the state machine in `CLARIFICATION_NEEDED`.
 
 ### Step 2: PRD Generation
-- Once the scope is clear, MetroFlow generates a highly structured Product Requirements Document (PRD).
-- The PRD strictly defines:
-  - **Problem Statement**: Why this feature is being built.
-  - **Goals & Non-Goals**: What is explicitly out of scope to prevent scope creep.
-  - **User Stories**: Persona-driven requirements.
-  - **Acceptance Criteria**: The exact conditions that must be met for the feature to be considered "done".
-  - **Edge Cases & Security**: Foreseen constraints and security considerations.
-  - **Success Metrics**: How the feature's success will be measured post-launch.
+- **The Action**: Once context is sufficient, the user triggers the `generatePRD` mutation.
+- **The Execution**: To avoid Vercel's 10-second serverless timeout limit, this heavy operation is handed off. The tRPC router emits an Inngest event: `inngest.send("prd/generate.requested", { data: { featureId } })`.
+- **The Output**: The Inngest background worker uses `generateObject` with Zod schema validation to force the LLM to output a strict PRD JSON structure:
+  - `problemStatement` (string)
+  - `goals` (string[])
+  - `nonGoals` (string[])
+  - `userStories` (array of persona, want, soThat)
+  - `acceptanceCriteria` (string[])
+- The worker then persists this JSON into the `FeatureRequest` Prisma model and advances the status to `PLANNING`.
 
-### Step 3: Task Planning
-- The PRD is automatically broken down into granular, actionable engineering tasks.
-- These tasks are populated onto an interactive, drag-and-drop Kanban board within the platform.
-- Engineering leads can review, reassign, or modify tasks before development begins.
+### Step 3: Task Planning & Breakdown
+- **Granular Decomposition**: In the same background Inngest step (or a chained event), the AI is prompted with the newly minted PRD and asked to act as an Engineering Manager.
+- **Task Generation**: It generates an array of `Task` objects, complete with titles, descriptions, and estimated story points.
+- **Database Persistence**: These tasks are bulk-inserted into PostgreSQL and mapped to the parent `FeatureRequest`. They immediately appear on the React frontend using `@hello-pangea/dnd` for Kanban visualization.
 
-### Step 4: Development & GitHub Integration
-- A native **GitHub App** seamlessly connects the workspace to the user's repositories.
-- Developers write code as usual. When they open a Pull Request, they reference the MetroFlow task ID (e.g., `Closes SF-123`).
-- MetroFlow listens to GitHub webhooks and automatically maps the PR to the specific feature and task in its database.
+### Step 4: The GitHub Handshake
+- **App Installation**: The workspace administrator installs the MetroFlow GitHub App. The OAuth flow completes via `/api/github/setup`, which stores the `installationId` in the workspace database record.
+- **Webhooks**: MetroFlow listens to the `/api/webhooks/github` endpoint. When a developer opens a Pull Request, GitHub fires a `pull_request.opened` or `pull_request.synchronize` payload.
+- **Mapping**: MetroFlow parses the PR description body for regex patterns like `Closes SF-123` or `Fixes SF-123` (where `SF-123` is the MetroFlow Task ID). It then establishes a relational link in PostgreSQL between the GitHub PR and the MetroFlow Feature.
 
-### Step 5: The AI Review Loop (The Gatekeeper)
-- This is the core technical differentiator. When a PR is opened or updated, MetroFlow triggers an async review job via Inngest.
-- The **AI QA Agent** pulls the raw git diff via Octokit and compares every line of code strictly against the corresponding PRD and Acceptance Criteria.
-- It evaluates the code for:
-  - Business logic alignment (Does it actually do what the PRD asked?)
-  - OWASP Top 10 Security vulnerabilities
-  - Performance bottlenecks
-  - Edge cases defined in the PRD
-- The AI classifies its findings into **BLOCKING** (must be fixed) or **NON_BLOCKING** (suggestions).
-- If blocking issues are found, the AI posts actionable comments directly on the GitHub PR and transitions the feature status to `FIX_NEEDED`. The PR cannot be merged until all blocking issues are resolved.
-- This loop runs automatically on every subsequent git push until the AI gives a passing grade.
+### Step 5: The Autonomous AI Review Loop (The Gatekeeper)
+- **Diff Extraction**: Upon mapping a PR, MetroFlow triggers `inngest.send("review/run.requested")`. The worker uses `@octokit/rest` authenticated as the GitHub App to fetch the raw `git diff` for the Pull Request.
+- **Context Assembly**: The worker pulls the full PRD, Acceptance Criteria, and active Tasks from PostgreSQL.
+- **Prompt Engineering**: It constructs a massive prompt for the LLM: 
+  * "You are a Senior Staff Engineer. Review this git diff. Your sole objective is to verify it fulfills the following PRD. Do not nitpick syntax. Check for business logic alignment, OWASP vulnerabilities, and edge cases. Output an array of issues."
+- **Structured Findings**: The Vercel AI SDK parses the response into an array of `ReviewFinding` objects, each with a severity (`BLOCKING` or `NON_BLOCKING`), a file path, a line number, and a comment body.
+- **Action**: 
+  - If `BLOCKING` issues exist, Octokit posts them as PR comments and uses the `REQUEST_CHANGES` GitHub API to physically block the PR from being merged. The feature status changes to `FIX_NEEDED`.
+  - The loop resets on the next git push.
 
-### Step 6: Human Approval & Shipping
-- Once the AI Review passes, the feature lands in the **Command Center**.
-- The Command Center aggregates the original PRD, the completed tasks, the PR diffs, and the complete AI review history into a single view.
-- Human engineering leads review this aggregated dossier and make the final decision to approve. Only then does the feature state transition to `SHIPPED`.
+### Step 6: Human Approval & The Command Center
+- **The Dossier**: Once the AI review returns 0 blocking issues, the status becomes `IN_REVIEW`.
+- **Human Oversight**: A human lead logs into the MetroFlow dashboard. The UI presents the complete "Dossier": the original PRD, the code diff, the AI's sign-off, and the task checklist.
+- **Final Sign-Off**: The human clicks "Approve". Only then does the database status change to `SHIPPED`, updating the Kanban board and closing the loop.
 
 ---
 
-## 4. Architecture & Data Flow
+## 4. Architecture & Monorepo Structure
 
-MetroFlow AI utilizes a modern, enterprise-grade architecture leveraging a **Turborepo** monorepo. This strictly separates frontend applications from shared backend logic, database schemas, and background jobs.
+MetroFlow AI utilizes an enterprise-grade **Turborepo** monorepo architecture. This strictly isolates frontend concerns from backend business logic and database access.
 
-### Monorepo Structure
+### The Monorepo Map
 ```text
 apps/
-  web/                          (Next.js App Router)
-    ├── app/(marketing)         Landing pages, docs, pricing
-    ├── app/(auth)              BetterAuth authentication flows
-    ├── app/dashboard           SaaS Dashboard, Workspaces, Kanban, Command Center
-    ├── app/api/trpc            tRPC HTTP handler for client-server RPC
-    ├── app/api/inngest         Webhook endpoint for Inngest background jobs
-    ├── app/api/webhooks/github Signature-verified GitHub PR webhooks
-    └── app/api/webhooks/razorpay Razorpay billing webhooks
+  web/                          (Next.js App Router - The Frontend Engine)
+    ├── app/(marketing)         Public pages (Landing, Docs, Pricing)
+    ├── app/(auth)              BetterAuth authentication flows & callbacks
+    ├── app/dashboard           The main SaaS application (Workspaces, Command Center, Kanban)
+    ├── app/api/trpc            The single HTTP endpoint for the tRPC server
+    ├── app/api/inngest         The HTTP webhook endpoint where Inngest executes background jobs
+    ├── app/api/webhooks/github The secure endpoint receiving GitHub App payloads
+    └── app/api/webhooks/razorpay The secure endpoint for billing lifecycle events
 
 packages/
-  api/                          (tRPC Routers + Business Logic)
-    ├── src/routers             tRPC routers (featureRequest, tasks, reviews, etc.)
-    ├── src/lib                 Core logic for AI, GitHub API, Billing, PRD generation
-  db/                           (Database Layer)
-    ├── prisma/schema.prisma    Single source of truth for the database schema
-    └── src/index.ts            Instantiated Prisma Client
-  inngest/                      (Background Job Schemas)
-    ├── client.ts               Inngest client initialization
-    └── functions/              Typed event schemas and workflow definitions
-  ui/                           (Shared UI Primitives)
-    └── src/components          Shadcn UI components and design system tokens
+  api/                          (tRPC Routers & Core Business Logic)
+    ├── src/routers             tRPC routers grouped by domain (featureRequest, tasks, github)
+    ├── src/lib                 Stateless utility functions (Octokit wrappers, AI SDK wrappers)
+  db/                           (The Data Layer)
+    ├── prisma/schema.prisma    The single source of truth for all database tables and relations
+    └── src/index.ts            The singleton Prisma Client exported for all packages to use
+  inngest/                      (Background Job Definitions)
+    ├── client.ts               Inngest client initialization with Event Registry
+    └── functions/              Typed event schemas, workflow definitions, and retry policies
+  ui/                           (Design System & Shared Components)
+    └── src/components          Shadcn UI components, Tailwind configs, and headless primitives
 ```
 
-### Async Data Flow (The Inngest Engine)
-Long-running AI tasks (like reading large Git diffs and generating massive PRDs) cannot be handled in standard serverless HTTP requests due to timeouts. MetroFlow uses **Inngest** for reliable background job execution.
-
-**Example: The PRD Generation Flow**
-1. User clicks "Generate PRD" on the frontend.
-2. The Next.js client calls a tRPC mutation: `prd.generate`.
-3. The tRPC router updates the database status to `GENERATING_PRD` and fires an event: `inngest.send("prd/generate.requested")`. It then immediately returns a `200 OK` to the client.
-4. The Inngest worker picks up the event in the background, invokes the Vercel AI SDK (`generateObject` with Claude/OpenAI), and processes the prompt.
-5. Once generation is complete, the Inngest worker saves the PRD and tasks back to the database via Prisma and updates the status to `PLANNING`.
-6. The frontend, which is polling via TanStack React Query, automatically updates the UI.
-
-### Multi-Tenancy & Security
-- **Workspace Isolation**: The database schema is strictly partitioned by `workspaceId`. 
-- **RBAC (Role-Based Access Control)**: Every tRPC procedure utilizes middleware (`assertWorkspaceMember` / `assertProjectAccess`) to enforce that the user has the correct role (ADMIN, LEAD, or MEMBER) before executing mutations.
+### Multi-Tenancy, Security, & RBAC
+- **Workspace Isolation**: MetroFlow is a B2B SaaS. Every critical model in the Prisma schema (Features, Tasks, Repositories) contains a mandatory `workspaceId` foreign key. 
+- **Role-Based Access Control (RBAC)**: Every tRPC procedure utilizes strict server-side middleware (`assertWorkspaceMember` / `assertProjectAccess`). This middleware queries the `WorkspaceMember` table to enforce that the user has the correct role (`ADMIN`, `LEAD`, or `MEMBER`) before executing queries or mutations, guaranteeing tenant data isolation.
 
 ---
 
