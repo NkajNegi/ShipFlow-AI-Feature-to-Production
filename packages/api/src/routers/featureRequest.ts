@@ -87,4 +87,37 @@ export const featureRequestRouter = createTRPCRouter({
       await ctx.prisma.featureRequest.delete({ where: { id: input.id } });
       return { success: true };
     }),
+
+  update: protectedProcedure
+    .input(z.object({
+      id: z.string(),
+      title: z.string().min(1).max(200).optional(),
+      context: z.string().min(1).max(10000).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const fr = await ctx.prisma.featureRequest.findUnique({
+        where: { id: input.id },
+        include: { project: true },
+      });
+      if (!fr) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const member = await ctx.prisma.workspaceMember.findUnique({
+        where: {
+          userId_workspaceId: { userId: ctx.session.user.id, workspaceId: fr.project.workspaceId },
+        },
+      });
+
+      if (!member) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not a member of this workspace." });
+      }
+
+      await ctx.prisma.featureRequest.update({
+        where: { id: input.id },
+        data: {
+          ...(input.title !== undefined && { title: input.title }),
+          ...(input.context !== undefined && { context: input.context }),
+        },
+      });
+      return { success: true };
+    }),
 });

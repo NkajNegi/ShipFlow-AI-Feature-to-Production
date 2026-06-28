@@ -19,7 +19,10 @@ import {
   HelpCircle,
   Pencil,
   Activity,
+  Trash2,
+  Plus
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 const STATUS_STYLES: Record<string, string> = {
   DISCOVERY: "bg-muted text-muted-foreground",
@@ -117,21 +120,7 @@ export default function FeatureCommandCenter({
         >
           <ArrowLeft className="mr-1 h-4 w-4" /> Back to projects
         </Link>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              {feature.title}
-            </h1>
-            <p className="text-muted-foreground mt-1">{feature.project.name}</p>
-          </div>
-          <span
-            className={`self-start px-3 py-1 rounded-full text-xs font-semibold ${
-              STATUS_STYLES[feature.status] ?? "bg-muted"
-            }`}
-          >
-            {feature.status}
-          </span>
-        </div>
+        <FeatureInfoEditor feature={feature} onSaved={() => featureQuery.refetch()} />
       </div>
 
       {/* Phase 1 — Product Discovery */}
@@ -273,29 +262,8 @@ export default function FeatureCommandCenter({
       {/* PRD + editor */}
       {prd && <PrdSection prd={prd} content={content} onSaved={() => featureQuery.refetch()} />}
 
-      {/* Tasks */}
-      {prd?.tasks?.length ? (
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-lg">Engineering Tasks</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {prd.tasks.map((t: any) => (
-              <div
-                key={t.id}
-                className="flex items-start gap-3 rounded-lg border border-border p-3"
-              >
-                <span className="font-mono text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded">
-                  SF-{t.ref}
-                </span>
-                <div>
-                  <p className="font-medium">{t.title}</p>
-                  <p className="text-sm text-muted-foreground">{t.description}</p>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+      {prd?.tasks?.length || prd ? (
+        <TasksSection prd={prd} projectId={feature.projectId} onSaved={() => featureQuery.refetch()} />
       ) : null}
 
       {/* Pull requests + AI reviews */}
@@ -856,5 +824,208 @@ function BulletSection({ title, items }: { title: string; items?: string[] }) {
         ))}
       </ul>
     </div>
+  );
+}
+
+function FeatureInfoEditor({ feature, onSaved }: { feature: any; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState(feature.title);
+  const [context, setContext] = useState(feature.context || "");
+
+  const update = trpc.featureRequest.update.useMutation({
+    onSuccess: () => {
+      setEditing(false);
+      onSaved();
+    },
+  });
+
+  const save = () => {
+    update.mutate({ id: feature.id, title, context });
+  };
+
+  if (editing) {
+    return (
+      <div className="space-y-4 bg-muted/50 p-4 rounded-lg">
+        <div>
+          <label className="text-sm font-semibold block mb-1">Title</label>
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+        </div>
+        <div>
+          <label className="text-sm font-semibold block mb-1">Context</label>
+          <Textarea className="min-h-32" value={context} onChange={(e) => setContext(e.target.value)} />
+        </div>
+        <div className="flex gap-2 pt-2">
+          <Button size="sm" onClick={save} disabled={update.isPending || !title.trim() || !context.trim()}>
+            {update.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Changes
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight truncate">
+            {feature.title}
+          </h1>
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground shrink-0" onClick={() => {
+            setTitle(feature.title);
+            setContext(feature.context || "");
+            setEditing(true);
+          }}>
+            <Pencil className="h-4 w-4" />
+          </Button>
+        </div>
+        <p className="text-muted-foreground mt-1">{feature.project.name}</p>
+        
+        {feature.context && (
+          <div className="mt-4 p-4 rounded-lg bg-muted/30 text-sm whitespace-pre-wrap text-muted-foreground border border-border/50">
+            {feature.context}
+          </div>
+        )}
+      </div>
+      <span
+        className={`self-start px-3 py-1 rounded-full text-xs font-semibold ${
+          STATUS_STYLES[feature.status] ?? "bg-muted"
+        }`}
+      >
+        {feature.status}
+      </span>
+    </div>
+  );
+}
+
+function TasksSection({ prd, projectId, onSaved }: { prd: any; projectId: string; onSaved: () => void }) {
+  const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState({ title: "", description: "" });
+
+  const createTask = trpc.task.create.useMutation({
+    onSuccess: () => {
+      setAdding(false);
+      onSaved();
+    },
+  });
+
+  const updateTask = trpc.task.update.useMutation({
+    onSuccess: () => {
+      setEditingId(null);
+      onSaved();
+    },
+  });
+
+  const deleteTask = trpc.task.delete.useMutation({
+    onSuccess: () => onSaved(),
+  });
+
+  const handleSaveAdd = () => {
+    createTask.mutate({
+      projectId,
+      prdId: prd.id,
+      title: draft.title,
+      description: draft.description,
+    });
+  };
+
+  const handleSaveEdit = (taskId: string) => {
+    updateTask.mutate({
+      taskId,
+      title: draft.title,
+      description: draft.description,
+    });
+  };
+
+  const startEdit = (t: any) => {
+    setDraft({ title: t.title, description: t.description || "" });
+    setEditingId(t.id);
+    setAdding(false);
+  };
+
+  const startAdd = () => {
+    setDraft({ title: "", description: "" });
+    setAdding(true);
+    setEditingId(null);
+  };
+
+  return (
+    <Card className="border-border">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-lg">Engineering Tasks</CardTitle>
+        <Button variant="outline" size="sm" onClick={startAdd} disabled={adding || editingId !== null}>
+          <Plus className="mr-2 h-4 w-4" /> Add Task
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {adding && (
+          <div className="rounded-lg border border-border p-3 space-y-3 bg-muted/20">
+            <Input placeholder="Task title" value={draft.title} onChange={(e) => setDraft({...draft, title: e.target.value})} />
+            <Textarea placeholder="Task description..." className="min-h-20" value={draft.description} onChange={(e) => setDraft({...draft, description: e.target.value})} />
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleSaveAdd} disabled={createTask.isPending || !draft.title.trim()}>
+                {createTask.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setAdding(false)}>Cancel</Button>
+            </div>
+          </div>
+        )}
+
+        {prd.tasks?.map((t: any) => {
+          if (editingId === t.id) {
+            return (
+              <div key={t.id} className="rounded-lg border border-border p-3 space-y-3 bg-muted/20">
+                <Input placeholder="Task title" value={draft.title} onChange={(e) => setDraft({...draft, title: e.target.value})} />
+                <Textarea placeholder="Task description..." className="min-h-20" value={draft.description} onChange={(e) => setDraft({...draft, description: e.target.value})} />
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => handleSaveEdit(t.id)} disabled={updateTask.isPending || !draft.title.trim()}>
+                    {updateTask.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>Cancel</Button>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div
+              key={t.id}
+              className="group flex items-start justify-between gap-3 rounded-lg border border-border p-3 hover:bg-muted/10 transition-colors"
+            >
+              <div className="flex items-start gap-3">
+                <span className="font-mono text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded mt-0.5">
+                  SF-{t.ref}
+                </span>
+                <div>
+                  <p className="font-medium">{t.title}</p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{t.description}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => startEdit(t)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-400 hover:text-red-500 hover:bg-red-500/10" onClick={() => {
+                  if (confirm("Delete this task?")) {
+                    deleteTask.mutate({ taskId: t.id });
+                  }
+                }}>
+                  {deleteTask.isPending && deleteTask.variables?.taskId === t.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+        {prd.tasks?.length === 0 && !adding && (
+          <p className="text-sm text-muted-foreground">No tasks generated yet. Add one manually or regenerate the PRD.</p>
+        )}
+      </CardContent>
+    </Card>
   );
 }

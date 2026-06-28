@@ -139,6 +139,7 @@ export const taskRouter = createTRPCRouter({
         assigneeId: z.string().optional(),
         dueDate: z.string().optional(),
         labelIds: z.array(z.string()).optional(),
+        prdId: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -161,6 +162,7 @@ export const taskRouter = createTRPCRouter({
           priority: input.priority,
           assigneeId: input.assigneeId,
           projectId: input.projectId,
+          prdId: input.prdId,
           dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
           labels: input.labelIds ? {
             create: input.labelIds.map(id => ({ labelId: id }))
@@ -182,6 +184,7 @@ export const taskRouter = createTRPCRouter({
         position: z.number().optional(),
         dueDate: z.string().nullable().optional(),
         labelIds: z.array(z.string()).optional(),
+        prdId: z.string().nullable().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -219,6 +222,7 @@ export const taskRouter = createTRPCRouter({
           description: input.description,
           assigneeId: input.assigneeId,
           projectId: input.projectId,
+          prdId: input.prdId,
           position: input.position,
           dueDate: input.dueDate !== undefined ? (input.dueDate ? new Date(input.dueDate) : null) : undefined,
           ...(input.labelIds && {
