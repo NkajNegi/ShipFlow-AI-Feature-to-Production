@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Terminal, BookOpen, GitPullRequest, Rocket, ShieldCheck, Zap } from "lucide-react";
+import { ChevronRight, Terminal, BookOpen, GitPullRequest, Rocket, ShieldCheck, Zap, Search, ArrowLeft, ArrowRight, ListTree } from "lucide-react";
 
 export const metadata = {
   title: "Documentation - ShipFlow AI",
@@ -14,11 +14,25 @@ export default function DocsPage() {
       <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-[#c084fc]/5 blur-[150px] rounded-full pointer-events-none z-0" />
       <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] bg-[#60a5fa]/5 blur-[120px] rounded-full pointer-events-none z-0" />
 
-      <div className="relative z-10 mx-auto max-w-[1400px] flex flex-col md:flex-row gap-8 px-6 py-12 pt-32">
+      <div className="relative z-10 mx-auto max-w-[1500px] flex flex-col md:flex-row gap-8 px-6 py-12 pt-32">
         
-        {/* Sidebar Navigation */}
+        {/* Left Sidebar Navigation */}
         <aside className="w-full md:w-64 shrink-0 space-y-8">
           <div className="sticky top-32 bg-[#0c0c0c]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-4 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+            
+            {/* Search Bar */}
+            <div className="relative mb-6">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input 
+                type="text" 
+                placeholder="Search docs..." 
+                className="w-full bg-[#111] border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-[#c084fc]/50 transition-colors"
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-white/5 text-muted-foreground border border-white/10">
+                ⌘K
+              </div>
+            </div>
+
             <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-4 px-2">Getting Started</h3>
             <nav className="space-y-1">
               <Link href="#introduction" className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white bg-gradient-to-r from-[#c084fc]/20 to-transparent border-l-2 border-[#c084fc]">
@@ -57,108 +71,159 @@ export default function DocsPage() {
         {/* Main Content */}
         <main className="flex-1 min-w-0 bg-[#0c0c0c]/60 backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-12 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
-            <span>Docs</span> <ChevronRight className="h-4 w-4" /> <span className="text-white">Introduction</span>
+            <span>Docs</span> <ChevronRight className="h-4 w-4" /> <span className="text-white">Getting Started</span> <ChevronRight className="h-4 w-4" /> <span className="text-white">Introduction</span>
           </div>
 
-          <article className="prose prose-invert prose-p:text-muted-foreground prose-headings:text-white max-w-4xl">
+          <article className="prose prose-invert prose-p:text-muted-foreground prose-headings:text-white max-w-none">
             <h1 id="introduction" className="text-4xl font-extrabold tracking-tight mb-4">
               Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#c084fc] to-[#60a5fa]">ShipFlow AI</span>
             </h1>
-            <p className="text-lg leading-relaxed mb-8">
+            <p className="text-lg leading-relaxed mb-8 text-white/80">
               ShipFlow AI is not just a code generator—it is a fully autonomous <strong>AI Operator</strong> for your software delivery lifecycle. It sits in your codebase, clarifies requirements, writes Product Requirements Documents (PRDs), plans engineering tasks, and stringently reviews pull requests before they hit production.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-12">
-              <div className="p-6 rounded-2xl border border-white/10 bg-white/5">
+              <div className="p-6 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent hover:border-[#c084fc]/50 transition-colors">
                 <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
                    <Terminal className="h-5 w-5 text-[#c084fc]" /> Developer First
                 </h3>
-                <p className="text-sm text-muted-foreground">ShipFlow integrates natively with GitHub. It comments on PRs, requests changes, and enforces architectural standards just like a Senior Staff Engineer.</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">ShipFlow integrates natively with GitHub. It comments on PRs, requests changes, and enforces architectural standards just like a Senior Staff Engineer.</p>
               </div>
-              <div className="p-6 rounded-2xl border border-white/10 bg-white/5">
+              <div className="p-6 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent hover:border-[#4ade80]/50 transition-colors">
                 <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
                    <ShieldCheck className="h-5 w-5 text-[#4ade80]" /> Spec-Driven
                 </h3>
-                <p className="text-sm text-muted-foreground">Everything starts with a PRD. ShipFlow generates the spec from your rough ideas, and ensures every line of code written strictly adheres to it.</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">Everything starts with a PRD. ShipFlow generates the spec from your rough ideas, and ensures every line of code written strictly adheres to it.</p>
               </div>
             </div>
 
             <hr className="border-white/10 my-12" />
 
-            <h2 id="quickstart" className="text-2xl font-bold mb-4">Quickstart</h2>
+            <h2 id="quickstart" className="text-2xl font-bold mb-4 flex items-center gap-3">
+              <Zap className="h-6 w-6 text-[#facc15]" /> Quickstart
+            </h2>
             <p className="mb-6">Get up and running with ShipFlow AI in less than two minutes. Follow these steps to connect your workspace.</p>
             
-            <ol className="space-y-6 list-decimal list-inside text-muted-foreground marker:text-[#c084fc] marker:font-bold">
-              <li className="pl-2">
-                <strong className="text-white">Create a Workspace:</strong> Sign up and create your first workspace. This acts as the command center for your engineering team.
-              </li>
-              <li className="pl-2">
-                <strong className="text-white">Install the GitHub App:</strong> Navigate to your workspace settings and click <em>Install GitHub App</em>. Select the repositories you want ShipFlow to operate on.
-              </li>
-              <li className="pl-2">
-                <strong className="text-white">Write your first idea:</strong> Go to the Projects tab and submit a rough feature idea. Watch as ShipFlow clarifies it and drafts a technical PRD!
-              </li>
-            </ol>
+            <div className="space-y-6">
+              <div className="pl-6 border-l-2 border-white/10 relative">
+                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-[#111] border-2 border-[#c084fc]" />
+                <h3 className="text-lg font-bold text-white mb-2">1. Create a Workspace</h3>
+                <p className="text-sm text-muted-foreground mb-4">Sign up and create your first workspace. This acts as the command center for your engineering team.</p>
+              </div>
+              
+              <div className="pl-6 border-l-2 border-white/10 relative">
+                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-[#111] border-2 border-[#c084fc]" />
+                <h3 className="text-lg font-bold text-white mb-2">2. Install the GitHub App</h3>
+                <p className="text-sm text-muted-foreground mb-4">Navigate to your workspace settings and click <em>Install GitHub App</em>. Select the repositories you want ShipFlow to operate on.</p>
+                <div className="bg-[#111] border border-white/10 rounded-lg p-4 font-mono text-sm text-[#4ade80]">
+                  $ shipflow connect --repo my-org/my-repo
+                </div>
+              </div>
+              
+              <div className="pl-6 border-l-2 border-transparent relative">
+                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-[#111] border-2 border-[#c084fc]" />
+                <h3 className="text-lg font-bold text-white mb-2">3. Write your first idea</h3>
+                <p className="text-sm text-muted-foreground mb-4">Go to the Projects tab and submit a rough feature idea. Watch as ShipFlow clarifies it and drafts a technical PRD!</p>
+              </div>
+            </div>
 
-            <div className="my-8 p-4 rounded-xl border border-[#c084fc]/30 bg-[#c084fc]/10 text-white flex gap-4 items-start">
+            <div className="my-10 p-5 rounded-2xl border border-[#c084fc]/30 bg-gradient-to-br from-[#c084fc]/10 to-transparent text-white flex gap-4 items-start shadow-[inset_0_0_20px_rgba(192,132,252,0.1)]">
                <Zap className="h-6 w-6 text-[#c084fc] shrink-0 mt-0.5" />
                <div>
-                 <strong className="block mb-1 text-[15px]">Pro Tip</strong>
-                 <span className="text-[14px] text-muted-foreground">You can invoke ShipFlow directly from a GitHub issue by commenting <code>@shipflow-ai plan this</code>. The AI will instantly read the issue context and begin drafting a PRD.</span>
+                 <strong className="block mb-2 text-[16px] text-[#c084fc]">Pro Tip: Issue Invocation</strong>
+                 <p className="text-[14px] text-white/80 leading-relaxed">
+                   You can invoke ShipFlow directly from a GitHub issue by commenting <code className="bg-black/50 text-[#c084fc] px-1.5 py-0.5 rounded border border-[#c084fc]/20 font-mono text-xs">@shipflow-ai plan this</code>. The AI will instantly read the issue context and begin drafting a PRD directly in your dashboard.
+                 </p>
                </div>
             </div>
 
             <hr className="border-white/10 my-12" />
 
             <h2 id="the-loop" className="text-2xl font-bold mb-4">The AI Loop</h2>
-            <p className="mb-6">ShipFlow operates on a deterministic, 5-step autonomous loop. It never jumps straight to code without understanding the requirements first.</p>
+            <p className="mb-8">ShipFlow operates on a deterministic, 5-step autonomous loop. It never jumps straight to code without understanding the requirements first.</p>
             
-            <div className="space-y-4">
-              <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-colors flex gap-4">
-                 <div className="w-8 h-8 rounded-lg bg-green-500/20 text-green-400 flex items-center justify-center font-bold text-sm shrink-0">1</div>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
+                 <div className="w-10 h-10 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(34,197,94,0.15)]">1</div>
                  <div>
-                   <strong className="text-white block mb-1">Clarify</strong>
-                   <span className="text-sm">ShipFlow ingests your rough feature request and asks clarifying questions if requirements are ambiguous.</span>
+                   <strong className="text-white block mb-1 text-lg">Clarify</strong>
+                   <span className="text-sm text-muted-foreground leading-relaxed block">ShipFlow ingests your rough feature request and asks clarifying questions if requirements are ambiguous.</span>
                  </div>
               </div>
-              <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-colors flex gap-4">
-                 <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-sm shrink-0">2</div>
+              <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
+                 <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(59,130,246,0.15)]">2</div>
                  <div>
-                   <strong className="text-white block mb-1">Plan</strong>
-                   <span className="text-sm">Once clarified, it authors a highly technical Product Requirements Document (PRD) and breaks it down into actionable tasks.</span>
+                   <strong className="text-white block mb-1 text-lg">Plan</strong>
+                   <span className="text-sm text-muted-foreground leading-relaxed block">Once clarified, it authors a highly technical Product Requirements Document (PRD) and breaks it down into actionable tasks.</span>
                  </div>
               </div>
-              <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-colors flex gap-4">
-                 <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-sm shrink-0">3</div>
+              <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
+                 <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(192,132,252,0.15)]">3</div>
                  <div>
-                   <strong className="text-white block mb-1">Build</strong>
-                   <span className="text-sm">ShipFlow (or your human engineers) executes the tasks and opens Pull Requests against the repository.</span>
+                   <strong className="text-white block mb-1 text-lg">Build</strong>
+                   <span className="text-sm text-muted-foreground leading-relaxed block">ShipFlow (or your human engineers) executes the tasks and opens Pull Requests against the repository.</span>
                  </div>
               </div>
-              <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-colors flex gap-4">
-                 <div className="w-8 h-8 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-sm shrink-0">4</div>
+              <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
+                 <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(249,115,22,0.15)]">4</div>
                  <div>
-                   <strong className="text-white block mb-1">Review</strong>
-                   <span className="text-sm">Every PR is intensely reviewed against the original PRD spec, best practices, and security guidelines.</span>
+                   <strong className="text-white block mb-1 text-lg">Review</strong>
+                   <span className="text-sm text-muted-foreground leading-relaxed block">Every PR is intensely reviewed against the original PRD spec, best practices, and security guidelines.</span>
                  </div>
               </div>
-              <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-colors flex gap-4">
-                 <div className="w-8 h-8 rounded-lg bg-pink-500/20 text-pink-400 flex items-center justify-center font-bold text-sm shrink-0">5</div>
+              <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all hover:-translate-y-0.5 flex gap-5">
+                 <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-400 flex items-center justify-center font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(236,72,153,0.15)]">5</div>
                  <div>
-                   <strong className="text-white block mb-1">Release</strong>
-                   <span className="text-sm">Once the code passes the AI Quality Gates, it is safely merged and released to production.</span>
+                   <strong className="text-white block mb-1 text-lg">Release</strong>
+                   <span className="text-sm text-muted-foreground leading-relaxed block">Once the code passes the AI Quality Gates, it is safely merged and released to production.</span>
                  </div>
               </div>
             </div>
 
-            <div className="mt-16 pt-8 border-t border-white/10 flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">Last updated on May 20, 2025</p>
-              <div className="flex gap-4">
-                <button className="text-sm font-medium text-white hover:text-[#c084fc] transition-colors">Edit this page</button>
-              </div>
+            {/* Pagination */}
+            <div className="mt-16 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <Link href="#" className="w-full sm:w-1/2 p-4 rounded-xl border border-white/10 bg-[#111] hover:bg-white/5 transition-colors flex items-center gap-4 group">
+                <ArrowLeft className="h-5 w-5 text-muted-foreground group-hover:text-white transition-colors" />
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">Previous</div>
+                  <div className="text-sm font-semibold text-white">Installation Guide</div>
+                </div>
+              </Link>
+              <Link href="#" className="w-full sm:w-1/2 p-4 rounded-xl border border-[#c084fc]/30 bg-gradient-to-r from-transparent to-[#c084fc]/10 hover:to-[#c084fc]/20 transition-colors flex items-center justify-end gap-4 group text-right">
+                <div>
+                  <div className="text-xs text-[#c084fc] uppercase font-bold tracking-wider mb-1">Next</div>
+                  <div className="text-sm font-semibold text-white">PRD Generation</div>
+                </div>
+                <ArrowRight className="h-5 w-5 text-[#c084fc] group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+            
+            <div className="mt-8 flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Last updated on May 20, 2025</p>
+              <button className="text-xs font-medium text-white hover:text-[#c084fc] transition-colors underline underline-offset-4">Edit this page on GitHub</button>
             </div>
           </article>
         </main>
+
+        {/* Right TOC Sidebar */}
+        <aside className="hidden xl:block w-56 shrink-0 pt-8">
+          <div className="sticky top-32">
+            <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-white mb-4">
+              <ListTree className="h-4 w-4" /> On this page
+            </h3>
+            <nav className="space-y-2 border-l border-white/10 ml-2 pl-4">
+              <Link href="#introduction" className="block text-sm text-[#c084fc] font-medium hover:text-[#c084fc] transition-colors">
+                Introduction
+              </Link>
+              <Link href="#quickstart" className="block text-sm text-muted-foreground hover:text-white transition-colors">
+                Quickstart
+              </Link>
+              <Link href="#the-loop" className="block text-sm text-muted-foreground hover:text-white transition-colors">
+                The AI Loop
+              </Link>
+            </nav>
+          </div>
+        </aside>
 
       </div>
     </div>
