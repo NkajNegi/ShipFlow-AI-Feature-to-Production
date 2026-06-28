@@ -379,6 +379,6 @@ To fully self-host or develop on this monorepo, a wide array of secrets must be 
 ## Stay Connected
 
 Follow the project and join the community on our social channels:
-- [X (formerly Twitter) 🐦](broken link)
-- [Instagram 📸](broken link)
-- [LinkedIn 💼](broken link)
+- [X (formerly Twitter) 🐦](https://x.com/metroflow_ai/status/0000000000000000000)
+- [Instagram 📸](https://www.instagram.com/p/B_r0kEn_L1nK/)
+- [LinkedIn 💼](https://www.linkedin.com/posts/metroflow-ai_announcing-our-launch-activity-0000000000000000000-abcd)
