@@ -110,6 +110,25 @@ export default function MarketingPage() {
 
       </section>
 
+      {/* trusted by */}
+      <section className="relative z-[2] mx-auto mt-16 max-w-[1200px] px-7">
+        <p className="text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/55">
+          Trusted by engineering teams
+        </p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+          {["GitHub", "AWS", "Docker", "Kubernetes", "Jenkins", "Terraform", "Prometheus", "Grafana"].map(
+            (name) => (
+              <span
+                key={name}
+                className="text-[15px] font-semibold text-muted-foreground/60 grayscale transition-colors duration-200 hover:text-foreground"
+              >
+                {name}
+              </span>
+            )
+          )}
+        </div>
+      </section>
+
       {/* bottom features */}
       <section className="relative z-[2] mx-auto mt-20 max-w-[1200px] px-7 pb-32">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -174,92 +193,6 @@ export default function MarketingPage() {
           ShipFlow AI — Your AI operator for software delivery · Builder Mode On
         </div>
       </section>
-    </div>
-  );
-}
-
-function OrbitGraphic() {
-  return (
-    <div className="relative mx-auto flex h-[500px] w-[500px] items-center justify-center">
-      {/* Background glow flares */}
-      <div className="absolute inset-0 rounded-full blur-[60px]" style={{ background: "radial-gradient(circle, rgba(245,165,36,0.15) 0%, transparent 60%)" }} />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[300px] rounded-full blur-[80px]" style={{ background: "radial-gradient(ellipse, rgba(157,80,187,0.15) 0%, transparent 60%)" }} />
-      
-      {/* Orbit Rings */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full border border-white/5 opacity-50" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[250px] rounded-full border border-white/10 opacity-40 rotate-12" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[350px] rounded-full border border-[#9D50BB]/30 opacity-30 -rotate-12" />
-
-      {/* Center S Hub */}
-      <div
-        className="relative flex h-[100px] w-[100px] items-center justify-center rounded-[28px] z-10"
-        style={{
-          background: "linear-gradient(135deg, #FFC250, #E09000)",
-          boxShadow: "0 0 60px rgba(245,165,36,0.5), inset 0 2px 5px rgba(255,255,255,0.5)",
-        }}
-      >
-        <span className="text-[50px] font-extrabold text-black/90">S</span>
-      </div>
-
-      {/* Floating Nodes */}
-      {/* Node 1: Clarify */}
-      <div className="absolute top-[5%] right-[15%] w-[200px] p-3 rounded-2xl bg-[#0c0c0c]/80 backdrop-blur-xl border-t-2 border-t-green-500 border-x border-b border-white/10 shadow-2xl z-20">
-        <div className="flex items-start gap-3">
-          <div className="w-6 h-6 shrink-0 rounded-md bg-green-500/20 text-green-500 flex items-center justify-center text-xs">💬</div>
-          <div>
-            <div className="text-[11px] font-bold text-white">1 Clarify</div>
-            <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight">Understands the request and asks the right questions.</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Node 2: Plan */}
-      <div className="absolute top-[25%] -right-[20%] w-[180px] p-3 rounded-2xl bg-[#0c0c0c]/80 backdrop-blur-xl border-t-2 border-t-purple-500 border-x border-b border-white/10 shadow-2xl z-20">
-        <div className="flex items-start gap-3">
-          <div className="w-6 h-6 shrink-0 rounded-md bg-purple-500/20 text-purple-500 flex items-center justify-center text-xs">📋</div>
-          <div>
-            <div className="text-[11px] font-bold text-white">2 Plan</div>
-            <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight">Creates PRD and breaks it down into tasks.</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Node 3: Build */}
-      <div className="absolute bottom-[40%] -right-[15%] w-[180px] p-3 rounded-2xl bg-[#0c0c0c]/80 backdrop-blur-xl border-t-2 border-t-blue-500 border-x border-b border-white/10 shadow-2xl z-20">
-        <div className="flex items-start gap-3">
-          <div className="w-6 h-6 shrink-0 rounded-md bg-blue-500/20 text-blue-500 flex items-center justify-center text-xs">&lt;/&gt;</div>
-          <div>
-            <div className="text-[11px] font-bold text-white">3 Build</div>
-            <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight">Executes tasks and opens pull requests.</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Node 4: Review */}
-      <div className="absolute bottom-[10%] left-[15%] w-[190px] p-3 rounded-2xl bg-[#0c0c0c]/80 backdrop-blur-xl border-t-2 border-t-yellow-500 border-x border-b border-white/10 shadow-2xl z-20">
-        <div className="flex items-start gap-3">
-          <div className="w-6 h-6 shrink-0 rounded-md bg-yellow-500/20 text-yellow-500 flex items-center justify-center text-xs">🛡️</div>
-          <div>
-            <div className="text-[11px] font-bold text-white">4 Review</div>
-            <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight">Reviews every PR against the spec.</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Node 5: Release */}
-      <div className="absolute top-[35%] -left-[15%] w-[170px] p-3 rounded-2xl bg-[#0c0c0c]/80 backdrop-blur-xl border-t-2 border-t-pink-500 border-x border-b border-white/10 shadow-2xl z-20">
-        <div className="flex items-start gap-3">
-          <div className="w-6 h-6 shrink-0 rounded-md bg-pink-500/20 text-pink-500 flex items-center justify-center text-xs">🚀</div>
-          <div>
-            <div className="text-[11px] font-bold text-white">5 Release</div>
-            <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight">Gates the release and ships.</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="absolute bottom-0 right-0 text-[11px] text-muted-foreground font-mono">
-        The whole loop. <span className="text-[#FFC250]">On autopilot.</span>
-      </div>
     </div>
   );
 }
