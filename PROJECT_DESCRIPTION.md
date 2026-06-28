@@ -161,3 +161,51 @@ packages/
 - **Linters**: ESLint (@next/eslint-plugin-next)
 - **Formatters**: Prettier
 - **Hosting & CI/CD Deployment**: Vercel
+
+---
+
+## 6. Key Differentiators (MetroFlow vs. The Market)
+
+The current AI developer tools market is saturated with code generators (e.g., GitHub Copilot, Cursor). MetroFlow takes a fundamentally different approach:
+
+1. **Not a Code Generator, an Operator**: MetroFlow does not write your code for you; it ensures the code you write is correct, secure, and solves the business problem. It acts as a gatekeeper, not a typist.
+2. **Spec-Driven Engineering**: Unlike Copilot, which guesses intent based on local context, MetroFlow enforces a top-down approach. The PRD is the absolute source of truth. If the code deviates from the PRD, it is rejected.
+3. **Autonomous Lifecycle Management**: It replaces Jira, Asana, and Linear by maintaining a self-updating Kanban board driven entirely by GitHub PR events and AI status checks.
+4. **Hard Security Blocking**: It actively blocks merges at the GitHub API level if OWASP vulnerabilities are detected, preventing human error from sneaking into production.
+
+---
+
+## 7. Target Audience & Ideal Customer Profile (ICP)
+
+MetroFlow AI is designed for high-velocity software engineering teams that prioritize code quality and architectural integrity over sheer typing speed.
+
+- **Fast-Scaling Startups (Seed to Series B)**: Small teams lacking dedicated QA or Product Management layers can use MetroFlow as their autonomous PM and Staff Engineer to maintain high standards without massive headcount overhead.
+- **Asynchronous & Remote Teams**: Teams distributed across time zones often suffer from multi-day delays on PR reviews. MetroFlow provides instant, high-quality reviews 24/7, unblocking developers immediately.
+- **Open Source Maintainers**: Large open-source projects receive hundreds of PRs from unknown contributors. MetroFlow can automatically review them against the project's standards, drastically reducing the maintainer's burden.
+- **CTOs & Engineering Managers**: Leaders who want a macro-view of feature velocity, AI review metrics, and team health through the centralized Command Center.
+
+---
+
+## 8. Deployment & Infrastructure Architecture
+
+MetroFlow is designed to be highly available and globally distributed, relying heavily on modern serverless paradigms.
+
+### 1. The Frontend & API (Vercel)
+- The entire Next.js application (including the tRPC API and webhook endpoints) is deployed on **Vercel**.
+- This provides Edge caching, zero-configuration CI/CD, and global CDN distribution.
+- Because Vercel serverless functions have execution timeouts (typically 10 to 60 seconds), long-running AI operations cannot be executed synchronously here.
+
+### 2. The Background Engine (Inngest)
+- **Inngest** serves as the backbone for all heavy lifting. It acts as an event-driven queue and background job runner.
+- When Vercel receives a webhook from GitHub or a user action, it pushes an event to Inngest and immediately returns a `200 OK`.
+- Inngest invokes the background functions (which are technically hosted on Vercel but orchestrated by Inngest to bypass standard timeouts via step functions and retries).
+- This ensures that if the LLM API times out or rate-limits, Inngest automatically retries the job with exponential backoff without dropping the GitHub webhook.
+
+### 3. The Database (PostgreSQL & Prisma)
+- Hosted on a managed PostgreSQL provider (e.g., Supabase or Neon).
+- Prisma acts as the connection pooler and ORM, ensuring type-safe queries. The database maintains the strict schema for workspaces, feature requests, tasks, and historical AI reviews.
+
+### 4. The Third-Party Pillars
+- **GitHub App**: Hosted on GitHub, authenticating via rotating private keys to fetch diffs and post comments.
+- **Anthropic / OpenAI**: The LLM APIs executing the `generateObject` calls.
+- **Razorpay**: The payment gateway handling subscription webhooks and invoicing.
