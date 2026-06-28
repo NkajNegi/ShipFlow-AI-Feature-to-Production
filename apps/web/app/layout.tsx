@@ -30,14 +30,15 @@ export default function RootLayout({
       lang="en"
       className={cn("dark font-sans", inter.variable, jetbrainsMono.variable)}
     >
-      <body className={cn(inter.className, "bg-background text-foreground min-h-screen relative overflow-x-hidden antialiased")}>
-        {/* Ambient Background Orbs */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px] mix-blend-screen opacity-70 animate-slow-spin" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-600/10 blur-[150px] mix-blend-screen opacity-50 animate-slow-spin-reverse" />
-          <div className="absolute top-[30%] left-[60%] w-[30%] h-[30%] rounded-full bg-blue-500/10 blur-[100px] mix-blend-screen opacity-40 animate-pulse-slow" />
-          {/* Subtle grid texture instead of missing image */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
+      <body className={cn(inter.className, "bg-black text-foreground min-h-screen relative overflow-x-hidden antialiased")}>
+        {/* Ambient Grid Background */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10 bg-black">
+          {/* Subtle Dot Matrix */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_0%,#000_10%,transparent_100%)] opacity-60" />
+          
+          {/* Extremely subtle aurora meshes (Vercel style) */}
+          <div className="absolute top-[-20%] left-[20%] w-[60%] h-[60%] rounded-full bg-[oklch(0.6_0.2_250)] blur-[200px] mix-blend-screen opacity-10 animate-slow-spin" />
+          <div className="absolute top-[10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[oklch(0.6_0.2_300)] blur-[150px] mix-blend-screen opacity-10 animate-slow-spin-reverse" />
         </div>
 
         <TRPCReactProvider>{children}</TRPCReactProvider>

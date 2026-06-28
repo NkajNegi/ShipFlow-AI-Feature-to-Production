@@ -9,16 +9,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.3)] hover:bg-primary/90 hover:shadow-[0_0_25px_rgba(var(--primary),0.5)] hover:-translate-y-0.5 active:scale-95 transition-all duration-200",
+        default: "bg-white text-black hover:bg-white/90 hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all duration-200",
         outline:
-          "border-border bg-background/50 backdrop-blur hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+          "border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 hover:text-white transition-all duration-200",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] hover:-translate-y-0.5 active:scale-95 transition-all duration-200 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "bg-white/10 text-white hover:bg-white/20 transition-all duration-200",
         ghost:
-          "hover:bg-muted/80 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/30 transition-colors duration-200",
+          "hover:bg-white/10 hover:text-white transition-all duration-200",
         destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 hover:-translate-y-0.5 active:scale-95 transition-all duration-200 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 transition-all duration-200",
+        link: "text-white underline-offset-4 hover:underline",
+        ai: "ai-glow-border bg-[#0c0c0c] text-white hover:bg-[#1a1a1a] transition-all duration-300",
       },
       size: {
         default:

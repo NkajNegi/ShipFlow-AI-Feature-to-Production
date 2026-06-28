@@ -298,7 +298,7 @@ export default function KanbanBoardPage({ params }: { params: Promise<{ workspac
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-wrap gap-4 mb-8 bg-card p-4 rounded-lg border border-border shadow-sm items-center">
+      <div className="flex flex-wrap gap-4 mb-8 bg-[#0c0c0c]/80 backdrop-blur-xl p-3 px-6 rounded-full border border-white/10 shadow-lg items-center sticky top-4 z-40">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
@@ -388,7 +388,7 @@ export default function KanbanBoardPage({ params }: { params: Promise<{ workspac
                                       {...provided.draggableProps}
                                       {...provided.dragHandleProps}
                                       onClick={() => openEditTask(task)}
-                                      className={`glass p-4 rounded-lg shadow-sm border transition-all duration-300 cursor-grab active:cursor-grabbing hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 group ${
+                                      className={`spotlight-card glass p-4 rounded-lg shadow-sm border transition-all duration-300 cursor-grab active:cursor-grabbing hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 group ${
                                         snapshot.isDragging ? "border-primary shadow-xl scale-[1.05] z-50 ring-2 ring-primary/20" : "border-white/10"
                                       }`}
                                       style={provided.draggableProps.style}

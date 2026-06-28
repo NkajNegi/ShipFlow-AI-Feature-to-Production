@@ -94,10 +94,10 @@ export function DashboardShell({
   };
 
   return (
-    <div className="flex h-screen bg-background text-foreground flex-col md:flex-row overflow-hidden">
-      {/* Desktop sidebar */}
+    <div className="flex h-screen bg-transparent text-foreground flex-col md:flex-row overflow-hidden p-4 gap-4">
+      {/* Desktop sidebar - Floating Style */}
       <aside
-        className={`hidden md:flex flex-col border-r border-white/5 bg-sidebar/60 backdrop-blur-xl transition-all duration-300 ease-in-out relative shadow-[4px_0_24px_rgba(0,0,0,0.2)]
+        className={`hidden md:flex flex-col border border-white/10 rounded-2xl bg-[#0c0c0c]/80 backdrop-blur-2xl transition-all duration-300 ease-in-out relative shadow-[0_0_40px_rgba(0,0,0,0.5)] overflow-hidden
         ${isCollapsed ? 'w-20' : 'w-64'}`}
       >
         <div className="h-14 flex items-center justify-between px-4 border-b border-border/50">
@@ -117,7 +117,7 @@ export function DashboardShell({
         <div className={`px-3 pt-4 pb-2 relative transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0 overflow-hidden pt-0' : 'opacity-100'}`}>
           <button
             onClick={() => setOpen((v) => !v)}
-            className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-md border border-border/60 bg-background/50 backdrop-blur shadow-sm text-sm hover:border-primary/50 transition-all"
+            className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] shadow-sm text-sm hover:border-white/20 transition-all"
           >
             <span className="truncate font-medium">{active?.name ?? "Select workspace"}</span>
             <ChevronsUpDown className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -217,17 +217,18 @@ export function DashboardShell({
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto pb-16 md:pb-0 bg-background relative z-0">
-        <header className="md:hidden h-14 flex items-center justify-between px-4 border-b border-border/50 bg-card/95 backdrop-blur-sm sticky top-0 z-10">
-          <span className="font-bold text-primary text-lg">ShipFlow AI</span>
+      {/* Main content - Floating Style */}
+      <main className="flex-1 relative flex flex-col min-w-0 overflow-hidden border border-white/10 rounded-2xl bg-[#0c0c0c]/60 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+        {/* Mobile header - Floating Style */}
+        <div className="md:hidden h-14 flex items-center justify-between px-4 border border-white/10 rounded-xl bg-[#0c0c0c]/80 backdrop-blur-2xl shadow-lg mt-4 mx-4">
+          <span className="font-bold text-foreground">ShipFlow</span>
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors rounded-md"
           >
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
-        </header>
+        </div>
 
         {/* Mobile Dropdown Menu (Slide-down) */}
         {mobileMenuOpen && (
