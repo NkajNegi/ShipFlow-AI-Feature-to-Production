@@ -24,10 +24,10 @@ export function LogoBadge({ size = 26 }: { size?: number }) {
 
 export function MarketingHeader() {
   return (
-    <header className="relative z-10 mx-auto flex max-w-[1180px] items-center gap-4 px-7 py-5">
+    <header className="relative z-10 mx-auto flex max-w-[1180px] items-center gap-4 px-4 sm:px-7 py-5">
       <Link href="/" className="flex items-center gap-2.5">
         <LogoBadge />
-        <span className="text-lg font-extrabold tracking-tight">
+        <span className="hidden sm:inline-block text-lg font-extrabold tracking-tight">
           MetroFlow<span style={{ color: ACCENT }}> AI</span>
         </span>
       </Link>

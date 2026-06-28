@@ -61,7 +61,7 @@ export default function WorkspaceDashboard({
   );
 
   return (
-    <div className="relative min-h-screen bg-[#000000] text-foreground flex flex-col p-6 md:p-8 overflow-x-hidden z-10">
+    <div className="relative min-h-screen bg-[#000000] text-foreground flex flex-col p-4 sm:p-6 md:p-8 overflow-x-hidden z-10">
       
       {/* Background Radial Glow */}
       <div className="absolute top-0 right-1/4 w-[600px] h-[400px] bg-[#c084fc]/5 blur-[120px] rounded-full pointer-events-none" />

@@ -14,7 +14,7 @@ export default function DocsPage() {
       <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-[#c084fc]/5 blur-[150px] rounded-full pointer-events-none z-0" />
       <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] bg-[#60a5fa]/5 blur-[120px] rounded-full pointer-events-none z-0" />
 
-      <div className="relative z-10 mx-auto max-w-[1500px] flex flex-col md:flex-row gap-8 px-6 py-12 pt-32">
+      <div className="relative z-10 mx-auto max-w-[1500px] flex flex-col md:flex-row gap-8 px-4 sm:px-6 py-12 pt-32">
         
         {/* Left Sidebar Navigation */}
         <aside className="w-full md:w-64 shrink-0 space-y-8">
@@ -69,7 +69,7 @@ export default function DocsPage() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0 bg-[#0c0c0c]/60 backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-12 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+        <main className="flex-1 min-w-0 bg-[#0c0c0c]/60 backdrop-blur-xl border border-white/5 rounded-3xl p-5 md:p-12 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
             <span>Docs</span> <ChevronRight className="h-4 w-4" /> <span className="text-white">Getting Started</span> <ChevronRight className="h-4 w-4" /> <span className="text-white">Introduction</span>
           </div>
