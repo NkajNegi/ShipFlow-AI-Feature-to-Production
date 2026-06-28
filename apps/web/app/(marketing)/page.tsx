@@ -169,9 +169,8 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      {/* showcase: terminal + orbit */}
-      <section className="relative z-[2] mx-auto mt-14 grid max-w-[1120px] grid-cols-1 items-center gap-7 px-7 lg:grid-cols-[1.15fr_0.85fr]">
-        <TerminalCard />
+      {/* showcase: orbit */}
+      <section className="relative z-[2] mx-auto mt-14 flex max-w-[1120px] flex-col items-center justify-center gap-7 px-7">
         <OrbitGraphic />
       </section>
 
@@ -321,53 +320,6 @@ function LogoBadge({ size = 26 }: { size?: number }) {
   );
 }
 
-function TerminalCard() {
-  return (
-    <div
-      className="relative overflow-hidden rounded-2xl"
-      style={{
-        border: "1px solid oklch(1 0 0 / 0.1)",
-        background: "linear-gradient(180deg, oklch(0.175 0 0), oklch(0.145 0 0))",
-        boxShadow: "0 40px 90px -40px oklch(0 0 0 / 0.85), inset 0 1px 0 oklch(1 0 0 / 0.05)",
-      }}
-    >
-      <div
-        className="flex items-center gap-[7px] border-b px-4 py-[13px]"
-        style={{ borderColor: "oklch(1 0 0 / 0.07)" }}
-      >
-        <span className="h-[11px] w-[11px] rounded-full" style={{ background: "oklch(0.62 0.2 25)" }} />
-        <span className="h-[11px] w-[11px] rounded-full" style={{ background: "oklch(0.8 0.14 80)" }} />
-        <span className="h-[11px] w-[11px] rounded-full" style={{ background: "oklch(0.72 0.16 150)" }} />
-        <span className="ml-2.5 text-xs font-medium" style={{ fontFamily: "var(--font-mono)", color: "oklch(0.6 0 0)" }}>
-          shipflow · agent · generating PRD
-        </span>
-      </div>
-      <div className="px-[22px] py-5 text-[13.5px] leading-[1.85]" style={{ fontFamily: "var(--font-mono)" }}>
-        <div style={{ color: "oklch(0.66 0 0)" }}>
-          <span style={{ color: ACCENT }}>›</span> feature: &quot;SSO login for enterprise customers&quot;
-        </div>
-        <div style={{ color: "oklch(0.75 0.16 150)" }}>✓ clarified scope — SAML + OIDC, JIT provisioning</div>
-        <div style={{ color: "oklch(0.75 0.16 150)" }}>✓ searched existing PRDs — no conflict found</div>
-        <div style={{ color: "oklch(0.9 0 0)" }}>
-          <span style={{ color: ACCENT }}>goals</span> · SAML 2.0/OIDC, JIT provisioning, audit log
-        </div>
-        <div style={{ color: "oklch(0.9 0 0)" }}>
-          <span style={{ color: ACCENT }}>acceptance</span> · login &lt; 2s, password fallback, RBAC
-        </div>
-        <div style={{ color: "oklch(0.9 0 0)" }}>
-          <span style={{ color: ACCENT }}>tasks</span> · SF-204·1 idp config · ·2 callback · ·3 session map
-        </div>
-        <div style={{ color: "oklch(0.66 0 0)" }}>
-          <span style={{ color: ACCENT }}>›</span> ready for review{" "}
-          <span
-            className="inline-block align-[-2px]"
-            style={{ width: 8, height: 15, background: ACCENT, animation: "sf-blink 1.1s infinite" }}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function OrbitGraphic() {
   const radius = 148;
