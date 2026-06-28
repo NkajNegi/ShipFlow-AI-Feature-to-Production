@@ -30,20 +30,11 @@ export function MarketingHeader() {
         </span>
       </Link>
       <nav className="ml-6 hidden gap-[22px] sm:flex">
-        <Link href="/product" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-          Product
-        </Link>
-        <Link href="/the-loop" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-          The Loop
-        </Link>
         <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
           Pricing
         </Link>
         <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
           Docs
-        </Link>
-        <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-          Changelog
         </Link>
       </nav>
       <div className="ml-auto flex items-center gap-2.5">
