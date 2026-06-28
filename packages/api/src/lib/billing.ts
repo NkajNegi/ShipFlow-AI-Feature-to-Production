@@ -66,3 +66,44 @@ export async function activateProForSubscription(razorpaySubscriptionId: string)
     }),
   ]);
 }
+
+/**
+ * Creates a one-off payment link to purchase a pack of AI credits.
+ */
+export async function createRazorpayPaymentLinkForCredits(
+  workspaceId: string,
+  amountOfCredits: number,
+  priceInInr: number
+) {
+  const client = getClient();
+  
+  // Create a payment link using Razorpay API
+  // NOTE: amount is in paise (1 INR = 100 paise)
+  const link = await (client.paymentLink.create as any)({
+    amount: priceInInr * 100,
+    currency: "INR",
+    description: `Buy ${amountOfCredits} AI Review Credits`,
+    notes: {
+      workspaceId,
+      credits: amountOfCredits,
+    },
+  });
+  
+  return {
+    paymentLinkId: link.id,
+    shortUrl: link.short_url,
+  };
+}
+
+/**
+ * Called by the Razorpay webhook when a payment link is paid.
+ */
+export async function addCreditsFromPaymentLink(
+  workspaceId: string,
+  credits: number
+) {
+  await prisma.workspace.update({
+    where: { id: workspaceId },
+    data: { aiReviewCredits: { increment: credits } },
+  });
+}

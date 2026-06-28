@@ -6,7 +6,7 @@ export { auth } from "./auth";
 // Webhook + integration helpers used by Next.js API routes.
 export { runReviewForPullRequest } from "./lib/review";
 export { parseTaskRefs, getInstallationOctokit } from "./lib/github";
-export { activateProForSubscription } from "./lib/billing";
+export { activateProForSubscription, addCreditsFromPaymentLink } from "./lib/billing";
 export { alreadyProcessed } from "./lib/webhook";
 export { captureError } from "./lib/log";
 

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { assertWorkspaceMember } from "../lib/access";
-import { createRazorpaySubscription } from "../lib/billing";
+import { createRazorpaySubscription, createRazorpayPaymentLinkForCredits } from "../lib/billing";
 import { PLAN_LIMITS } from "../lib/plan";
 
 export const billingRouter = createTRPCRouter({
@@ -54,5 +54,25 @@ export const billingRouter = createTRPCRouter({
       );
       const sub = await createRazorpaySubscription(input.workspaceId);
       return sub;
+    }),
+
+  /** Purchase a one-off pack of 100 AI credits for 1000 INR. */
+  buyCredits: protectedProcedure
+    .input(z.object({ workspaceId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await assertWorkspaceMember(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.workspaceId,
+        ["ADMIN", "LEAD"]
+      );
+      
+      const link = await createRazorpayPaymentLinkForCredits(
+        input.workspaceId,
+        100, // Credits
+        1000 // INR
+      );
+      
+      return link;
     }),
 });

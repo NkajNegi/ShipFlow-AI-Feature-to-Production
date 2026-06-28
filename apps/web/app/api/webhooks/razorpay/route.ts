@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { activateProForSubscription, alreadyProcessed, captureError } from "@repo/api";
+import { activateProForSubscription, alreadyProcessed, captureError, addCreditsFromPaymentLink } from "@repo/api";
 
 export const runtime = "nodejs";
 
@@ -47,6 +47,16 @@ export async function POST(req: Request) {
     if (subId) {
       try {
         await activateProForSubscription(subId);
+      } catch (err) {
+        captureError(err, { webhook: "razorpay", type });
+      }
+    }
+  } else if (type === "payment_link.paid") {
+    const workspaceId = event.payload?.payment_link?.entity?.notes?.workspaceId;
+    const credits = Number(event.payload?.payment_link?.entity?.notes?.credits || 0);
+    if (workspaceId && credits) {
+      try {
+        await addCreditsFromPaymentLink(workspaceId, credits);
       } catch (err) {
         captureError(err, { webhook: "razorpay", type });
       }

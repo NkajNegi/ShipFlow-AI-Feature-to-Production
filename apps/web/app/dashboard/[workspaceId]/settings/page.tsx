@@ -39,6 +39,12 @@ export default function SettingsPage({
     },
   });
 
+  const buyCredits = trpc.billing.buyCredits.useMutation({
+    onSuccess: (data) => {
+      if (data.shortUrl) window.location.href = data.shortUrl;
+    },
+  });
+
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
       <div>
@@ -156,22 +162,37 @@ export default function SettingsPage({
                   </p>
                 </div>
               </div>
-              {billing.data?.planTier !== "PRO" && (
+              <div className="flex flex-wrap items-center gap-3 mt-4">
+                {billing.data?.planTier !== "PRO" && (
+                  <Button
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    disabled={upgrade.isPending || buyCredits.isPending}
+                    onClick={() => upgrade.mutate({ workspaceId })}
+                  >
+                    {upgrade.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Rocket className="mr-2 h-4 w-4" />
+                    )}
+                    Upgrade to Pro
+                  </Button>
+                )}
+                
                 <Button
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
-                  disabled={upgrade.isPending}
-                  onClick={() => upgrade.mutate({ workspaceId })}
+                  variant="outline"
+                  disabled={buyCredits.isPending || upgrade.isPending}
+                  onClick={() => buyCredits.mutate({ workspaceId })}
                 >
-                  {upgrade.isPending ? (
+                  {buyCredits.isPending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
-                    <Rocket className="mr-2 h-4 w-4" />
+                    <Sparkles className="mr-2 h-4 w-4 text-emerald-500" />
                   )}
-                  Upgrade to Pro
+                  Buy 100 Credits (₹1000)
                 </Button>
-              )}
-              {upgrade.error && (
-                <p className="text-sm text-red-400">{upgrade.error.message}</p>
+              </div>
+              {(upgrade.error || buyCredits.error) && (
+                <p className="text-sm text-red-400">{upgrade.error?.message || buyCredits.error?.message}</p>
               )}
             </>
           )}
