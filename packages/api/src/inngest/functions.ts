@@ -72,7 +72,25 @@ export const repoAnalyzeFn = inngest.createFunction(
 );
 
 export const runCommitReviewFn = inngest.createFunction(
-  { id: "run-commit-review", name: "Run AI Commit Review", retries: 2 },
+  {
+    id: "run-commit-review",
+    name: "Run AI Commit Review",
+    retries: 2,
+    onFailure: async ({ event }) => {
+      // If the function completely fails (e.g., all retries exhausted due to Vercel timeouts),
+      // we must mark the review as FAILED so it doesn't get stuck in PENDING forever on the UI.
+      const { commitReviewId } = event.data.event.data;
+      if (commitReviewId) {
+        await prisma.commitReview.update({
+          where: { id: commitReviewId },
+          data: {
+            status: "FAILED",
+            error: "Background worker timed out or exhausted retries. Check Vercel/Inngest logs.",
+          },
+        }).catch(() => {});
+      }
+    },
+  },
   { event: EVENTS.COMMIT_REVIEW },
   async ({ event, step }) => {
     const { commitReviewId } = event.data;
