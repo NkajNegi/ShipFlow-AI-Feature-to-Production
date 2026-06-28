@@ -96,6 +96,10 @@ export default function FeatureCommandCenter({
     onSuccess: () => featureQuery.refetch(),
   });
 
+  // Require a deliberate confirmation before overriding a non-READY decision
+  // (ALREADY_EXISTS / NEEDS_CLARIFICATION) and generating a PRD anyway.
+  const [confirmOverride, setConfirmOverride] = useState(false);
+
   if (featureQuery.isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -108,9 +112,7 @@ export default function FeatureCommandCenter({
   const prd = feature.prds[0];
   const content = (prd?.contentJson ?? {}) as any;
   const clar = (feature as any).clarificationJson as any;
-  // Require a deliberate confirmation before overriding a non-READY decision
   // (ALREADY_EXISTS / NEEDS_CLARIFICATION) and generating a PRD anyway.
-  const [confirmOverride, setConfirmOverride] = useState(false);
   const hasBlocking = feature.pullRequests.some(
     (pr: any) => (pr.reviews[0]?.blockingCount ?? 0) > 0
   );
