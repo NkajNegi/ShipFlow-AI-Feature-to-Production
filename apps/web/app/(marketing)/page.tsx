@@ -54,7 +54,7 @@ export default function MarketingPage() {
       <MarketingHeader />
 
       {/* hero + showcase */}
-      <section className="relative z-[2] mx-auto mt-20 grid max-w-[1200px] grid-cols-1 items-center gap-10 px-4 sm:px-7 lg:grid-cols-2">
+      <section className="relative z-[2] mx-auto mt-8 grid max-w-[1200px] grid-cols-1 items-center gap-10 px-4 sm:px-7 lg:grid-cols-2">
         <div className="text-left">
           <div
             className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold"

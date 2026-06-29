@@ -5,7 +5,7 @@ import { MessageSquare, ListTodo, Code, ShieldCheck, Rocket } from "lucide-react
 
 export function HeroOrbitalGraphic() {
   return (
-    <div className="relative w-full h-full min-h-[500px] flex items-center justify-center pt-10 select-none overflow-visible">
+    <div className="relative w-full h-full min-h-[500px] flex items-center justify-center select-none overflow-visible">
       {/* Dynamic Scaling Wrapper for Responsiveness */}
       <div className="relative transform scale-[0.7] xl:scale-[0.85] 2xl:scale-100 origin-center transition-transform duration-300 w-full h-full flex items-center justify-center">
         
