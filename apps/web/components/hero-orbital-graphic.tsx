@@ -51,7 +51,7 @@ export function HeroOrbitalGraphic() {
       <div className="absolute inset-0 z-30 pointer-events-none">
         
         {/* Node 1: Clarify (Top Right) */}
-        <div className="absolute top-[5%] right-[10%] animate-[sf-float2_12s_ease-in-out_infinite]">
+        <div className="absolute top-[5%] right-[30%] animate-[sf-float2_12s_ease-in-out_infinite]">
           <div className="relative group">
             <div className="absolute -inset-2 bg-[#4ade80]/10 blur-xl rounded-full opacity-0 transition-opacity" />
             <div className="relative flex items-center gap-4 p-3 pr-5 rounded-2xl bg-gradient-to-b from-white/[0.04] to-black/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
@@ -100,7 +100,7 @@ export function HeroOrbitalGraphic() {
         </div>
 
         {/* Node 4: Review (Bottom Center) */}
-        <div className="absolute bottom-[4%] left-[20%] animate-[sf-float1_16s_ease-in-out_infinite_reverse] flex flex-col items-center">
+        <div className="absolute bottom-[4%] left-[30%] animate-[sf-float1_16s_ease-in-out_infinite_reverse] flex flex-col items-center">
           <div className="relative group">
             <div className="relative flex items-center gap-4 p-3 pr-5 rounded-2xl bg-gradient-to-b from-white/[0.04] to-black/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-[#fb923c]/30 to-transparent" />
