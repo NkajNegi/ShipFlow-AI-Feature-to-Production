@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight, Terminal, BookOpen, GitPullRequest, Rocket, ShieldCheck, Zap, Search, ArrowLeft, ArrowRight, ListTree } from "lucide-react";
+import { MarketingHeader } from "@/components/marketing-header";
 
 export const metadata = {
   title: "Documentation - MetroFlow AI",
@@ -9,6 +10,7 @@ export const metadata = {
 export default function DocsPage() {
   return (
     <div className="relative min-h-screen bg-[#000000] text-foreground overflow-hidden">
+      <MarketingHeader />
       
       {/* Background Radial Glow */}
       <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-[#c084fc]/5 blur-[150px] rounded-full pointer-events-none z-0" />
