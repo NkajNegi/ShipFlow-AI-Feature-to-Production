@@ -7,14 +7,14 @@ export function HeroOrbitalGraphic() {
   return (
     <div className="relative w-full h-full min-h-[500px] flex items-center justify-center pt-10 select-none">
       
-      {/* Central Glowing S */}
+      {/* Central Glowing M */}
       <div className="relative z-20 w-[140px] h-[140px] flex items-center justify-center">
         {/* Background ambient glow - intensified */}
-        <div className="absolute inset-0 bg-[#F5A524]/30 blur-[80px] rounded-full scale-150 pointer-events-none" />
+        <div className="absolute inset-0 bg-[#F5A524]/30 blur-[80px] rounded-full scale-150 pointer-events-none animate-pulse" />
         
         {/* Box itself */}
         <div 
-          className="relative w-full h-full rounded-[30px] flex items-center justify-center shadow-[0_0_100px_rgba(245,165,36,0.4)] animate-[sf-float1_10s_ease-in-out_infinite]"
+          className="relative w-full h-full rounded-[30px] flex items-center justify-center shadow-[0_0_100px_rgba(245,165,36,0.4)]"
           style={{
             background: "linear-gradient(135deg, #2a1600 0%, #0c0800 100%)",
             border: "1px solid rgba(245,165,36,0.5)",
@@ -24,7 +24,7 @@ export function HeroOrbitalGraphic() {
           {/* Inner ring highlight */}
           <div className="absolute inset-[2px] rounded-[28px] border border-white/10 pointer-events-none" />
           
-          <span className="text-[72px] font-extrabold text-[#F5A524] drop-shadow-[0_0_25px_rgba(245,165,36,1)] tracking-tighter">S</span>
+          <span className="text-[72px] font-extrabold text-[#F5A524] drop-shadow-[0_0_25px_rgba(245,165,36,1)] tracking-tighter">M</span>
         </div>
       </div>
 
@@ -51,9 +51,9 @@ export function HeroOrbitalGraphic() {
       <div className="absolute inset-0 z-30 pointer-events-none">
         
         {/* Node 1: Clarify (Top Right) */}
-        <div className="absolute top-[5%] right-[30%] animate-[sf-float2_12s_ease-in-out_infinite]">
+        <div className="absolute top-[10%] right-[15%] transition-transform hover:-translate-y-1">
           <div className="relative group">
-            <div className="absolute -inset-2 bg-[#4ade80]/10 blur-xl rounded-full opacity-0 transition-opacity" />
+            <div className="absolute -inset-2 bg-[#4ade80]/10 blur-xl rounded-full opacity-0 transition-opacity group-hover:opacity-100" />
             <div className="relative flex items-center gap-4 p-3 pr-5 rounded-2xl bg-gradient-to-b from-white/[0.04] to-black/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-[#4ade80]/30 to-transparent" />
               <div className="w-10 h-10 shrink-0 rounded-xl bg-[#4ade80]/10 flex items-center justify-center text-[#4ade80] border border-[#4ade80]/20 shadow-[0_0_15px_rgba(74,222,128,0.15)]">
@@ -68,7 +68,7 @@ export function HeroOrbitalGraphic() {
         </div>
 
         {/* Node 2: Plan (Middle Right) */}
-        <div className="absolute top-[32%] right-[-5%] animate-[sf-float1_15s_ease-in-out_infinite_reverse]">
+        <div className="absolute top-[45%] right-[5%] transition-transform hover:-translate-y-1">
           <div className="relative group">
             <div className="relative flex items-center gap-4 p-3 pr-5 rounded-2xl bg-gradient-to-b from-white/[0.04] to-black/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-[#c084fc]/30 to-transparent" />
@@ -84,7 +84,7 @@ export function HeroOrbitalGraphic() {
         </div>
 
         {/* Node 3: Build (Bottom Right) */}
-        <div className="absolute top-[65%] right-[2%] animate-[sf-float2_14s_ease-in-out_infinite]">
+        <div className="absolute bottom-[20%] right-[15%] transition-transform hover:-translate-y-1">
           <div className="relative group">
             <div className="relative flex items-center gap-4 p-3 pr-5 rounded-2xl bg-gradient-to-b from-white/[0.04] to-black/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-[#60a5fa]/30 to-transparent" />
@@ -99,8 +99,8 @@ export function HeroOrbitalGraphic() {
           </div>
         </div>
 
-        {/* Node 4: Review (Bottom Center) */}
-        <div className="absolute bottom-[4%] left-[30%] animate-[sf-float1_16s_ease-in-out_infinite_reverse] flex flex-col items-center">
+        {/* Node 4: Review (Bottom Left) */}
+        <div className="absolute bottom-[20%] left-[15%] transition-transform hover:-translate-y-1">
           <div className="relative group">
             <div className="relative flex items-center gap-4 p-3 pr-5 rounded-2xl bg-gradient-to-b from-white/[0.04] to-black/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-[#fb923c]/30 to-transparent" />
@@ -113,15 +113,10 @@ export function HeroOrbitalGraphic() {
               </div>
             </div>
           </div>
-          
-          {/* Autopilot Badge */}
-          <div className="mt-6 ml-32 px-5 py-2.5 rounded-full bg-black/80 border border-white/10 shadow-2xl backdrop-blur-xl relative">
-             <span className="text-[12px] text-muted-foreground font-medium relative z-10">The whole loop. <span className="text-[#F5A524] font-bold">On autopilot.</span></span>
-          </div>
         </div>
 
-        {/* Node 5: Release (Left Middle) */}
-        <div className="absolute top-[45%] left-[-2%] animate-[sf-float2_18s_ease-in-out_infinite]">
+        {/* Node 5: Release (Top Left) */}
+        <div className="absolute top-[20%] left-[10%] transition-transform hover:-translate-y-1">
           <div className="relative group">
             <div className="relative flex items-center gap-4 p-3 pr-5 rounded-2xl bg-gradient-to-b from-white/[0.04] to-black/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-[#ec4899]/30 to-transparent" />
@@ -135,7 +130,11 @@ export function HeroOrbitalGraphic() {
             </div>
           </div>
         </div>
-
+      </div>
+      
+      {/* Autopilot Badge - Centered Bottom */}
+      <div className="absolute bottom-[-20%] left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full bg-black/80 border border-white/10 shadow-2xl backdrop-blur-xl z-40 animate-pulse">
+         <span className="text-[12px] text-muted-foreground font-medium relative z-10">The whole loop. <span className="text-[#F5A524] font-bold">On autopilot.</span></span>
       </div>
 
     </div>
