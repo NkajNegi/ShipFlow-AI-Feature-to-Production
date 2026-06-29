@@ -54,8 +54,18 @@ export default function LoginPage() {
 
   const handleGithubLogin = async () => {
     setLoading(true);
-    await signIn.social({ provider: "github", callbackURL: getRedirect() });
-    setLoading(false);
+    setError("");
+    try {
+      const { error } = await signIn.social({
+        provider: "github",
+        callbackURL: getRedirect(),
+      });
+      if (error) throw error;
+      // On success the browser is redirected to GitHub; nothing else to do.
+    } catch (err: any) {
+      setError(err?.message || "Could not start GitHub sign-in.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -203,7 +213,6 @@ export default function LoginPage() {
                   <input type="checkbox" className="hidden" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
                   <span className="text-[12px] text-muted-foreground">Remember me</span>
                 </label>
-                <a href="#" className="text-[12px] text-[#c084fc] hover:underline">Forgot password?</a>
               </div>
             )}
 
