@@ -39,6 +39,7 @@ export default function LoginPage() {
         const { data, error } = await signIn.email({
           email,
           password,
+          rememberMe,
         });
         if (error) throw error;
       }
@@ -177,10 +178,11 @@ export default function LoginPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
+                  minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full h-11 pl-10 pr-10 rounded-xl bg-white/5 border border-white/10 text-white text-[14px] focus:outline-none focus:border-[#c084fc] transition-colors"
-                  placeholder="Enter your password"
+                  placeholder={isSignUp ? "At least 8 characters" : "Enter your password"}
                 />
                 <button 
                   type="button" 
