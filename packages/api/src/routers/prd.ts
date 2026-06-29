@@ -73,6 +73,7 @@ export const prdRouter = createTRPCRouter({
       z.object({
         prdId: z.string(),
         content: z.object({
+          assumptions: z.array(z.string().max(1000)).max(50),
           problemStatement: z.string().max(5000),
           goals: z.array(z.string().max(1000)).max(50),
           nonGoals: z.array(z.string().max(1000)).max(50),
