@@ -113,10 +113,12 @@ export const runReadinessCheckFn = inngest.createFunction(
   }
 );
 
-// Hourly housekeeping: prune expired rate-limit buckets and old records.
+// Daily housekeeping: prune expired rate-limit buckets and old records.
+// (Daily instead of hourly — saves ~700 Inngest runs/month on the free tier;
+// the data it prunes has a 30-day horizon, so hourly was overkill.)
 export const cleanupFn = inngest.createFunction(
   { id: "housekeeping-cleanup" },
-  { cron: "0 * * * *" },
+  { cron: "0 3 * * *" },
   async ({ step }) => {
     await step.run("prune", async () => {
       const now = new Date();

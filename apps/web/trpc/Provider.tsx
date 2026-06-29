@@ -13,7 +13,25 @@ function getBaseUrl() {
 }
 
 export function TRPCReactProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            // Treat data as fresh for 60s so navigating/clicking around doesn't
+            // refire the same query — cuts redundant DB hits on the free tier.
+            staleTime: 60_000,
+            // Don't refetch just because the tab regained focus or the network
+            // reconnected (the #1 source of "spam on every click").
+            refetchOnWindowFocus: false,
+            refetchOnReconnect: false,
+            // One retry instead of three keeps a transient error from
+            // tripling load. (Mutations still surface errors immediately.)
+            retry: 1,
+          },
+        },
+      })
+  );
   const [trpcClient] = useState(() =>
     trpc.createClient({
       transformer: superjson,

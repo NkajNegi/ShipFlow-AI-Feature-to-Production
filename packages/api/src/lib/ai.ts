@@ -49,13 +49,15 @@ export function resolveModel(keys: AiKeys) {
     return openRouterProvider(process.env.OPENROUTER_API_KEY)(OPENROUTER_MODEL_ID);
   }
 
-  if (process.env.ANTHROPIC_API_KEY) {
-    return createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY })(WEAK_MODEL_ID);
-  }
-
+  // NOTE: Anthropic is intentionally BYOK-only — we never fall back to a
+  // platform ANTHROPIC_API_KEY, so platform AI usage stays on the cheaper/free
+  // providers (OpenRouter / Google / OpenAI). Anthropic is used only when a
+  // workspace or user supplies their own key (handled at the top of this fn).
   throw new TRPCError({
     code: "PRECONDITION_FAILED",
-    message: "No AI provider configured.",
+    message:
+      "No AI provider configured. Set a platform OpenRouter/Google/OpenAI key, " +
+      "or add your own Anthropic key in Profile/Settings.",
   });
 }
 
