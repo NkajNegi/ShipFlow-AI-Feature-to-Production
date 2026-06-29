@@ -94,7 +94,7 @@ export default function WorkspaceDashboard({
           </div>
           
           {/* Notifications */}
-          <NotificationPopover />
+          <NotificationPopover workspaceId={workspaceId} />
           
           {/* Avatar */}
           <UserProfileDropdown />
