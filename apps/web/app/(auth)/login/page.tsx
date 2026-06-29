@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { signIn, signUp, forgetPassword } from "@/lib/auth-client";
+import {
+  signIn,
+  signUp,
+  forgetPassword,
+  sendVerificationEmail,
+} from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -15,6 +20,29 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [verifyResent, setVerifyResent] = useState(false);
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError("Enter your email above first.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const { error } = await sendVerificationEmail({
+        email,
+        callbackURL: getRedirect(),
+      });
+      if (error) throw error;
+      setVerifyResent(true);
+    } catch (err: any) {
+      setError(err?.message || "Could not resend the verification email.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleForgot = async () => {
     if (!email) {
@@ -48,6 +76,8 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setResetSent(false);
+    setVerifyResent(false);
 
     try {
       if (isSignUp) {
@@ -57,18 +87,27 @@ export default function LoginPage() {
           name,
         });
         if (error) throw error;
+        // If email verification is required, sign-up returns no session token —
+        // prompt the user to verify instead of bouncing to a guarded page.
+        if (!(data as any)?.token) {
+          setNeedsVerification(true);
+          return;
+        }
       } else {
-        const { data, error } = await signIn.email({
+        const { error } = await signIn.email({
           email,
           password,
           rememberMe,
         });
         if (error) throw error;
       }
-      
+
       router.push(getRedirect());
     } catch (err: any) {
-      setError(err?.message || "An error occurred");
+      const msg = err?.message || "An error occurred";
+      // Surface a resend option when the failure is about an unverified email.
+      if (/verif/i.test(msg)) setNeedsVerification(true);
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -251,6 +290,31 @@ export default function LoginPage() {
               <p className="text-[13px] text-emerald-400 font-medium">
                 If an account exists for that email, a password-reset link is on its way. Check your inbox.
               </p>
+            )}
+            {needsVerification && (
+              <div className="rounded-xl border border-[#facc15]/30 bg-[#facc15]/5 p-3 space-y-2">
+                <p className="text-[13px] font-semibold text-[#facc15]">
+                  Verify your email
+                </p>
+                <p className="text-[12px] text-muted-foreground">
+                  We sent a verification link to {email || "your inbox"}. Click it
+                  to finish signing in.
+                </p>
+                {verifyResent ? (
+                  <p className="text-[12px] text-emerald-400">
+                    Verification email resent.
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={loading}
+                    className="text-[12px] text-[#c084fc] hover:underline font-semibold disabled:opacity-50"
+                  >
+                    Resend verification email
+                  </button>
+                )}
+              </div>
             )}
             
             <button 
