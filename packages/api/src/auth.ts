@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@repo/db";
+import { sendEmail, actionEmail } from "./lib/email";
 
 // Only enable GitHub social login when BOTH credentials are present. Otherwise
 // better-auth would emit an OAuth URL with `client_id=undefined`, sending users
@@ -23,11 +24,34 @@ export const auth = betterAuth({
     // mail provider is configured. Enable in production with a real sender.
     requireEmailVerification:
       process.env.REQUIRE_EMAIL_VERIFICATION === "true",
+    // Password reset — emails a link back to /reset-password?token=...
+    sendResetPassword: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: "Reset your MetroFlow password",
+        html: actionEmail({
+          heading: "Reset your password",
+          body: "We received a request to reset your MetroFlow password. This link expires in 1 hour. If you didn't request it, you can safely ignore this email.",
+          ctaLabel: "Reset password",
+          ctaUrl: url,
+        }),
+        text: `Reset your MetroFlow password: ${url}`,
+      });
+    },
   },
   emailVerification: {
-    // Plug a real email provider here in production. For now the link is logged.
     sendVerificationEmail: async ({ user, url }) => {
-      console.log(`[email-verification] ${user.email}: ${url}`);
+      await sendEmail({
+        to: user.email,
+        subject: "Verify your MetroFlow email",
+        html: actionEmail({
+          heading: "Welcome to MetroFlow 👋",
+          body: "Confirm your email address to finish setting up your account.",
+          ctaLabel: "Verify email",
+          ctaUrl: url,
+        }),
+        text: `Verify your MetroFlow email: ${url}`,
+      });
     },
   },
   // Throttle auth endpoints (login/signup) to slow brute-force attempts.

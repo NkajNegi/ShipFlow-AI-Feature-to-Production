@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn, signUp } from "@/lib/auth-client";
+import { signIn, signUp, forgetPassword } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -14,6 +14,28 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  const handleForgot = async () => {
+    if (!email) {
+      setError("Enter your email above first, then click “Forgot password?”.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const { error } = await forgetPassword({
+        email,
+        redirectTo: "/reset-password",
+      });
+      if (error) throw error;
+      setResetSent(true);
+    } catch (err: any) {
+      setError(err?.message || "Could not send reset email.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Allow post-login redirect (e.g. back to an /invite/<token> page).
   const getRedirect = () => {
@@ -213,10 +235,23 @@ export default function LoginPage() {
                   <input type="checkbox" className="hidden" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
                   <span className="text-[12px] text-muted-foreground">Remember me</span>
                 </label>
+                <button
+                  type="button"
+                  onClick={handleForgot}
+                  disabled={loading}
+                  className="text-[12px] text-[#c084fc] hover:underline disabled:opacity-50"
+                >
+                  Forgot password?
+                </button>
               </div>
             )}
 
             {error && <p className="text-[13px] text-red-400 font-medium">{error}</p>}
+            {resetSent && (
+              <p className="text-[13px] text-emerald-400 font-medium">
+                If an account exists for that email, a password-reset link is on its way. Check your inbox.
+              </p>
+            )}
             
             <button 
               type="submit" 
