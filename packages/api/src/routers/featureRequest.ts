@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { assertProjectAccess, assertWorkspaceMember } from "../lib/access";
+import {
+  assertProjectAccess,
+  assertWorkspaceMember,
+  assertFeatureRequestAccess,
+} from "../lib/access";
+import { logAudit } from "../lib/audit";
 
 export const featureRequestRouter = createTRPCRouter({
   create: protectedProcedure
@@ -25,6 +30,61 @@ export const featureRequestRouter = createTRPCRouter({
           projectId: input.projectId,
         },
       });
+    }),
+
+  /**
+   * Phase 2 — human approval of the plan. A LEAD/ADMIN reviews the PRD + tasks
+   * and explicitly approves the plan before development starts, moving the
+   * feature from PLANNING to PLANNED (ready for development).
+   */
+  approvePlan: protectedProcedure
+    .input(z.object({ featureRequestId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const fr = await assertFeatureRequestAccess(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.featureRequestId,
+        ["ADMIN", "LEAD"]
+      );
+
+      const feature = await ctx.prisma.featureRequest.findUnique({
+        where: { id: input.featureRequestId },
+        select: {
+          title: true,
+          status: true,
+          _count: { select: { prds: true } },
+        },
+      });
+      if (!feature) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Feature not found." });
+      }
+      if (feature._count.prds === 0) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Generate a PRD and tasks before approving the plan.",
+        });
+      }
+      if (feature.status !== "PLANNING") {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: `The plan can only be approved from the PLANNING stage (current: ${feature.status}).`,
+        });
+      }
+
+      const updated = await ctx.prisma.featureRequest.update({
+        where: { id: input.featureRequestId },
+        data: { status: "PLANNED" },
+      });
+
+      await logAudit({
+        workspaceId: fr.project.workspaceId,
+        actorId: ctx.session.user.id,
+        actorName: ctx.session.user.name,
+        action: "PLAN_APPROVED",
+        target: updated.title,
+      });
+
+      return updated;
     }),
 
   list: protectedProcedure

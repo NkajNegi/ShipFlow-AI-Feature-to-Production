@@ -192,8 +192,9 @@ model FeatureRequest {
   projectId String @map("project_id")
   // Where the request came from: UI, EMAIL, TICKET, API, SLACK
   source    String @default("UI")
-  // DISCOVERY, GENERATING_PRD, PLANNING, IN_PROGRESS, IN_REVIEW,
+  // DISCOVERY, GENERATING_PRD, PLANNING, PLANNED, IN_PROGRESS, IN_REVIEW,
   // FIX_NEEDED, APPROVED, SHIPPED, REJECTED
+  // (PLANNED = plan reviewed & approved by a lead, ready for development)
   status    String @default("DISCOVERY")
 
   // Phase 1 AI clarification analysis (latest run)

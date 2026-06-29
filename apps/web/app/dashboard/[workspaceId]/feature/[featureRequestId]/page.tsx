@@ -29,6 +29,7 @@ const STATUS_STYLES: Record<string, string> = {
   DISCOVERY: "bg-muted text-muted-foreground",
   GENERATING_PRD: "bg-blue-500/15 text-blue-400",
   PLANNING: "bg-blue-500/15 text-blue-400",
+  PLANNED: "bg-indigo-500/15 text-indigo-400",
   IN_PROGRESS: "bg-amber-500/15 text-amber-400",
   IN_REVIEW: "bg-purple-500/15 text-purple-400",
   FIX_NEEDED: "bg-red-500/15 text-red-400",
@@ -93,6 +94,9 @@ export default function FeatureCommandCenter({
     onSuccess: () => featureQuery.refetch(),
   });
   const readiness = trpc.review.runReadinessCheck.useMutation({
+    onSuccess: () => featureQuery.refetch(),
+  });
+  const approvePlan = trpc.featureRequest.approvePlan.useMutation({
     onSuccess: () => featureQuery.refetch(),
   });
 
@@ -284,6 +288,47 @@ export default function FeatureCommandCenter({
       {prd?.tasks?.length || prd ? (
         <TasksSection prd={prd} projectId={feature.projectId} onSaved={() => featureQuery.refetch()} />
       ) : null}
+
+      {/* Phase 2 — human approval of the plan before development starts */}
+      {prd && (feature.status === "PLANNING" || feature.status === "PLANNED") && (
+        <Card className="border-border">
+          <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
+            {feature.status === "PLANNED" ? (
+              <p className="flex items-center gap-2 text-sm text-indigo-400">
+                <CheckCircle2 className="h-4 w-4" /> Plan approved — ready for
+                development. Open a PR referencing this feature to begin.
+              </p>
+            ) : (
+              <>
+                <div className="text-sm">
+                  <p className="font-medium">Review the PRD &amp; tasks, then approve the plan</p>
+                  <p className="text-muted-foreground">
+                    Approving signs off Phase 2 and marks the feature ready for
+                    development (Admins/Leads only).
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <Button
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    disabled={approvePlan.isPending}
+                    onClick={() => approvePlan.mutate({ featureRequestId })}
+                  >
+                    {approvePlan.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                    )}
+                    Approve Plan
+                  </Button>
+                  {approvePlan.error && (
+                    <p className="text-xs text-red-400">{approvePlan.error.message}</p>
+                  )}
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Pull requests + AI reviews */}
       {prd && (
