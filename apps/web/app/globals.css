@@ -200,6 +200,10 @@
   0%, 100% { transform: translate(0, 0) scale(1); }
   50% { transform: translate(-50px, 40px) scale(1.12); }
 }
+@keyframes sf-float-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
 @keyframes sf-orbit { to { transform: rotate(360deg); } }
 @keyframes sf-orbit-rev { to { transform: rotate(-360deg); } }
 @keyframes sf-pulse-ring {
