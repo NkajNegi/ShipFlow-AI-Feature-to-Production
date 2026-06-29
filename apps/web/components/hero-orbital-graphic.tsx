@@ -51,7 +51,7 @@ export function HeroOrbitalGraphic() {
       <div className="absolute inset-0 z-30 pointer-events-none">
         
         {/* Node 1: Clarify (Top Right) */}
-        <div className="absolute top-[5%] right-[5%] animate-[sf-float-gentle_6s_ease-in-out_infinite] transition-transform hover:-translate-y-1">
+        <div className="absolute top-[10%] left-[60%] animate-[sf-float-gentle_6s_ease-in-out_infinite] transition-transform hover:-translate-y-1">
           <div className="relative group">
             <div className="absolute -inset-2 bg-[#4ade80]/10 blur-xl rounded-full opacity-0 transition-opacity group-hover:opacity-100" />
             <div className="relative flex items-center gap-4 p-3 pr-5 rounded-2xl bg-gradient-to-b from-white/[0.04] to-black/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
@@ -68,7 +68,7 @@ export function HeroOrbitalGraphic() {
         </div>
 
         {/* Node 2: Plan (Middle Right) */}
-        <div className="absolute top-[40%] right-[-10%] animate-[sf-float-gentle_8s_ease-in-out_infinite] transition-transform hover:-translate-y-1">
+        <div className="absolute top-[45%] left-[65%] animate-[sf-float-gentle_8s_ease-in-out_infinite] transition-transform hover:-translate-y-1">
           <div className="relative group">
             <div className="relative flex items-center gap-4 p-3 pr-5 rounded-2xl bg-gradient-to-b from-white/[0.04] to-black/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-[#c084fc]/30 to-transparent" />
@@ -84,7 +84,7 @@ export function HeroOrbitalGraphic() {
         </div>
 
         {/* Node 3: Build (Bottom Right) */}
-        <div className="absolute bottom-[10%] right-[5%] animate-[sf-float-gentle_7s_ease-in-out_infinite] transition-transform hover:-translate-y-1">
+        <div className="absolute top-[75%] left-[55%] animate-[sf-float-gentle_7s_ease-in-out_infinite] transition-transform hover:-translate-y-1">
           <div className="relative group">
             <div className="relative flex items-center gap-4 p-3 pr-5 rounded-2xl bg-gradient-to-b from-white/[0.04] to-black/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-[#60a5fa]/30 to-transparent" />
@@ -100,7 +100,7 @@ export function HeroOrbitalGraphic() {
         </div>
 
         {/* Node 4: Review (Bottom Left) */}
-        <div className="absolute bottom-[10%] left-[5%] animate-[sf-float-gentle_9s_ease-in-out_infinite] transition-transform hover:-translate-y-1">
+        <div className="absolute top-[75%] left-[10%] animate-[sf-float-gentle_9s_ease-in-out_infinite] transition-transform hover:-translate-y-1">
           <div className="relative group">
             <div className="relative flex items-center gap-4 p-3 pr-5 rounded-2xl bg-gradient-to-b from-white/[0.04] to-black/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-[#fb923c]/30 to-transparent" />
@@ -116,7 +116,7 @@ export function HeroOrbitalGraphic() {
         </div>
 
         {/* Node 5: Release (Top Left) */}
-        <div className="absolute top-[25%] left-[-5%] animate-[sf-float-gentle_10s_ease-in-out_infinite] transition-transform hover:-translate-y-1">
+        <div className="absolute top-[40%] left-[5%] animate-[sf-float-gentle_10s_ease-in-out_infinite] transition-transform hover:-translate-y-1">
           <div className="relative group">
             <div className="relative flex items-center gap-4 p-3 pr-5 rounded-2xl bg-gradient-to-b from-white/[0.04] to-black/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-[#ec4899]/30 to-transparent" />
@@ -132,8 +132,8 @@ export function HeroOrbitalGraphic() {
         </div>
       </div>
       
-      {/* Autopilot Badge - Centered Top */}
-      <div className="absolute top-[2%] left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full bg-black/80 border border-white/10 shadow-2xl backdrop-blur-xl z-40 animate-[sf-float-gentle_8s_ease-in-out_infinite]">
+      {/* Autopilot Badge - Centered Bottom */}
+      <div className="absolute bottom-[2%] left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full bg-black/80 border border-white/10 shadow-2xl backdrop-blur-xl z-40 animate-[sf-float-gentle_8s_ease-in-out_infinite]">
          <span className="text-[12px] text-muted-foreground font-medium relative z-10">The whole loop. <span className="text-[#F5A524] font-bold">On autopilot.</span></span>
       </div>
 
