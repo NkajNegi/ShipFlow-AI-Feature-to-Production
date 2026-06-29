@@ -59,7 +59,7 @@ export function DashboardShell({
         onSuccess: () => {
           setIsSigningOut(false);
           setIsSigningOutModalOpen(false);
-          router.push("/login");
+          router.push("/");
         },
         onError: () => {
           setIsSigningOut(false);
