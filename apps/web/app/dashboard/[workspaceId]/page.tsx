@@ -446,7 +446,7 @@ export default function WorkspaceDashboard({
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {features.data?.slice(0, 4).map((f) => (
-                  <Link key={f.id} href={`/dashboard/${workspaceId}/projects/${f.project.id}/features/${f.id}`} className="block group">
+                  <Link key={f.id} href={`/dashboard/${workspaceId}/feature/${f.id}`} className="block group">
                      <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/5 hover:border-white/10 transition-colors h-full flex flex-col justify-between">
                         <div>
                           <div className="flex items-center justify-between mb-2">
