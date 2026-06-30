@@ -4,7 +4,7 @@ import { createAppAuth } from "@octokit/auth-app";
 /**
  * GitHub App integration helpers.
  *
- * MetroFlow authenticates as a GitHub App (not a personal OAuth token) so it can
+ * ShipFlow authenticates as a GitHub App (not a personal OAuth token) so it can
  * act on behalf of an installation across a workspace's repositories. The App's
  * credentials come from the GitHub Developer Settings:
  *   - GITHUB_APP_ID
@@ -73,7 +73,7 @@ export function evictInstallationOctokit(installationId: number) {
 
 /** Build the GitHub App installation URL the user is redirected to. */
 export function getInstallUrl(state?: string): string {
-  const slug = process.env.GITHUB_APP_SLUG || "metroflow-ai";
+  const slug = process.env.GITHUB_APP_SLUG || "shipflow-ai";
   const base = `https://github.com/apps/${slug}/installations/new`;
   return state ? `${base}?state=${encodeURIComponent(state)}` : base;
 }

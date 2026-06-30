@@ -50,7 +50,7 @@ export function SetupChecklist({
   const content = (
     <Card className="border-border w-full max-w-2xl mx-auto shadow-lg bg-card/50 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-xl">Get Started with MetroFlow AI</CardTitle>
+        <CardTitle className="text-xl">Get Started with ShipFlow AI</CardTitle>
         <CardDescription>
           Complete these 2 quick steps to enable PR sync and the AI review loop
           for your team.
@@ -78,7 +78,7 @@ export function SetupChecklist({
           {!isGitHubConnected && (
             <div className="ml-9 p-4 rounded-md border border-border bg-muted/40">
               <p className="text-sm text-muted-foreground mb-3">
-                Install the GitHub App on your workspace to allow MetroFlow to
+                Install the GitHub App on your workspace to allow ShipFlow to
                 read PRs and post reviews.
               </p>
               <Button
