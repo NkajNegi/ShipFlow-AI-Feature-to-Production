@@ -12,7 +12,7 @@ export {
 } from "./lib/github";
 export {
   activateProForSubscription,
-  addCreditsFromPaymentLink,
+  confirmCreditsPayment,
 } from "./lib/billing";
 export { alreadyProcessed } from "./lib/webhook";
 export { captureError } from "./lib/log";
@@ -26,3 +26,5 @@ export { getWorkspaceAiModel } from "./lib/ai";
 export { createAgentTools } from "./lib/agent/tools";
 export { enforceRateLimit } from "./lib/ratelimit";
 export { computeSlaState, formatSlaLabel } from "./lib/sla";
+
+export * from "./lib/agent/tools";

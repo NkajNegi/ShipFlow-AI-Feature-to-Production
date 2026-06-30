@@ -81,10 +81,9 @@ export const billingRouter = createTRPCRouter({
       );
 
       try {
+        // Price + credit count are fixed server-side (CREDIT_PACK).
         const link = await createRazorpayPaymentLinkForCredits(
           input.workspaceId,
-          100, // Credits
-          1000, // INR
         );
         return link;
       } catch (err: any) {

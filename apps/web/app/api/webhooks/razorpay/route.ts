@@ -3,7 +3,7 @@ import {
   activateProForSubscription,
   alreadyProcessed,
   captureError,
-  addCreditsFromPaymentLink,
+  confirmCreditsPayment,
 } from "@repo/api";
 
 export const runtime = "nodejs";
@@ -65,7 +65,8 @@ export async function POST(req: Request) {
     
     if (paymentLinkId && amountPaidPaise > 0) {
       try {
-        await addCreditsFromPaymentLink(paymentLinkId, amountPaidPaise);
+        // Verifies the paid amount against the persisted order before crediting.
+        await confirmCreditsPayment(paymentLinkId, amountPaidPaise);
       } catch (err) {
         captureError(err, { webhook: "razorpay", type });
       }
