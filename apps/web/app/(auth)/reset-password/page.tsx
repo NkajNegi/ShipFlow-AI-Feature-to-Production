@@ -39,7 +39,9 @@ function ResetForm() {
       setDone(true);
       setTimeout(() => router.push("/login"), 1500);
     } catch (err: any) {
-      setError(err?.message || "Could not reset password. The link may have expired.");
+      setError(
+        err?.message || "Could not reset password. The link may have expired.",
+      );
     } finally {
       setLoading(false);
     }
@@ -122,7 +124,8 @@ function ResetForm() {
                 disabled={loading}
                 className="w-full h-12 rounded-xl font-bold text-[15px] text-black transition-opacity hover:opacity-90 disabled:opacity-50"
                 style={{
-                  background: "linear-gradient(90deg, #c084fc 0%, #facc15 100%)",
+                  background:
+                    "linear-gradient(90deg, #c084fc 0%, #facc15 100%)",
                   boxShadow: "0 4px 14px rgba(192,132,252,0.4)",
                 }}
               >

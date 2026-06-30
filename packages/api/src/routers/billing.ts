@@ -2,7 +2,10 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { assertWorkspaceMember } from "../lib/access";
-import { createRazorpaySubscription, createRazorpayPaymentLinkForCredits } from "../lib/billing";
+import {
+  createRazorpaySubscription,
+  createRazorpayPaymentLinkForCredits,
+} from "../lib/billing";
 import { PLAN_LIMITS } from "../lib/plan";
 
 export const billingRouter = createTRPCRouter({
@@ -12,7 +15,7 @@ export const billingRouter = createTRPCRouter({
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
-        input.workspaceId
+        input.workspaceId,
       );
       const ws = await ctx.prisma.workspace.findUnique({
         where: { id: input.workspaceId },
@@ -24,7 +27,10 @@ export const billingRouter = createTRPCRouter({
         },
       });
       if (!ws) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Workspace not found." });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Workspace not found.",
+        });
       }
       const tier = (ws.planTier as keyof typeof PLAN_LIMITS) ?? "FREE";
       const repositoryCount = await ctx.prisma.repository.count({
@@ -50,7 +56,7 @@ export const billingRouter = createTRPCRouter({
         ctx.prisma,
         ctx.session.user.id,
         input.workspaceId,
-        ["ADMIN"]
+        ["ADMIN"],
       );
       try {
         const sub = await createRazorpaySubscription(input.workspaceId);
@@ -71,14 +77,14 @@ export const billingRouter = createTRPCRouter({
         ctx.prisma,
         ctx.session.user.id,
         input.workspaceId,
-        ["ADMIN", "LEAD"]
+        ["ADMIN", "LEAD"],
       );
-      
+
       try {
         const link = await createRazorpayPaymentLinkForCredits(
           input.workspaceId,
           100, // Credits
-          1000 // INR
+          1000, // INR
         );
         return link;
       } catch (err: any) {

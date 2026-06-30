@@ -60,6 +60,6 @@ export async function GET(req: Request) {
   });
 
   return NextResponse.redirect(
-    new URL(`/dashboard/${workspaceId}/settings`, req.url)
+    new URL(`/dashboard/${workspaceId}/settings`, req.url),
   );
 }

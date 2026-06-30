@@ -25,7 +25,7 @@ const ClarificationSchema = z.object({
   existingFeatureNote: z
     .string()
     .describe(
-      "If similar functionality already exists, a short educational note for the user; otherwise empty"
+      "If similar functionality already exists, a short educational note for the user; otherwise empty",
     ),
 });
 
@@ -38,7 +38,7 @@ export const clarifyRouter = createTRPCRouter({
       await assertFeatureRequestAccess(
         ctx.prisma,
         ctx.session.user.id,
-        input.featureRequestId
+        input.featureRequestId,
       );
 
       const feature = await ctx.prisma.featureRequest.findUnique({
@@ -52,7 +52,11 @@ export const clarifyRouter = createTRPCRouter({
       // Honour the user's BYOK on/off toggle.
       const actingUser = await ctx.prisma.user.findUnique({
         where: { id: ctx.session.user.id },
-        select: { anthropicApiKeyEnc: true, openRouterApiKeyEnc: true, aiKeyEnabled: true },
+        select: {
+          anthropicApiKeyEnc: true,
+          openRouterApiKeyEnc: true,
+          aiKeyEnabled: true,
+        },
       });
       const userKey = actingUser?.aiKeyEnabled
         ? actingUser.anthropicApiKeyEnc
@@ -68,7 +72,12 @@ export const clarifyRouter = createTRPCRouter({
       });
 
       // Abuse + cost guardrails.
-      await enforceRateLimit(ctx.prisma, `ai:clarify:${ctx.session.user.id}`, 15, 60);
+      await enforceRateLimit(
+        ctx.prisma,
+        `ai:clarify:${ctx.session.user.id}`,
+        15,
+        60,
+      );
       await consumeAiCreditIfPlatform(ctx.prisma, feature.project.workspaceId);
 
       // Pull sibling features (with shipped PRDs) so the AI can detect overlap.
@@ -134,13 +143,13 @@ educational note about existing functionality.`,
       z.object({
         featureRequestId: z.string(),
         answers: z.string().min(1).max(5000),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const feature = await assertFeatureRequestAccess(
         ctx.prisma,
         ctx.session.user.id,
-        input.featureRequestId
+        input.featureRequestId,
       );
       const current = await ctx.prisma.featureRequest.findUnique({
         where: { id: feature.id },

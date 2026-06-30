@@ -9,7 +9,11 @@ export const {
   signIn,
   signUp,
   signOut,
-  forgetPassword,
+  requestPasswordReset,
   resetPassword,
   sendVerificationEmail,
 } = authClient;
+
+// Backwards-compatible alias: better-auth renamed `forgetPassword` →
+// `requestPasswordReset`. Keep the old name working for existing callers.
+export const forgetPassword = requestPasswordReset;

@@ -35,7 +35,7 @@ export function NotificationPopover({ workspaceId }: { workspaceId?: string }) {
 
   const q = trpc.notification.getForWorkspace.useQuery(
     { workspaceId: workspaceId ?? "" },
-    { enabled: !!workspaceId, refetchInterval: 120_000 }
+    { enabled: !!workspaceId, refetchInterval: 120_000 },
   );
   const items = q.data ?? [];
 
@@ -49,12 +49,13 @@ export function NotificationPopover({ workspaceId }: { workspaceId?: string }) {
   }, [seenKey]);
 
   const unreadCount = items.filter(
-    (n) => new Date(n.createdAt).getTime() > lastSeen
+    (n) => new Date(n.createdAt).getTime() > lastSeen,
   ).length;
 
   const markAllAsRead = () => {
     const now = Date.now();
-    if (typeof window !== "undefined") localStorage.setItem(seenKey, String(now));
+    if (typeof window !== "undefined")
+      localStorage.setItem(seenKey, String(now));
     setLastSeen(now);
   };
 
@@ -85,10 +86,14 @@ export function NotificationPopover({ workspaceId }: { workspaceId?: string }) {
       <button
         onClick={toggleOpen}
         className={`relative w-9 h-9 rounded-full border flex items-center justify-center transition-all ${
-          isOpen ? "bg-white/10 border-white/20" : "bg-[#111] border-white/10 hover:bg-white/5"
+          isOpen
+            ? "bg-white/10 border-white/20"
+            : "bg-[#111] border-white/10 hover:bg-white/5"
         }`}
       >
-        <Bell className={`h-4 w-4 ${isOpen ? "text-white" : "text-muted-foreground"}`} />
+        <Bell
+          className={`h-4 w-4 ${isOpen ? "text-white" : "text-muted-foreground"}`}
+        />
         {unreadCount > 0 && (
           <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 border-2 border-black rounded-full flex items-center justify-center text-[8px] font-bold text-white">
             {unreadCount > 9 ? "9+" : unreadCount}
@@ -126,7 +131,9 @@ export function NotificationPopover({ workspaceId }: { workspaceId?: string }) {
                         unread ? "bg-white/[0.02]" : ""
                       } ${notif.href ? "cursor-pointer" : ""}`}
                     >
-                      <div className="mt-0.5 shrink-0">{getTypeIcon(notif.type)}</div>
+                      <div className="mt-0.5 shrink-0">
+                        {getTypeIcon(notif.type)}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <span
@@ -165,7 +172,9 @@ export function NotificationPopover({ workspaceId }: { workspaceId?: string }) {
             ) : (
               <div className="p-8 text-center flex flex-col items-center justify-center">
                 <Bell className="w-8 h-8 text-white/10 mb-3" />
-                <p className="text-sm text-muted-foreground">You're all caught up!</p>
+                <p className="text-sm text-muted-foreground">
+                  You're all caught up!
+                </p>
               </div>
             )}
           </div>

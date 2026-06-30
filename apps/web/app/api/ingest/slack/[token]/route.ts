@@ -41,7 +41,7 @@ function ephemeral(text: string, status = 200) {
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ token: string }> }
+  { params }: { params: Promise<{ token: string }> },
 ) {
   const { token } = await params;
   const rawBody = await req.text();
@@ -55,9 +55,7 @@ export async function POST(
   const userName = form.get("user_name") ?? "someone";
 
   if (!text) {
-    return ephemeral(
-      "Usage: `/metroflow <describe the feature you want>`"
-    );
+    return ephemeral("Usage: `/metroflow <describe the feature you want>`");
   }
   if (text.length > 10000) {
     return ephemeral("That request is too long (max 10,000 characters).");
@@ -68,7 +66,10 @@ export async function POST(
     select: { id: true, name: true },
   });
   if (!project) {
-    return ephemeral("This Slack command isn’t linked to a valid project.", 401);
+    return ephemeral(
+      "This Slack command isn’t linked to a valid project.",
+      401,
+    );
   }
 
   // Title = first line / sentence (trimmed); full text kept as context.
@@ -87,6 +88,6 @@ export async function POST(
 
   return ephemeral(
     `✅ Feature request created in *${project.name}* and queued for AI discovery.\n` +
-      `Track it in MetroFlow (id \`${fr.id}\`).`
+      `Track it in MetroFlow (id \`${fr.id}\`).`,
   );
 }

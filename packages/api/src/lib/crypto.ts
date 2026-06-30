@@ -38,7 +38,7 @@ export function decryptSecret(payload: string): string {
   const decipher = crypto.createDecipheriv(
     ALGO,
     getKey(),
-    Buffer.from(ivB64, "base64")
+    Buffer.from(ivB64, "base64"),
   );
   decipher.setAuthTag(Buffer.from(tagB64, "base64"));
   const dec = Buffer.concat([

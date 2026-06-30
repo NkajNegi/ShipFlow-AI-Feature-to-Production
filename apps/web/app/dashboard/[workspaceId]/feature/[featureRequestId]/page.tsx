@@ -290,10 +290,10 @@ export default function FeatureCommandCenter({
       ) : null}
 
       {/* Phase 2 — human approval of the plan before development starts */}
-      {prd && (feature.status === "PLANNING" || feature.status === "PLANNED") && (
+      {prd && (feature.status === "PLANNING" || feature.status === "PLAN_APPROVED") && (
         <Card className="border-border">
           <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
-            {feature.status === "PLANNED" ? (
+            {feature.status === "PLAN_APPROVED" ? (
               <p className="flex items-center gap-2 text-sm text-indigo-400">
                 <CheckCircle2 className="h-4 w-4" /> Plan approved — ready for
                 development. Open a PR referencing this feature to begin.
@@ -751,6 +751,10 @@ function PrdSection({
     nonGoals: (content.nonGoals ?? []).join("\n"),
     userStories: (content.userStories ?? []).join("\n"),
     acceptanceCriteria: (content.acceptanceCriteria ?? []).join("\n"),
+    technicalRequirements: (content.technicalRequirements ?? []).join("\n"),
+    securityRequirements: (content.securityRequirements ?? []).join("\n"),
+    testingStrategy: (content.testingStrategy ?? []).join("\n"),
+    rollbackPlan: content.rollbackPlan ?? "",
     edgeCases: (content.edgeCases ?? []).join("\n"),
     successMetrics: (content.successMetrics ?? []).join("\n"),
   });
@@ -778,6 +782,10 @@ function PrdSection({
         nonGoals: toLines(draft.nonGoals),
         userStories: toLines(draft.userStories),
         acceptanceCriteria: toLines(draft.acceptanceCriteria),
+        technicalRequirements: toLines(draft.technicalRequirements),
+        securityRequirements: toLines(draft.securityRequirements),
+        testingStrategy: toLines(draft.testingStrategy),
+        rollbackPlan: draft.rollbackPlan,
         edgeCases: toLines(draft.edgeCases),
         successMetrics: toLines(draft.successMetrics),
       },
@@ -845,6 +853,26 @@ function PrdSection({
               onChange={(v) => setDraft({ ...draft, acceptanceCriteria: v })}
             />
             <EditField
+              label="Technical requirements (one per line)"
+              value={draft.technicalRequirements}
+              onChange={(v) => setDraft({ ...draft, technicalRequirements: v })}
+            />
+            <EditField
+              label="Security requirements (one per line)"
+              value={draft.securityRequirements}
+              onChange={(v) => setDraft({ ...draft, securityRequirements: v })}
+            />
+            <EditField
+              label="Testing strategy (one per line)"
+              value={draft.testingStrategy}
+              onChange={(v) => setDraft({ ...draft, testingStrategy: v })}
+            />
+            <EditField
+              label="Rollback plan"
+              value={draft.rollbackPlan}
+              onChange={(v) => setDraft({ ...draft, rollbackPlan: v })}
+            />
+            <EditField
               label="Edge cases (one per line)"
               value={draft.edgeCases}
               onChange={(v) => setDraft({ ...draft, edgeCases: v })}
@@ -868,6 +896,23 @@ function PrdSection({
               title="Acceptance criteria"
               items={content.acceptanceCriteria}
             />
+            <BulletSection
+              title="Technical requirements"
+              items={content.technicalRequirements}
+            />
+            <BulletSection
+              title="Security requirements"
+              items={content.securityRequirements}
+            />
+            <BulletSection
+              title="Testing strategy"
+              items={content.testingStrategy}
+            />
+            {content.rollbackPlan && (
+              <Section title="Rollback plan">
+                <p className="text-muted-foreground">{content.rollbackPlan}</p>
+              </Section>
+            )}
             <BulletSection title="Edge cases" items={content.edgeCases} />
             <BulletSection title="Success metrics" items={content.successMetrics} />
           </>

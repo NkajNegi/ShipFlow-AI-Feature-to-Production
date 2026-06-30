@@ -19,13 +19,13 @@ final decision makers.
 
 ### The Core Loop
 
-| Phase | What happens |
-| ----- | ------------ |
-| **1. Discovery** | An AI PM clarifies the request, asks follow-up questions for missing context, and educates the user if similar functionality already exists. Only valid + new requests proceed. It then generates a strict PRD: problem statement, goals, non-goals, user stories, acceptance criteria, edge cases, success metrics. |
-| **2. Planning** | The PRD is converted into engineering tasks tracked on a drag-and-drop Kanban board; teams review/approve the plan. |
-| **3. Development** | A GitHub App connects repos. A PR that references a task (`Closes SF-123`) is mapped to the feature automatically via webhook. |
-| **4. AI Review Loop** | A QA agent reviews the diff against the PRD, acceptance criteria, tasks, security (OWASP Top 10), performance, edge cases, and code quality — classifying issues **BLOCKING** vs **NON_BLOCKING**, posting them to the PR, and sending the feature to `FIX_NEEDED` until clean. Re-reviews run on every push. |
-| **5. Human Approval** | A command center aggregates the PRD, tasks, PR status, and full AI review history. Admins/Leads approve or reject; only approved, non-blocking features become `SHIPPED`. |
+| Phase                 | What happens                                                                                                                                                                                                                                                                                                         |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1. Discovery**      | An AI PM clarifies the request, asks follow-up questions for missing context, and educates the user if similar functionality already exists. Only valid + new requests proceed. It then generates a strict PRD: problem statement, goals, non-goals, user stories, acceptance criteria, edge cases, success metrics. |
+| **2. Planning**       | The PRD is converted into engineering tasks tracked on a drag-and-drop Kanban board; teams review/approve the plan.                                                                                                                                                                                                  |
+| **3. Development**    | A GitHub App connects repos. A PR that references a task (`Closes SF-123`) is mapped to the feature automatically via webhook.                                                                                                                                                                                       |
+| **4. AI Review Loop** | A QA agent reviews the diff against the PRD, acceptance criteria, tasks, security (OWASP Top 10), performance, edge cases, and code quality — classifying issues **BLOCKING** vs **NON_BLOCKING**, posting them to the PR, and sending the feature to `FIX_NEEDED` until clean. Re-reviews run on every push.        |
+| **5. Human Approval** | A command center aggregates the PRD, tasks, PR status, and full AI review history. Admins/Leads approve or reject; only approved, non-blocking features become `SHIPPED`.                                                                                                                                            |
 
 ---
 
@@ -87,17 +87,20 @@ role checks (ADMIN/LEAD/MEMBER).
 ## Setup Instructions
 
 ### Prerequisites
+
 - Node.js ≥ 18
 - A PostgreSQL database
 - Anthropic API key (plus a GitHub App and Razorpay account for full functionality)
 
 ### Install & configure
+
 ```bash
 npm install
 cp .env.example apps/web/.env        # fill in the values
 ```
 
 ### Database
+
 ```bash
 npm run db:generate --workspace @repo/db
 npm run db:push --workspace @repo/db      # quick local sync
@@ -106,6 +109,7 @@ npm run db:push --workspace @repo/db      # quick local sync
 ```
 
 ### Run (3 terminals for full local dev)
+
 ```bash
 npm run dev                          # web app on http://localhost:3001
 npx inngest-cli@latest dev           # Inngest dev server (executes workflows locally)
@@ -116,24 +120,24 @@ npx inngest-cli@latest dev           # Inngest dev server (executes workflows lo
 
 ## Environment Variables
 
-| Variable | Purpose |
-| -------- | ------- |
-| `DATABASE_URL` | PostgreSQL connection string |
-| `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL` | BetterAuth session signing + base URL |
-| `NEXT_PUBLIC_APP_URL` | Public app URL (auth client) |
-| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | GitHub social login (optional) |
-| `ANTHROPIC_API_KEY` | Platform Claude API key (fallback when a workspace has no BYOK key) |
-| `AI_MODEL` | Model override (default `claude-3-5-sonnet-latest`) |
-| `ENCRYPTION_KEY` | 32-byte key (hex/base64) used to encrypt workspace BYOK keys at rest |
-| `REQUIRE_EMAIL_VERIFICATION` | `true` to require verified email before login (needs a mail sender) |
-| `SENTRY_DSN` | Optional error-tracking DSN (wire up in `packages/api/src/lib/log.ts`) |
-| `GITHUB_APP_ID` / `GITHUB_APP_SLUG` | GitHub App identity |
-| `GITHUB_APP_PRIVATE_KEY` | GitHub App PEM (escaped `\n` supported) |
-| `GITHUB_WEBHOOK_SECRET` | Verifies incoming PR webhooks |
-| `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Inngest production keys |
-| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | Razorpay API keys |
-| `RAZORPAY_PRO_PLAN_ID` | Razorpay Plan id for the Pro tier |
-| `RAZORPAY_WEBHOOK_SECRET` | Verifies Razorpay billing webhooks |
+| Variable                                    | Purpose                                                                |
+| ------------------------------------------- | ---------------------------------------------------------------------- |
+| `DATABASE_URL`                              | PostgreSQL connection string                                           |
+| `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL`    | BetterAuth session signing + base URL                                  |
+| `NEXT_PUBLIC_APP_URL`                       | Public app URL (auth client)                                           |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | GitHub social login (optional)                                         |
+| `ANTHROPIC_API_KEY`                         | Platform Claude API key (fallback when a workspace has no BYOK key)    |
+| `AI_MODEL`                                  | Model override (default `claude-3-5-sonnet-latest`)                    |
+| `ENCRYPTION_KEY`                            | 32-byte key (hex/base64) used to encrypt workspace BYOK keys at rest   |
+| `REQUIRE_EMAIL_VERIFICATION`                | `true` to require verified email before login (needs a mail sender)    |
+| `SENTRY_DSN`                                | Optional error-tracking DSN (wire up in `packages/api/src/lib/log.ts`) |
+| `GITHUB_APP_ID` / `GITHUB_APP_SLUG`         | GitHub App identity                                                    |
+| `GITHUB_APP_PRIVATE_KEY`                    | GitHub App PEM (escaped `\n` supported)                                |
+| `GITHUB_WEBHOOK_SECRET`                     | Verifies incoming PR webhooks                                          |
+| `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Inngest production keys                                                |
+| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET`   | Razorpay API keys                                                      |
+| `RAZORPAY_PRO_PLAN_ID`                      | Razorpay Plan id for the Pro tier                                      |
+| `RAZORPAY_WEBHOOK_SECRET`                   | Verifies Razorpay billing webhooks                                     |
 
 ---
 
@@ -238,5 +242,5 @@ npm run check-types   # type-check
 
 ---
 
-*Builder Mode On | iPhone Giveaway Hackathon*
-*#chaicode*
+_Builder Mode On | iPhone Giveaway Hackathon_
+_#chaicode_

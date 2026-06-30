@@ -17,7 +17,9 @@ export function LogoBadge({ size = 26 }: { size?: number }) {
       }}
     >
       {/* Animated M */}
-      <span className="relative z-10 animate-pulse transform transition-transform duration-500 group-hover:scale-110">M</span>
+      <span className="relative z-10 animate-pulse transform transition-transform duration-500 group-hover:scale-110">
+        M
+      </span>
     </div>
   );
 }
@@ -31,16 +33,49 @@ export function MarketingHeader() {
           MetroFlow<span style={{ color: ACCENT }}> AI</span>
         </span>
       </Link>
-      <nav className="ml-6 hidden gap-[22px] sm:flex">
-        <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+      <nav className="ml-6 hidden gap-[22px] lg:flex">
+        <a
+          href="/#how"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          How it works
+        </a>
+        <a
+          href="/#review"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          AI review
+        </a>
+        <a
+          href="/#agent"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Agent
+        </a>
+        <Link
+          href="/pricing"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
           Pricing
         </Link>
-        <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <a
+          href="/#faq"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          FAQ
+        </a>
+        <Link
+          href="/docs"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
           Docs
         </Link>
       </nav>
       <div className="ml-auto flex items-center gap-2.5">
-        <Link href="/login" className="px-3 py-2 text-sm font-semibold text-foreground/85 hover:text-foreground transition-colors">
+        <Link
+          href="/login"
+          className="px-3 py-2 text-sm font-semibold text-foreground/85 hover:text-foreground transition-colors"
+        >
           Sign in
         </Link>
         <Link

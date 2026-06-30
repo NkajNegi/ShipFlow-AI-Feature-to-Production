@@ -22,8 +22,7 @@ export const auth = betterAuth({
     maxPasswordLength: 128,
     // Email verification is opt-in via env so local/demo isn't blocked when no
     // mail provider is configured. Enable in production with a real sender.
-    requireEmailVerification:
-      process.env.REQUIRE_EMAIL_VERIFICATION === "true",
+    requireEmailVerification: process.env.REQUIRE_EMAIL_VERIFICATION === "true",
     // Password reset — emails a link back to /reset-password?token=...
     sendResetPassword: async ({ user, url }) => {
       await sendEmail({

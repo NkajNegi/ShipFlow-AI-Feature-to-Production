@@ -94,7 +94,7 @@ Return structured findings based only on your own analysis.`,
  * null if prerequisites are missing.
  */
 export async function runCommitReview(
-  commitReviewId: string
+  commitReviewId: string,
 ): Promise<string | null> {
   const cr = await prisma.commitReview.findUnique({
     where: { id: commitReviewId },
@@ -127,11 +127,19 @@ export async function runCommitReview(
     if (cr.requestedById) {
       const user = await prisma.user.findUnique({
         where: { id: cr.requestedById },
-        select: { anthropicApiKeyEnc: true, openRouterApiKeyEnc: true, aiKeyEnabled: true },
+        select: {
+          anthropicApiKeyEnc: true,
+          openRouterApiKeyEnc: true,
+          aiKeyEnabled: true,
+        },
       });
       // Honour the user's BYOK on/off toggle.
-      userKeyEnc = user?.aiKeyEnabled ? (user.anthropicApiKeyEnc ?? null) : null;
-      userOrKeyEnc = user?.aiKeyEnabled ? (user.openRouterApiKeyEnc ?? null) : null;
+      userKeyEnc = user?.aiKeyEnabled
+        ? (user.anthropicApiKeyEnc ?? null)
+        : null;
+      userOrKeyEnc = user?.aiKeyEnabled
+        ? (user.openRouterApiKeyEnc ?? null)
+        : null;
     }
 
     const [owner, repo] = cr.repository.fullName.split("/") as [string, string];
@@ -140,7 +148,7 @@ export async function runCommitReview(
     await addStep(runId, "Fetching commit diff from GitHub");
     const diffResp = await octokit.request(
       "GET /repos/{owner}/{repo}/commits/{ref}",
-      { owner, repo, ref: cr.sha, mediaType: { format: "diff" } }
+      { owner, repo, ref: cr.sha, mediaType: { format: "diff" } },
     );
     const diff = diffResp.data as unknown as string;
 
@@ -153,7 +161,7 @@ export async function runCommitReview(
         anthropicUser: userKeyEnc,
         openRouterWorkspace: workspace.openRouterApiKeyEnc,
         openRouterUser: userOrKeyEnc,
-      }
+      },
     });
 
     await prisma.commitReview.update({

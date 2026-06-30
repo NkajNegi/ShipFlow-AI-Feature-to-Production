@@ -4,10 +4,7 @@
  * `@sentry/node` and call `Sentry.captureException` here). Kept dependency-free
  * so it's safe to call from anywhere (webhooks, Inngest functions).
  */
-export function captureError(
-  err: unknown,
-  context?: Record<string, unknown>
-) {
+export function captureError(err: unknown, context?: Record<string, unknown>) {
   // eslint-disable-next-line no-console
   console.error("[metroflow:error]", context ?? {}, err);
 }

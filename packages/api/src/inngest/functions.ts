@@ -5,6 +5,7 @@ import { runReviewForPullRequest } from "../lib/review";
 import { analyzeRepository } from "../lib/repo";
 import { runCommitReview } from "../lib/commitReview";
 import { runReadinessCheck } from "../lib/readiness";
+import { runCodegenForFeature } from "../lib/codegen";
 
 /**
  * Inngest workflow functions (async, durable, retryable).
@@ -16,9 +17,9 @@ import { runReadinessCheck } from "../lib/readiness";
  */
 
 export const generatePrdFn = inngest.createFunction(
-  { 
-    id: "generate-prd", 
-    name: "Generate PRD", 
+  {
+    id: "generate-prd",
+    name: "Generate PRD",
     retries: 2,
     cancelOn: [
       {
@@ -31,16 +32,16 @@ export const generatePrdFn = inngest.createFunction(
   async ({ event, step }) => {
     const { featureRequestId } = event.data;
     const prd = await step.run("generate-prd", () =>
-      generatePrdForFeature(featureRequestId)
+      generatePrdForFeature(featureRequestId),
     );
     return { prdId: prd.id };
-  }
+  },
 );
 
 export const runReviewFn = inngest.createFunction(
-  { 
-    id: "run-ai-review", 
-    name: "Run AI Code Review", 
+  {
+    id: "run-ai-review",
+    name: "Run AI Code Review",
     retries: 2,
     cancelOn: [
       {
@@ -53,10 +54,10 @@ export const runReviewFn = inngest.createFunction(
   async ({ event, step }) => {
     const { pullRequestId, reviewId } = event.data;
     const finalReviewId = await step.run("run-review", () =>
-      runReviewForPullRequest(pullRequestId, reviewId)
+      runReviewForPullRequest(pullRequestId, reviewId),
     );
     return { reviewId: finalReviewId };
-  }
+  },
 );
 
 export const repoAnalyzeFn = inngest.createFunction(
@@ -65,10 +66,10 @@ export const repoAnalyzeFn = inngest.createFunction(
   async ({ event, step }) => {
     const { repositoryId } = event.data;
     const id = await step.run("analyze-repo", () =>
-      analyzeRepository(repositoryId)
+      analyzeRepository(repositoryId),
     );
     return { repositoryId: id };
-  }
+  },
 );
 
 export const runCommitReviewFn = inngest.createFunction(
@@ -81,13 +82,16 @@ export const runCommitReviewFn = inngest.createFunction(
       // we must mark the review as FAILED so it doesn't get stuck in PENDING forever on the UI.
       const { commitReviewId } = event.data.event.data;
       if (commitReviewId) {
-        await prisma.commitReview.update({
-          where: { id: commitReviewId },
-          data: {
-            status: "FAILED",
-            error: "Background worker timed out or exhausted retries. Check Vercel/Inngest logs.",
-          },
-        }).catch(() => {});
+        await prisma.commitReview
+          .update({
+            where: { id: commitReviewId },
+            data: {
+              status: "FAILED",
+              error:
+                "Background worker timed out or exhausted retries. Check Vercel/Inngest logs.",
+            },
+          })
+          .catch(() => {});
       }
     },
   },
@@ -95,22 +99,59 @@ export const runCommitReviewFn = inngest.createFunction(
   async ({ event, step }) => {
     const { commitReviewId } = event.data;
     const id = await step.run("run-commit-review", () =>
-      runCommitReview(commitReviewId)
+      runCommitReview(commitReviewId),
     );
     return { commitReviewId: id };
-  }
+  },
 );
 
 export const runReadinessCheckFn = inngest.createFunction(
-  { id: "run-readiness-check", name: "Run AI Release Readiness Check", retries: 2 },
+  {
+    id: "run-readiness-check",
+    name: "Run AI Release Readiness Check",
+    retries: 2,
+  },
   { event: EVENTS.READINESS_CHECK },
   async ({ event, step }) => {
     const { featureRequestId } = event.data;
     const id = await step.run("run-readiness", () =>
-      runReadinessCheck(featureRequestId)
+      runReadinessCheck(featureRequestId),
     );
     return { featureRequestId: id };
-  }
+  },
+);
+
+export const runCodegenFn = inngest.createFunction(
+  {
+    id: "run-codegen",
+    name: "Run AI Codegen",
+    // Codegen is expensive (ensemble + critic + revision) — a single retry only.
+    retries: 1,
+    onFailure: async ({ event }) => {
+      // Ensure the run never gets stuck in a non-terminal state on total failure.
+      const { codegenRunId } = event.data.event.data;
+      if (codegenRunId) {
+        await prisma.codegenRun
+          .update({
+            where: { id: codegenRunId },
+            data: {
+              status: "FAILED",
+              error:
+                "Background worker timed out or exhausted retries. Check Inngest logs.",
+            },
+          })
+          .catch(() => {});
+      }
+    },
+  },
+  { event: EVENTS.CODEGEN_RUN },
+  async ({ event, step }) => {
+    const { codegenRunId } = event.data;
+    const id = await step.run("run-codegen", () =>
+      runCodegenForFeature(codegenRunId),
+    );
+    return { codegenRunId: id };
+  },
 );
 
 // Daily housekeeping: prune expired rate-limit buckets and old records.
@@ -133,7 +174,7 @@ export const cleanupFn = inngest.createFunction(
       return { ok: true };
     });
     return { ok: true };
-  }
+  },
 );
 
 export const inngestFunctions = [
@@ -142,5 +183,6 @@ export const inngestFunctions = [
   repoAnalyzeFn,
   runCommitReviewFn,
   runReadinessCheckFn,
+  runCodegenFn,
   cleanupFn,
 ];

@@ -5,27 +5,30 @@ import { trpc } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
-export function RepoLinker({ 
-  workspaceId, 
-  onSuccess 
-}: { 
-  workspaceId: string; 
-  onSuccess?: () => void; 
+export function RepoLinker({
+  workspaceId,
+  onSuccess,
+}: {
+  workspaceId: string;
+  onSuccess?: () => void;
 }) {
   const utils = trpc.useUtils();
   const available = trpc.github.listRepositories.useQuery(
     { workspaceId },
-    { retry: false }
+    { retry: false },
   );
   const projects = trpc.project.list.useQuery({ workspaceId });
   const hasProjects = (projects.data ?? []).length > 0;
   const [repoSel, setRepoSel] = useState("");
   const [userProjSel, setUserProjSel] = useState<string | null>(null);
-  
+
   // Safe default: "NEW" if loaded and 0 projects, otherwise ""
-  const projSel = userProjSel !== null 
-    ? userProjSel 
-    : (projects.isSuccess && !hasProjects ? "NEW" : "");
+  const projSel =
+    userProjSel !== null
+      ? userProjSel
+      : projects.isSuccess && !hasProjects
+        ? "NEW"
+        : "";
 
   const link = trpc.github.linkRepository.useMutation({
     onSuccess: () => {
@@ -85,9 +88,7 @@ export function RepoLinker({
               {projects.isLoading ? "Loading projects…" : "Select a project"}
             </option>
           )}
-          <option value="NEW">
-            Auto-create project for repository
-          </option>
+          <option value="NEW">Auto-create project for repository</option>
           {(projects.data ?? []).map((p: any) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -99,9 +100,7 @@ export function RepoLinker({
           disabled={!repoSel || !projSel || link.isPending}
           onClick={connect}
         >
-          {link.isPending && (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          )}
+          {link.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Connect
         </Button>
       </div>

@@ -1,5 +1,10 @@
 import crypto from "crypto";
-import { activateProForSubscription, alreadyProcessed, captureError, addCreditsFromPaymentLink } from "@repo/api";
+import {
+  activateProForSubscription,
+  alreadyProcessed,
+  captureError,
+  addCreditsFromPaymentLink,
+} from "@repo/api";
 
 export const runtime = "nodejs";
 
@@ -17,7 +22,7 @@ function verify(payload: string, signature: string | null): boolean {
   try {
     return crypto.timingSafeEqual(
       Buffer.from(expected),
-      Buffer.from(signature)
+      Buffer.from(signature),
     );
   } catch {
     return false;
@@ -34,7 +39,8 @@ export async function POST(req: Request) {
 
   // Idempotency: skip events Razorpay has already delivered.
   const eventId =
-    req.headers.get("x-razorpay-event-id") || `${req.headers.get("x-razorpay-signature")}`;
+    req.headers.get("x-razorpay-event-id") ||
+    `${req.headers.get("x-razorpay-signature")}`;
   if (await alreadyProcessed("razorpay", eventId)) {
     return Response.json({ ok: true, deduped: true });
   }
@@ -53,7 +59,9 @@ export async function POST(req: Request) {
     }
   } else if (type === "payment_link.paid") {
     const workspaceId = event.payload?.payment_link?.entity?.notes?.workspaceId;
-    const credits = Number(event.payload?.payment_link?.entity?.notes?.credits || 0);
+    const credits = Number(
+      event.payload?.payment_link?.entity?.notes?.credits || 0,
+    );
     if (workspaceId && credits) {
       try {
         await addCreditsFromPaymentLink(workspaceId, credits);

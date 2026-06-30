@@ -13,7 +13,7 @@ type Db = PrismaClient;
  */
 export async function consumeAiCreditIfPlatform(
   prisma: Db,
-  workspaceId: string
+  workspaceId: string,
 ): Promise<void> {
   const ws = await prisma.workspace.findUnique({
     where: { id: workspaceId },

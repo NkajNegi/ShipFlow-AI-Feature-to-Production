@@ -39,8 +39,7 @@ export function WorkspaceSetup({
   const projects = trpc.project.list.useQuery({ workspaceId });
   const linked = trpc.github.listLinkedRepositories.useQuery({ workspaceId });
 
-  const loading =
-    status.isLoading || projects.isLoading || linked.isLoading;
+  const loading = status.isLoading || projects.isLoading || linked.isLoading;
   const ghConnected = Boolean(status.data?.connected);
   const hasProject = (projects.data?.length ?? 0) > 0;
   const hasRepo = (linked.data?.length ?? 0) > 0;
@@ -68,7 +67,7 @@ export function WorkspaceSetup({
 
   const available = trpc.github.listRepositories.useQuery(
     { workspaceId },
-    { retry: false, enabled: ghConnected }
+    { retry: false, enabled: ghConnected },
   );
   const [repoSel, setRepoSel] = useState("");
   const [projSel, setProjSel] = useState("");
@@ -100,10 +99,16 @@ export function WorkspaceSetup({
   const body = (
     <div className="space-y-3">
       {/* Step 1 — GitHub */}
-      <Step done={ghConnected} icon={GitBranch} title="Connect GitHub" loading={loading}>
+      <Step
+        done={ghConnected}
+        icon={GitBranch}
+        title="Connect GitHub"
+        loading={loading}
+      >
         {ghConnected ? (
           <p className="text-sm text-emerald-400">
-            Connected{status.data?.accountLogin ? ` · ${status.data.accountLogin}` : ""}.
+            Connected
+            {status.data?.accountLogin ? ` · ${status.data.accountLogin}` : ""}.
           </p>
         ) : (
           <Button
@@ -122,7 +127,12 @@ export function WorkspaceSetup({
       </Step>
 
       {/* Step 2 — Project */}
-      <Step done={hasProject} icon={FolderPlus} title="Create a project" loading={loading}>
+      <Step
+        done={hasProject}
+        icon={FolderPlus}
+        title="Create a project"
+        loading={loading}
+      >
         {hasProject ? (
           <p className="text-sm text-emerald-400">
             {projects.data!.length} project
@@ -153,7 +163,12 @@ export function WorkspaceSetup({
       </Step>
 
       {/* Step 3 — Repository */}
-      <Step done={hasRepo} icon={GitBranch} title="Connect a repository" loading={loading}>
+      <Step
+        done={hasRepo}
+        icon={GitBranch}
+        title="Connect a repository"
+        loading={loading}
+      >
         {hasRepo ? (
           <p className="text-sm text-emerald-400">
             {linked.data!.length} repositor
@@ -162,7 +177,9 @@ export function WorkspaceSetup({
         ) : !ghConnected ? (
           <p className="text-sm text-muted-foreground">Connect GitHub first.</p>
         ) : !hasProject ? (
-          <p className="text-sm text-muted-foreground">Create a project first.</p>
+          <p className="text-sm text-muted-foreground">
+            Create a project first.
+          </p>
         ) : (
           <div className="space-y-2">
             <div className="flex flex-col sm:flex-row gap-2">
@@ -172,7 +189,9 @@ export function WorkspaceSetup({
                 className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm"
               >
                 <option value="">
-                  {available.isLoading ? "Loading repos…" : "Select a repository"}
+                  {available.isLoading
+                    ? "Loading repos…"
+                    : "Select a repository"}
                 </option>
                 {(available.data ?? []).map((r) => (
                   <option key={r.githubId} value={String(r.githubId)}>

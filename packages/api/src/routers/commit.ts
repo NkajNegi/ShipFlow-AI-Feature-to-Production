@@ -17,7 +17,7 @@ import { enforceRateLimit } from "../lib/ratelimit";
 async function repoWithWorkspace(
   prisma: any,
   userId: string,
-  repositoryId: string
+  repositoryId: string,
 ) {
   const repo = await prisma.repository.findUnique({
     where: { id: repositoryId },
@@ -33,7 +33,10 @@ async function repoWithWorkspace(
     },
   });
   if (!repo) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Repository not found." });
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Repository not found.",
+    });
   }
   await assertWorkspaceMember(prisma, userId, repo.project.workspaceId);
   return repo;
@@ -46,13 +49,13 @@ export const commitRouter = createTRPCRouter({
       z.object({
         repositoryId: z.string(),
         perPage: z.number().min(1).max(50).default(20),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const repo = await repoWithWorkspace(
         ctx.prisma,
         ctx.session.user.id,
-        input.repositoryId
+        input.repositoryId,
       );
       const installationId = repo.project.workspace.githubInstallationId;
       if (!installationId || !repo.fullName) {
@@ -86,13 +89,13 @@ export const commitRouter = createTRPCRouter({
       z.object({
         repositoryId: z.string(),
         sha: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const repo = await repoWithWorkspace(
         ctx.prisma,
         ctx.session.user.id,
-        input.repositoryId
+        input.repositoryId,
       );
       const installationId = repo.project.workspace.githubInstallationId;
       if (!installationId || !repo.fullName) {
@@ -106,7 +109,7 @@ export const commitRouter = createTRPCRouter({
         ctx.prisma,
         `ai:commit:${ctx.session.user.id}`,
         15,
-        60
+        60,
       );
 
       const [owner, name] = repo.fullName.split("/");
@@ -166,7 +169,7 @@ export const commitRouter = createTRPCRouter({
       await repoWithWorkspace(
         ctx.prisma,
         ctx.session.user.id,
-        input.repositoryId
+        input.repositoryId,
       );
       return ctx.prisma.commitReview.findUnique({
         where: {
@@ -185,7 +188,7 @@ export const commitRouter = createTRPCRouter({
       await repoWithWorkspace(
         ctx.prisma,
         ctx.session.user.id,
-        input.repositoryId
+        input.repositoryId,
       );
       return ctx.prisma.commitReview.findMany({
         where: { repositoryId: input.repositoryId },

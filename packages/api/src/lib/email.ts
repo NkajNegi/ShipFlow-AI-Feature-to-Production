@@ -22,7 +22,7 @@ export async function sendEmail(opts: {
   if (!apiKey) {
     console.log(
       `[email:fallback] to=${opts.to} subject="${opts.subject}"\n` +
-        (opts.text ?? opts.html)
+        (opts.text ?? opts.html),
     );
     return { sent: false };
   }

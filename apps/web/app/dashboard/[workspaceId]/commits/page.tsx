@@ -45,11 +45,13 @@ export default function CommitsPage({
 
   const syncPRs = trpc.github.syncPullRequests.useMutation({
     onSuccess: (data) => {
-      alert(`Successfully synced ${data.syncedCount} pull requests from GitHub! Check your Kanban board.`);
+      alert(
+        `Successfully synced ${data.syncedCount} pull requests from GitHub! Check your Kanban board.`,
+      );
     },
     onError: (err) => {
       alert(`Failed to sync PRs: ${err.message}`);
-    }
+    },
   });
 
   return (
@@ -64,8 +66,8 @@ export default function CommitsPage({
             improvements. Runs on Claude Opus.
           </p>
         </div>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           disabled={syncPRs.isPending}
           onClick={() => syncPRs.mutate({ workspaceId })}
           className="shrink-0"
@@ -116,7 +118,7 @@ function RepoCommits({ repositoryId }: { repositoryId: string }) {
   const utils = trpc.useUtils();
   const commits = trpc.commit.listCommits.useQuery(
     { repositoryId },
-    { retry: false }
+    { retry: false },
   );
   const reviews = trpc.commit.listReviews.useQuery({ repositoryId });
   const [activeSha, setActiveSha] = useState<string | null>(null);
@@ -148,7 +150,7 @@ function RepoCommits({ repositoryId }: { repositoryId: string }) {
       const latestSha = commits.data[0]?.sha;
       if (!latestSha) return;
       const latestStored = reviewBySha[latestSha];
-      
+
       // If we haven't reviewed the latest commit, automatically review it
       if (!latestStored) {
         hasAutoReviewed.current = true;
@@ -191,9 +193,7 @@ function RepoCommits({ repositoryId }: { repositoryId: string }) {
         </Button>
       </div>
 
-      {activeSha && (
-        <ReviewPanel repositoryId={repositoryId} sha={activeSha} />
-      )}
+      {activeSha && <ReviewPanel repositoryId={repositoryId} sha={activeSha} />}
 
       <Card className="border-border">
         <CardHeader>
@@ -261,7 +261,7 @@ function ReviewPanel({
         const status = data?.status;
         return status === "COMPLETED" || status === "FAILED" ? false : 2000;
       },
-    }
+    },
   );
 
   const data = q.data;
@@ -299,9 +299,7 @@ function ReviewPanel({
               <div className="space-y-4">
                 <FindingGroup
                   title="Flaws"
-                  icon={
-                    <AlertTriangle className="h-4 w-4 text-red-400" />
-                  }
+                  icon={<AlertTriangle className="h-4 w-4 text-red-400" />}
                   findings={flaws}
                 />
                 <FindingGroup

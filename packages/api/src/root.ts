@@ -15,6 +15,7 @@ import { workflowRouter } from "./routers/workflow";
 import { profileRouter } from "./routers/profile";
 import { commitRouter } from "./routers/commit";
 import { notificationRouter } from "./routers/notification";
+import { codegenRouter } from "./routers/codegen";
 
 export const appRouter = createTRPCRouter({
   workspace: workspaceRouter,
@@ -33,6 +34,7 @@ export const appRouter = createTRPCRouter({
   profile: profileRouter,
   commit: commitRouter,
   notification: notificationRouter,
+  codegen: codegenRouter,
 });
 
 export type AppRouter = typeof appRouter;

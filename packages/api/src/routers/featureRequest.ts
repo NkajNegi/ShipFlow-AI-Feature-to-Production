@@ -10,18 +10,27 @@ import { logAudit } from "../lib/audit";
 
 export const featureRequestRouter = createTRPCRouter({
   create: protectedProcedure
+    .meta({
+      openapi: {
+        method: "POST",
+        path: "/projects/{projectId}/features",
+        tags: ["Features"],
+        summary: "Create a feature request",
+        protect: true,
+      },
+    })
     .input(
       z.object({
         projectId: z.string(),
         title: z.string().min(1).max(200),
         context: z.string().min(1).max(10000),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       await assertProjectAccess(
         ctx.prisma,
         ctx.session.user.id,
-        input.projectId
+        input.projectId,
       );
       return ctx.prisma.featureRequest.create({
         data: {
@@ -33,9 +42,8 @@ export const featureRequestRouter = createTRPCRouter({
     }),
 
   /**
-   * Phase 2 — human approval of the plan. A LEAD/ADMIN reviews the PRD + tasks
-   * and explicitly approves the plan before development starts, moving the
-   * feature from PLANNING to PLANNED (ready for development).
+   * Human PM approves the AI-generated PRD (or manual tasks) and moves the
+   * feature from PLANNING to PLAN_APPROVED (ready for development).
    */
   approvePlan: protectedProcedure
     .input(z.object({ featureRequestId: z.string() }))
@@ -44,7 +52,7 @@ export const featureRequestRouter = createTRPCRouter({
         ctx.prisma,
         ctx.session.user.id,
         input.featureRequestId,
-        ["ADMIN", "LEAD"]
+        ["ADMIN", "LEAD"],
       );
 
       const feature = await ctx.prisma.featureRequest.findUnique({
@@ -56,7 +64,10 @@ export const featureRequestRouter = createTRPCRouter({
         },
       });
       if (!feature) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Feature not found." });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Feature not found.",
+        });
       }
       if (feature._count.prds === 0) {
         throw new TRPCError({
@@ -73,7 +84,7 @@ export const featureRequestRouter = createTRPCRouter({
 
       const updated = await ctx.prisma.featureRequest.update({
         where: { id: input.featureRequestId },
-        data: { status: "PLANNED" },
+        data: { status: "PLAN_APPROVED" },
       });
 
       await logAudit({
@@ -88,12 +99,21 @@ export const featureRequestRouter = createTRPCRouter({
     }),
 
   list: protectedProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: "/projects/{projectId}/features",
+        tags: ["Features"],
+        summary: "List features for a project",
+        protect: true,
+      },
+    })
     .input(z.object({ projectId: z.string() }))
     .query(async ({ ctx, input }) => {
       await assertProjectAccess(
         ctx.prisma,
         ctx.session.user.id,
-        input.projectId
+        input.projectId,
       );
       return ctx.prisma.featureRequest.findMany({
         where: { projectId: input.projectId },
@@ -108,7 +128,7 @@ export const featureRequestRouter = createTRPCRouter({
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
-        input.workspaceId
+        input.workspaceId,
       );
       return ctx.prisma.featureRequest.findMany({
         where: { project: { workspaceId: input.workspaceId } },
@@ -136,12 +156,18 @@ export const featureRequestRouter = createTRPCRouter({
 
       const member = await ctx.prisma.workspaceMember.findUnique({
         where: {
-          userId_workspaceId: { userId: ctx.session.user.id, workspaceId: fr.project.workspaceId },
+          userId_workspaceId: {
+            userId: ctx.session.user.id,
+            workspaceId: fr.project.workspaceId,
+          },
         },
       });
 
       if (!member) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Not a member of this workspace." });
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Not a member of this workspace.",
+        });
       }
 
       await ctx.prisma.featureRequest.delete({ where: { id: input.id } });
@@ -149,11 +175,22 @@ export const featureRequestRouter = createTRPCRouter({
     }),
 
   update: protectedProcedure
-    .input(z.object({
-      id: z.string(),
-      title: z.string().min(1).max(200).optional(),
-      context: z.string().min(1).max(10000).optional(),
-    }))
+    .meta({
+      openapi: {
+        method: "PUT",
+        path: "/features/{id}",
+        tags: ["Features"],
+        summary: "Update a feature request",
+        protect: true,
+      },
+    })
+    .input(
+      z.object({
+        id: z.string(),
+        title: z.string().min(1).max(200).optional(),
+        context: z.string().min(1).max(10000).optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const fr = await ctx.prisma.featureRequest.findUnique({
         where: { id: input.id },
@@ -163,12 +200,18 @@ export const featureRequestRouter = createTRPCRouter({
 
       const member = await ctx.prisma.workspaceMember.findUnique({
         where: {
-          userId_workspaceId: { userId: ctx.session.user.id, workspaceId: fr.project.workspaceId },
+          userId_workspaceId: {
+            userId: ctx.session.user.id,
+            workspaceId: fr.project.workspaceId,
+          },
         },
       });
 
       if (!member) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Not a member of this workspace." });
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Not a member of this workspace.",
+        });
       }
 
       await ctx.prisma.featureRequest.update({

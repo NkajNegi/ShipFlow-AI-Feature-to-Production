@@ -16,7 +16,7 @@ export async function enforceRateLimit(
   prisma: Db,
   key: string,
   limit: number,
-  windowSec: number
+  windowSec: number,
 ): Promise<void> {
   const windowMs = windowSec * 1000;
   const windowIndex = Math.floor(Date.now() / windowMs);
@@ -32,7 +32,8 @@ export async function enforceRateLimit(
   if (rec.count > limit) {
     throw new TRPCError({
       code: "TOO_MANY_REQUESTS",
-      message: "You're doing that too fast. Please wait a moment and try again.",
+      message:
+        "You're doing that too fast. Please wait a moment and try again.",
     });
   }
 }

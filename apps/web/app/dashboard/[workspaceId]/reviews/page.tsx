@@ -3,12 +3,7 @@
 import { use } from "react";
 import Link from "next/link";
 import { trpc } from "@/trpc/client";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Loader2,
   ShieldCheck,

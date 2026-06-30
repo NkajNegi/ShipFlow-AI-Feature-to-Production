@@ -50,7 +50,9 @@ export async function createRazorpaySubscription(workspaceId: string) {
  * Apply a billing event (called from the Razorpay webhook). Activates Pro and
  * tops up AI review credits when a subscription becomes active.
  */
-export async function activateProForSubscription(razorpaySubscriptionId: string) {
+export async function activateProForSubscription(
+  razorpaySubscriptionId: string,
+) {
   const workspace = await prisma.workspace.findUnique({
     where: { razorpaySubscriptionId },
   });
@@ -63,7 +65,11 @@ export async function activateProForSubscription(razorpaySubscriptionId: string)
     }),
     prisma.subscription.upsert({
       where: { workspaceId: workspace.id },
-      update: { plan: "PRO", status: "ACTIVE", razorpayId: razorpaySubscriptionId },
+      update: {
+        plan: "PRO",
+        status: "ACTIVE",
+        razorpayId: razorpaySubscriptionId,
+      },
       create: {
         workspaceId: workspace.id,
         plan: "PRO",
@@ -80,10 +86,10 @@ export async function activateProForSubscription(razorpaySubscriptionId: string)
 export async function createRazorpayPaymentLinkForCredits(
   workspaceId: string,
   amountOfCredits: number,
-  priceInInr: number
+  priceInInr: number,
 ) {
   const client = getClient();
-  
+
   // Create a payment link using Razorpay API
   // NOTE: amount is in paise (1 INR = 100 paise)
   const link = await (client.paymentLink.create as any)({
@@ -95,7 +101,7 @@ export async function createRazorpayPaymentLinkForCredits(
       credits: amountOfCredits,
     },
   });
-  
+
   return {
     paymentLinkId: link.id,
     shortUrl: link.short_url,
@@ -107,7 +113,7 @@ export async function createRazorpayPaymentLinkForCredits(
  */
 export async function addCreditsFromPaymentLink(
   workspaceId: string,
-  credits: number
+  credits: number,
 ) {
   await prisma.workspace.update({
     where: { id: workspaceId },

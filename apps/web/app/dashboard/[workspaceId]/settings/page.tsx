@@ -7,7 +7,13 @@ import { RepoLinker } from "@/components/repo-linker";
 import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Loader2,
   CreditCard,
@@ -50,7 +56,9 @@ export default function SettingsPage({
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Settings</h1>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+          Settings
+        </h1>
         <p className="text-muted-foreground mt-1">
           Manage integrations, billing, and your team.
         </p>
@@ -68,12 +76,18 @@ export default function SettingsPage({
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Metric label="Features shipped" value={metrics.data?.shippedCount ?? 0} />
+              <Metric
+                label="Features shipped"
+                value={metrics.data?.shippedCount ?? 0}
+              />
               <Metric
                 label="Avg cycle (hrs)"
                 value={metrics.data?.avgCycleHours ?? 0}
               />
-              <Metric label="AI reviews" value={metrics.data?.reviewCount ?? 0} />
+              <Metric
+                label="AI reviews"
+                value={metrics.data?.reviewCount ?? 0}
+              />
               <Metric
                 label="Bugs caught"
                 value={metrics.data?.bugsCaught ?? 0}
@@ -106,7 +120,10 @@ export default function SettingsPage({
                 : ""}
             </div>
           ) : (
-            <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button
+              asChild
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
               <a href={ghInstall.data?.url ?? "#"}>
                 <GitBranch className="mr-2 h-4 w-4" /> Connect GitHub
               </a>
@@ -144,7 +161,9 @@ export default function SettingsPage({
                 </div>
                 <div>
                   <p className="text-muted-foreground">AI review credits</p>
-                  <p className="font-semibold">{billing.data?.aiReviewCredits}</p>
+                  <p className="font-semibold">
+                    {billing.data?.aiReviewCredits}
+                  </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Projects</p>
@@ -180,7 +199,7 @@ export default function SettingsPage({
                     Upgrade to Pro
                   </Button>
                 )}
-                
+
                 <Button
                   variant="outline"
                   disabled={buyCredits.isPending || upgrade.isPending}
@@ -195,7 +214,9 @@ export default function SettingsPage({
                 </Button>
               </div>
               {(upgrade.error || buyCredits.error) && (
-                <p className="text-sm text-red-400">{upgrade.error?.message || buyCredits.error?.message}</p>
+                <p className="text-sm text-red-400">
+                  {upgrade.error?.message || buyCredits.error?.message}
+                </p>
               )}
             </>
           )}
@@ -220,7 +241,7 @@ function AuditCard({ workspaceId }: { workspaceId: string }) {
   const canManage = role === "ADMIN" || role === "LEAD";
   const logs = trpc.workspace.getAuditLog.useQuery(
     { workspaceId },
-    { enabled: canManage }
+    { enabled: canManage },
   );
 
   if (!canManage) return null;
@@ -248,7 +269,9 @@ function AuditCard({ workspaceId }: { workspaceId: string }) {
                 className="flex items-center justify-between gap-3 py-2 text-sm"
               >
                 <div className="min-w-0">
-                  <span className="font-medium">{l.actorName ?? "Someone"}</span>{" "}
+                  <span className="font-medium">
+                    {l.actorName ?? "Someone"}
+                  </span>{" "}
                   <span className="text-muted-foreground">{l.action}</span>{" "}
                   {l.target && <span className="truncate">· {l.target}</span>}
                 </div>
@@ -274,14 +297,17 @@ function TeamCard({ workspaceId }: { workspaceId: string }) {
   const members = trpc.workspace.getMembers.useQuery({ workspaceId });
   const invites = trpc.member.listInvitations.useQuery(
     { workspaceId },
-    { enabled: canManage }
+    { enabled: canManage },
   );
 
   const [email, setEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("MEMBER");
   const [link, setLink] = useState("");
   const [copied, setCopied] = useState(false);
-  const [memberToRemove, setMemberToRemove] = useState<{id: string; name: string} | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const refresh = () => {
     members.refetch();
@@ -300,7 +326,7 @@ function TeamCard({ workspaceId }: { workspaceId: string }) {
     onSuccess: () => invites.refetch(),
   });
   const updateRole = trpc.member.updateRole.useMutation({ onSuccess: refresh });
-  const removeMember = trpc.member.remove.useMutation({ 
+  const removeMember = trpc.member.remove.useMutation({
     onSuccess: (data) => {
       setMemberToRemove(null);
       if (data.isSelf) {
@@ -308,7 +334,7 @@ function TeamCard({ workspaceId }: { workspaceId: string }) {
       } else {
         refresh();
       }
-    }
+    },
   });
 
   return (
@@ -344,7 +370,10 @@ function TeamCard({ workspaceId }: { workspaceId: string }) {
                     <select
                       value={m.role}
                       onChange={(e) =>
-                        updateRole.mutate({ memberId: m.id, role: e.target.value as any })
+                        updateRole.mutate({
+                          memberId: m.id,
+                          role: e.target.value as any,
+                        })
                       }
                       className="bg-background border border-border rounded-md text-xs px-2 py-1"
                     >
@@ -361,7 +390,12 @@ function TeamCard({ workspaceId }: { workspaceId: string }) {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setMemberToRemove({ id: m.id, name: m.user.name || "Unknown User" })}
+                      onClick={() =>
+                        setMemberToRemove({
+                          id: m.id,
+                          name: m.user.name || "Unknown User",
+                        })
+                      }
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -402,10 +436,16 @@ function TeamCard({ workspaceId }: { workspaceId: string }) {
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
                 disabled={!email.trim() || invite.isPending}
                 onClick={() =>
-                  invite.mutate({ workspaceId, email: email.trim(), role: inviteRole as any })
+                  invite.mutate({
+                    workspaceId,
+                    email: email.trim(),
+                    role: inviteRole as any,
+                  })
                 }
               >
-                {invite.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {invite.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Create invite
               </Button>
             </div>
@@ -499,14 +539,18 @@ function ReposCard({ workspaceId }: { workspaceId: string }) {
         {/* Connect a repository (installation repo → project) */}
         <div className="rounded-lg border border-border p-3 space-y-2">
           <p className="text-sm font-medium">Connect a repository</p>
-          <RepoLinker workspaceId={workspaceId} onSuccess={() => repos.refetch()} />
+          <RepoLinker
+            workspaceId={workspaceId}
+            onSuccess={() => repos.refetch()}
+          />
         </div>
 
         {repos.isLoading ? (
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
         ) : !repos.data || repos.data.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No repositories linked yet. Select one above to link it to a project.
+            No repositories linked yet. Select one above to link it to a
+            project.
           </p>
         ) : (
           repos.data.map((r: any) => (
@@ -514,7 +558,9 @@ function ReposCard({ workspaceId }: { workspaceId: string }) {
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="font-medium truncate">{r.fullName ?? r.name}</p>
-                  <p className="text-xs text-muted-foreground">{r.project?.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {r.project?.name}
+                  </p>
                 </div>
                 <Button
                   variant="outline"
@@ -603,10 +649,16 @@ function NotificationsCard({ workspaceId }: { workspaceId: string }) {
             className="bg-primary text-primary-foreground hover:bg-primary/90"
             disabled={save.isPending}
             onClick={() =>
-              save.mutate({ workspaceId, webhookUrl: url.trim(), type: type as any })
+              save.mutate({
+                workspaceId,
+                webhookUrl: url.trim(),
+                type: type as any,
+              })
             }
           >
-            {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {save.isPending && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             Save
           </Button>
         </div>
@@ -653,7 +705,8 @@ function AiKeyCard({ workspaceId }: { workspaceId: string }) {
     onSuccess: () => utils.workspace.getAiKeyStatus.invalidate({ workspaceId }),
   });
 
-  const invalidFormat = apiKey.length > 0 && !apiKey.trim().startsWith("sk-ant-");
+  const invalidFormat =
+    apiKey.length > 0 && !apiKey.trim().startsWith("sk-ant-");
 
   return (
     <Card className="border-border">
@@ -666,8 +719,8 @@ function AiKeyCard({ workspaceId }: { workspaceId: string }) {
           This overrides each member’s personal key. MetroFlow runs Claude Opus
           only, so the key must have access to{" "}
           <code className="text-primary">claude-opus-4-8</code> (verified on
-          save). Keys start with{" "}
-          <code className="text-primary">sk-ant-</code> and are stored encrypted.
+          save). Keys start with <code className="text-primary">sk-ant-</code>{" "}
+          and are stored encrypted.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -717,7 +770,9 @@ function AiKeyCard({ workspaceId }: { workspaceId: string }) {
             disabled={!apiKey.trim() || invalidFormat || save.isPending}
             onClick={() => save.mutate({ workspaceId, apiKey: apiKey.trim() })}
           >
-            {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {save.isPending && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             {status.data?.hasKey ? "Replace key" : "Save key"}
           </Button>
         </div>
@@ -749,18 +804,21 @@ function WorkspaceOpenRouterKeyCard({ workspaceId }: { workspaceId: string }) {
     onSuccess: () => utils.workspace.getAiKeyStatus.invalidate({ workspaceId }),
   });
 
-  const invalidFormat = apiKey.length > 0 && !apiKey.trim().startsWith("sk-or-v1-");
+  const invalidFormat =
+    apiKey.length > 0 && !apiKey.trim().startsWith("sk-or-v1-");
 
   return (
     <Card className="border-border">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
-          <KeyRound className="h-5 w-5 text-primary" /> OpenRouter Provider Key (BYOK)
+          <KeyRound className="h-5 w-5 text-primary" /> OpenRouter Provider Key
+          (BYOK)
         </CardTitle>
         <CardDescription>
-          Use a workspace OpenRouter API key so AI usage (like critic review) is billed here.
-          This overrides each member’s personal key. Keys typically start with{" "}
-          <code className="text-primary">sk-or-v1-</code> and are stored encrypted.
+          Use a workspace OpenRouter API key so AI usage (like critic review) is
+          billed here. This overrides each member’s personal key. Keys typically
+          start with <code className="text-primary">sk-or-v1-</code> and are
+          stored encrypted.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -793,7 +851,8 @@ function WorkspaceOpenRouterKeyCard({ workspaceId }: { workspaceId: string }) {
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Currently using the platform OpenRouter key. Add your own to control cost.
+            Currently using the platform OpenRouter key. Add your own to control
+            cost.
           </p>
         )}
 
@@ -810,7 +869,9 @@ function WorkspaceOpenRouterKeyCard({ workspaceId }: { workspaceId: string }) {
             disabled={!apiKey.trim() || invalidFormat || save.isPending}
             onClick={() => save.mutate({ workspaceId, apiKey: apiKey.trim() })}
           >
-            {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {save.isPending && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             {status.data?.hasOpenRouterKey ? "Replace key" : "Save key"}
           </Button>
         </div>
@@ -849,14 +910,12 @@ function DangerZoneCard({ workspaceId }: { workspaceId: string }) {
           <Trash2 className="h-5 w-5" /> Danger Zone
         </CardTitle>
         <CardDescription className="text-red-500/80">
-          Permanently delete this workspace and all its projects, feature requests, tasks, and data.
+          Permanently delete this workspace and all its projects, feature
+          requests, tasks, and data.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Button 
-          variant="destructive"
-          onClick={() => setIsDeleting(true)}
-        >
+        <Button variant="destructive" onClick={() => setIsDeleting(true)}>
           Delete Workspace
         </Button>
         <ConfirmModal

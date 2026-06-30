@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -30,8 +36,12 @@ export default function OnboardingPage() {
     <div className="flex-1 flex items-center justify-center p-4">
       <Card className="w-full max-w-md border-border bg-card">
         <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-2xl font-bold text-primary">Welcome to MetroFlow AI</CardTitle>
-          <CardDescription>Let's set up your first workspace to get started.</CardDescription>
+          <CardTitle className="text-2xl font-bold text-primary">
+            Welcome to MetroFlow AI
+          </CardTitle>
+          <CardDescription>
+            Let's set up your first workspace to get started.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -43,21 +53,23 @@ export default function OnboardingPage() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                disabled={createWorkspace.isLoading}
+                disabled={createWorkspace.isPending}
                 className="border-border focus:border-primary"
               />
             </div>
-            
+
             {createWorkspace.isError && (
-              <p className="text-sm text-red-500">{createWorkspace.error.message}</p>
+              <p className="text-sm text-red-500">
+                {createWorkspace.error.message}
+              </p>
             )}
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-              disabled={createWorkspace.isLoading}
+              disabled={createWorkspace.isPending}
             >
-              {createWorkspace.isLoading ? "Creating..." : "Create Workspace"}
+              {createWorkspace.isPending ? "Creating..." : "Create Workspace"}
             </Button>
           </form>
         </CardContent>

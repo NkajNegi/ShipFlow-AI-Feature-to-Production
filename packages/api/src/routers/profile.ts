@@ -30,7 +30,7 @@ export const profileRouter = createTRPCRouter({
         name: z.string().min(1, "Name is required").max(120).optional(),
         // Avatar image URL (empty string clears it). Keep simple — no upload infra.
         image: z.string().url().max(2000).or(z.literal("")).optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const data: { name?: string; image?: string | null } = {};
@@ -50,7 +50,11 @@ export const profileRouter = createTRPCRouter({
   getAiKeyStatus: protectedProcedure.query(async ({ ctx }) => {
     const user = await ctx.prisma.user.findUnique({
       where: { id: ctx.session.user.id },
-      select: { anthropicApiKeyEnc: true, openRouterApiKeyEnc: true, aiKeyEnabled: true },
+      select: {
+        anthropicApiKeyEnc: true,
+        openRouterApiKeyEnc: true,
+        aiKeyEnabled: true,
+      },
     });
     const enc = user?.anthropicApiKeyEnc;
     let masked: string | null = null;

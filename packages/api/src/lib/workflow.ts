@@ -4,11 +4,11 @@ import { prisma } from "@repo/db";
  * Lightweight workflow-run tracking so async (Inngest) work is visible in-app.
  * Each run records ordered steps and a terminal status.
  */
-type RunType = "PRD_GENERATION" | "AI_REVIEW" | "REPO_ANALYSIS";
+type RunType = "PRD_GENERATION" | "AI_REVIEW" | "REPO_ANALYSIS" | "CODEGEN";
 
 export async function startRun(
   type: RunType,
-  opts: { label?: string; featureRequestId?: string; repositoryId?: string }
+  opts: { label?: string; featureRequestId?: string; repositoryId?: string },
 ) {
   const run = await prisma.workflowRun.create({
     data: {
@@ -41,7 +41,7 @@ export async function addStep(runId: string, label: string) {
 export async function finishRun(
   runId: string,
   status: "COMPLETED" | "FAILED",
-  error?: string
+  error?: string,
 ) {
   await prisma.workflowRun.update({
     where: { id: runId },

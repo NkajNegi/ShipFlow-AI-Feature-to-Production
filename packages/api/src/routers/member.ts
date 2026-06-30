@@ -13,7 +13,7 @@ async function memberWorkspace(
   prisma: any,
   userId: string,
   memberId: string,
-  roles?: string[]
+  roles?: string[],
 ) {
   const member = await prisma.workspaceMember.findUnique({
     where: { id: memberId },
@@ -34,14 +34,14 @@ export const memberRouter = createTRPCRouter({
         workspaceId: z.string(),
         email: z.string().email().max(200),
         role: RoleEnum.default("MEMBER"),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
         input.workspaceId,
-        ["ADMIN", "LEAD"]
+        ["ADMIN", "LEAD"],
       );
 
       const email = input.email.trim().toLowerCase();
@@ -59,7 +59,7 @@ export const memberRouter = createTRPCRouter({
 
       const token = crypto.randomBytes(24).toString("hex");
       const expiresAt = new Date(
-        Date.now() + INVITE_TTL_DAYS * 24 * 60 * 60 * 1000
+        Date.now() + INVITE_TTL_DAYS * 24 * 60 * 60 * 1000,
       );
 
       const invitation = await ctx.prisma.invitation.upsert({
@@ -101,7 +101,7 @@ export const memberRouter = createTRPCRouter({
         ctx.prisma,
         ctx.session.user.id,
         input.workspaceId,
-        ["ADMIN", "LEAD"]
+        ["ADMIN", "LEAD"],
       );
       return ctx.prisma.invitation.findMany({
         where: { workspaceId: input.workspaceId, status: "PENDING" },
@@ -117,13 +117,16 @@ export const memberRouter = createTRPCRouter({
         select: { workspaceId: true },
       });
       if (!inv) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Invite not found." });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Invite not found.",
+        });
       }
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
         inv.workspaceId,
-        ["ADMIN", "LEAD"]
+        ["ADMIN", "LEAD"],
       );
       return ctx.prisma.invitation.update({
         where: { id: input.invitationId },
@@ -140,7 +143,10 @@ export const memberRouter = createTRPCRouter({
         include: { workspace: { select: { name: true } } },
       });
       if (!inv) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Invitation not found." });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Invitation not found.",
+        });
       }
       return {
         workspaceName: inv.workspace.name,
@@ -166,7 +172,10 @@ export const memberRouter = createTRPCRouter({
         });
       }
       if (inv.expiresAt.getTime() < Date.now()) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "This invitation has expired." });
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "This invitation has expired.",
+        });
       }
       if ((ctx.session.user.email ?? "").toLowerCase() !== inv.email) {
         throw new TRPCError({
@@ -206,7 +215,7 @@ export const memberRouter = createTRPCRouter({
         ctx.prisma,
         ctx.session.user.id,
         input.memberId,
-        ["ADMIN"]
+        ["ADMIN"],
       );
 
       // Don't allow demoting the last remaining admin.
@@ -243,7 +252,7 @@ export const memberRouter = createTRPCRouter({
         ctx.prisma,
         ctx.session.user.id,
         input.memberId,
-        ["ADMIN"]
+        ["ADMIN"],
       );
 
       if (member.role === "ADMIN") {
@@ -264,10 +273,16 @@ export const memberRouter = createTRPCRouter({
           assigneeId: member.userId,
           OR: [
             { project: { workspaceId: member.workspaceId } },
-            { prd: { featureRequest: { project: { workspaceId: member.workspaceId } } } }
-          ]
+            {
+              prd: {
+                featureRequest: {
+                  project: { workspaceId: member.workspaceId },
+                },
+              },
+            },
+          ],
         },
-        data: { assigneeId: null }
+        data: { assigneeId: null },
       });
 
       const removed = await ctx.prisma.workspaceMember.delete({

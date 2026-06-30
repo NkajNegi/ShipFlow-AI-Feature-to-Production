@@ -22,7 +22,7 @@ export const workspaceRouter = createTRPCRouter({
       const member = await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
-        input.workspaceId
+        input.workspaceId,
       );
       // Explicit select so the encrypted API key never leaves the server.
       const workspace = await ctx.prisma.workspace.findUnique({
@@ -46,7 +46,7 @@ export const workspaceRouter = createTRPCRouter({
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
-        input.workspaceId
+        input.workspaceId,
       );
       return ctx.prisma.workspaceMember.findMany({
         where: { workspaceId: input.workspaceId },
@@ -59,7 +59,7 @@ export const workspaceRouter = createTRPCRouter({
     .input(
       z.object({
         name: z.string().min(1, "Workspace name is required").max(120),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       return ctx.prisma.workspace.create({
@@ -80,7 +80,7 @@ export const workspaceRouter = createTRPCRouter({
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
-        input.workspaceId
+        input.workspaceId,
       );
       const ws = await ctx.prisma.workspace.findUnique({
         where: { id: input.workspaceId },
@@ -104,11 +104,11 @@ export const workspaceRouter = createTRPCRouter({
           orMasked = "••••";
         }
       }
-      return { 
-        hasKey: Boolean(enc), 
+      return {
+        hasKey: Boolean(enc),
         maskedKey: masked,
         hasOpenRouterKey: Boolean(orEnc),
-        openRouterMaskedKey: orMasked
+        openRouterMaskedKey: orMasked,
       };
     }),
 
@@ -117,14 +117,14 @@ export const workspaceRouter = createTRPCRouter({
       z.object({
         workspaceId: z.string(),
         apiKey: z.string().min(10),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
         input.workspaceId,
-        ["ADMIN"]
+        ["ADMIN"],
       );
 
       const key = input.apiKey.trim();
@@ -146,7 +146,7 @@ export const workspaceRouter = createTRPCRouter({
         ctx.prisma,
         ctx.session.user.id,
         input.workspaceId,
-        ["ADMIN"]
+        ["ADMIN"],
       );
       await ctx.prisma.workspace.update({
         where: { id: input.workspaceId },
@@ -160,14 +160,14 @@ export const workspaceRouter = createTRPCRouter({
       z.object({
         workspaceId: z.string(),
         apiKey: z.string().min(10),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
         input.workspaceId,
-        ["ADMIN"]
+        ["ADMIN"],
       );
 
       const key = input.apiKey.trim();
@@ -186,7 +186,7 @@ export const workspaceRouter = createTRPCRouter({
         ctx.prisma,
         ctx.session.user.id,
         input.workspaceId,
-        ["ADMIN"]
+        ["ADMIN"],
       );
       await ctx.prisma.workspace.update({
         where: { id: input.workspaceId },
@@ -200,7 +200,10 @@ export const workspaceRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const member = await ctx.prisma.workspaceMember.findUnique({
         where: {
-          userId_workspaceId: { userId: ctx.session.user.id, workspaceId: input.id },
+          userId_workspaceId: {
+            userId: ctx.session.user.id,
+            workspaceId: input.id,
+          },
         },
       });
 
@@ -223,7 +226,7 @@ export const workspaceRouter = createTRPCRouter({
         ctx.prisma,
         ctx.session.user.id,
         input.workspaceId,
-        ["ADMIN", "LEAD"]
+        ["ADMIN", "LEAD"],
       );
       return ctx.prisma.auditLog.findMany({
         where: { workspaceId: input.workspaceId },
@@ -240,7 +243,7 @@ export const workspaceRouter = createTRPCRouter({
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
-        input.workspaceId
+        input.workspaceId,
       );
       const ws = await ctx.prisma.workspace.findUnique({
         where: { id: input.workspaceId },
@@ -258,14 +261,14 @@ export const workspaceRouter = createTRPCRouter({
         workspaceId: z.string(),
         webhookUrl: z.string().url().max(500).or(z.literal("")),
         type: z.enum(["SLACK", "DISCORD"]),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
         input.workspaceId,
-        ["ADMIN"]
+        ["ADMIN"],
       );
       await ctx.prisma.workspace.update({
         where: { id: input.workspaceId },

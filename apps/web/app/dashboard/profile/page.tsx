@@ -125,10 +125,7 @@ function ProfileCard() {
               <Button
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
                 disabled={
-                  !dirty ||
-                  !name.trim() ||
-                  invalidImage ||
-                  update.isPending
+                  !dirty || !name.trim() || invalidImage || update.isPending
                 }
                 onClick={() =>
                   update.mutate({ name: name.trim(), image: image.trim() })
@@ -212,8 +209,9 @@ function UserAiKeyCard() {
         <div className="flex items-start gap-2 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">
           <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
           <span className="text-muted-foreground">
-            MetroFlow runs <span className="text-primary font-medium">Claude
-            Opus</span> only (high-tier models). Your key must have access to{" "}
+            MetroFlow runs{" "}
+            <span className="text-primary font-medium">Claude Opus</span> only
+            (high-tier models). Your key must have access to{" "}
             <code className="text-primary">claude-opus-4-8</code> — we verify
             this when you save it.
           </span>
@@ -239,8 +237,8 @@ function UserAiKeyCard() {
                   <Power className="h-5 w-5" />
                   <span className="text-sm">
                     Key saved but turned off{" "}
-                    <code>{status.data.maskedKey}</code> — workspace/platform key
-                    is used.
+                    <code>{status.data.maskedKey}</code> — workspace/platform
+                    key is used.
                   </span>
                 </div>
               )}
@@ -305,7 +303,9 @@ function UserAiKeyCard() {
             disabled={!apiKey.trim() || invalidFormat || save.isPending}
             onClick={() => save.mutate({ apiKey: apiKey.trim() })}
           >
-            {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {save.isPending && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             {status.data?.hasKey ? "Replace key" : "Save key"}
           </Button>
         </div>
@@ -344,11 +344,12 @@ function UserOpenRouterKeyCard() {
     <Card className="border-border">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
-          <KeyRound className="h-5 w-5 text-primary" /> Use your own OpenRouter key
+          <KeyRound className="h-5 w-5 text-primary" /> Use your own OpenRouter
+          key
         </CardTitle>
         <CardDescription>
-          Add your own OpenRouter API key so AI usage (like critic review) is billed to your
-          account. Stored encrypted.
+          Add your own OpenRouter API key so AI usage (like critic review) is
+          billed to your account. Stored encrypted.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -383,7 +384,8 @@ function UserOpenRouterKeyCard() {
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            No personal OpenRouter key set — your workspace or the platform key is used.
+            No personal OpenRouter key set — your workspace or the platform key
+            is used.
           </p>
         )}
 
@@ -400,7 +402,9 @@ function UserOpenRouterKeyCard() {
             disabled={!apiKey.trim() || invalidFormat || save.isPending}
             onClick={() => save.mutate({ apiKey: apiKey.trim() })}
           >
-            {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {save.isPending && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             {status.data?.hasOpenRouterKey ? "Replace key" : "Save key"}
           </Button>
         </div>

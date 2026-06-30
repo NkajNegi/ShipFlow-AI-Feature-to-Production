@@ -12,8 +12,7 @@ export async function notifyWorkspace(workspaceId: string, text: string) {
   if (!ws?.notifyWebhookUrl) return;
 
   // Slack expects { text }, Discord expects { content }.
-  const body =
-    ws.notifyType === "DISCORD" ? { content: text } : { text };
+  const body = ws.notifyType === "DISCORD" ? { content: text } : { text };
 
   try {
     await fetch(ws.notifyWebhookUrl, {

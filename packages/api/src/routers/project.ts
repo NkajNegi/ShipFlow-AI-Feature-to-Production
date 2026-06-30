@@ -7,12 +7,14 @@ const FREE_PROJECT_LIMIT = 3;
 
 export const projectRouter = createTRPCRouter({
   create: protectedProcedure
-    .input(z.object({ workspaceId: z.string(), name: z.string().min(1).max(120) }))
+    .input(
+      z.object({ workspaceId: z.string(), name: z.string().min(1).max(120) }),
+    )
     .mutation(async ({ ctx, input }) => {
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
-        input.workspaceId
+        input.workspaceId,
       );
 
       // Enforce the Free-tier project limit (billing constraint).
@@ -41,7 +43,7 @@ export const projectRouter = createTRPCRouter({
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
-        input.workspaceId
+        input.workspaceId,
       );
       return ctx.prisma.project.findMany({
         where: { workspaceId: input.workspaceId },
@@ -59,7 +61,10 @@ export const projectRouter = createTRPCRouter({
 
       const member = await ctx.prisma.workspaceMember.findUnique({
         where: {
-          userId_workspaceId: { userId: ctx.session.user.id, workspaceId: project.workspaceId },
+          userId_workspaceId: {
+            userId: ctx.session.user.id,
+            workspaceId: project.workspaceId,
+          },
         },
       });
 

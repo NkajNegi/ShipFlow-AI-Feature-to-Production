@@ -6,7 +6,13 @@ import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { trpc } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Loader2, Mail } from "lucide-react";
 
 export default function InvitePage({
@@ -20,7 +26,7 @@ export default function InvitePage({
 
   const inv = trpc.member.getInvitation.useQuery(
     { token },
-    { enabled: !!session }
+    { enabled: !!session },
   );
   const accept = trpc.member.acceptInvitation.useMutation({
     onSuccess: (d) => router.push(`/dashboard/${d.workspaceId}/board`),
@@ -33,7 +39,9 @@ export default function InvitePage({
           <CardTitle className="text-2xl font-bold text-primary">
             Workspace invitation
           </CardTitle>
-          <CardDescription>You've been invited to join a MetroFlow workspace.</CardDescription>
+          <CardDescription>
+            You've been invited to join a MetroFlow workspace.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {isPending ? (
@@ -45,7 +53,10 @@ export default function InvitePage({
               <p className="text-sm text-muted-foreground">
                 Sign in to accept this invitation.
               </p>
-              <Button asChild className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button
+                asChild
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+              >
                 <Link href={`/login?redirect=/invite/${token}`}>Sign in</Link>
               </Button>
             </div>
@@ -59,12 +70,15 @@ export default function InvitePage({
             </p>
           ) : inv.data.status !== "PENDING" || inv.data.expired ? (
             <p className="text-sm text-red-400 text-center">
-              This invitation is no longer valid{inv.data.expired ? " (expired)" : ""}.
+              This invitation is no longer valid
+              {inv.data.expired ? " (expired)" : ""}.
             </p>
           ) : (
             <div className="space-y-4">
               <div className="rounded-lg border border-border p-4 text-center">
-                <p className="font-semibold text-lg">{inv.data.workspaceName}</p>
+                <p className="font-semibold text-lg">
+                  {inv.data.workspaceName}
+                </p>
                 <p className="text-sm text-muted-foreground mt-1">
                   Role: {inv.data.role}
                 </p>

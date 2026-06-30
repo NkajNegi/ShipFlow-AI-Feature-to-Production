@@ -86,7 +86,7 @@ model Verification {
 model Workspace {
   id        String @id @default(cuid())
   name      String
-  planTier  String @default("FREE") // FREE or PRO
+  planTier  PlanTier @default(FREE) // FREE or PRO
 
   // Billing (Razorpay)
   razorpayCustomerId     String? @unique @map("razorpay_customer_id")
@@ -107,7 +107,7 @@ model Workspace {
   notifyWebhookUrl String? @map("notify_webhook_url")
 
   labels           Label[]
-  notifyType       String? @map("notify_type") // SLACK or DISCORD
+  notifyType  NotifyType? @map("notify_type") // SLACK or DISCORD
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -124,9 +124,9 @@ model Invitation {
   id          String   @id @default(cuid())
   workspaceId String   @map("workspace_id")
   email       String
-  role        String   @default("MEMBER") // ADMIN, LEAD, MEMBER
+  role      WorkspaceRole @default(MEMBER) // ADMIN, LEAD, MEMBER
   token       String   @unique
-  status      String   @default("PENDING") // PENDING, ACCEPTED, REVOKED
+  status      InvitationStatus @default(PENDING)
   invitedById String   @map("invited_by_id")
   expiresAt   DateTime @map("expires_at")
   createdAt   DateTime @default(now())
@@ -142,8 +142,8 @@ model Invitation {
 model Subscription {
   id          String   @id @default(cuid())
   workspaceId String   @unique @map("workspace_id")
-  plan        String   @default("FREE") // FREE or PRO
-  status      String   @default("ACTIVE") // ACTIVE, PAST_DUE, CANCELLED
+  plan      PlanTier @default(FREE) // FREE or PRO
+  status    SubscriptionStatus @default(ACTIVE) // ACTIVE, PAST_DUE, CANCELLED
   razorpayId  String?  @map("razorpay_id")
   currentPeriodEnd DateTime? @map("current_period_end")
   createdAt   DateTime @default(now())
@@ -158,7 +158,7 @@ model WorkspaceMember {
   id          String    @id @default(cuid())
   userId      String    @map("user_id")
   workspaceId String    @map("workspace_id")
-  role        String    @default("MEMBER") // ADMIN, LEAD, MEMBER
+  role      WorkspaceRole @default(MEMBER) // ADMIN, LEAD, MEMBER
   createdAt   DateTime  @default(now())
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -191,18 +191,18 @@ model FeatureRequest {
   context   String @db.Text
   projectId String @map("project_id")
   // Where the request came from: UI, EMAIL, TICKET, API, SLACK
-  source    String @default("UI")
-  // DISCOVERY, GENERATING_PRD, PLANNING, PLANNED, IN_PROGRESS, IN_REVIEW,
-  // FIX_NEEDED, APPROVED, SHIPPED, REJECTED
-  // (PLANNED = plan reviewed & approved by a lead, ready for development)
-  status    String @default("DISCOVERY")
+  source    FeatureSource @default(UI)
+  // DISCOVERY, GENERATING_PRD, PLANNING, PLAN_APPROVED, IN_PROGRESS, IN_REVIEW,
+  // FIX_NEEDED, APPROVED, SHIPPED, REJECTED, DUPLICATE_EDUCATION
+  // (PLAN_APPROVED = plan reviewed & approved by a lead, ready for development)
+  status    FeatureStatus @default(DISCOVERY)
 
   // Phase 1 AI clarification analysis (latest run)
   clarificationJson Json? @map("clarification_json")
 
   // Phase 5 AI release-readiness check (latest run)
   // readinessStatus: PENDING, COMPLETED, FAILED
-  readinessStatus    String?   @map("readiness_status")
+  readinessStatus    JobStatus?   @map("readiness_status")
   // { verdict: READY|NEEDS_ATTENTION|NOT_READY, summary, blockers[], risks[], recommendations[] }
   readinessJson      Json?     @map("readiness_json")
   readinessCheckedAt DateTime? @map("readiness_checked_at")
@@ -219,6 +219,7 @@ model FeatureRequest {
   prds         PRD[]
   pullRequests PullRequest[]
 
+  @@index([projectId, status])
   @@map("feature_request")
 }
 
@@ -241,13 +242,16 @@ model Task {
   ref         Int      @default(autoincrement())
   title       String
   description String   @db.Text
-  status      String   @default("TODO") // TODO, IN_PROGRESS, REVIEW, DONE
-  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  status    TaskStatus @default(TODO) // TODO, IN_PROGRESS, REVIEW, DONE
+  priority  TaskPriority @default(MEDIUM) // LOW, MEDIUM, HIGH, URGENT
   position    Float    @default(0)
   dueDate     DateTime? @map("due_date")
   assigneeId  String?  @map("assignee_id")
   projectId   String?  @map("project_id")
   prdId       String?  @map("prd_id")
+  // AI implementation walkthrough (steps + cursor), generated on demand.
+  walkthroughJson Json? @map("walkthrough_json")
+  walkthroughStep Int   @default(0) @map("walkthrough_step")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -257,6 +261,7 @@ model Task {
   comments TaskComment[]
   labels   TaskLabel[]
 
+  @@index([projectId, status])
   @@map("task")
 }
 
@@ -328,7 +333,7 @@ model CommitReview {
   authorName    String?  @map("author_name")
   htmlUrl       String?  @map("html_url")
   // PENDING, COMPLETED, FAILED
-  status        String   @default("PENDING")
+  status        JobStatus   @default(PENDING)
   summary       String?  @db.Text
   // Array of { type: FLAW|IMPROVEMENT, severity, category, title, detail, file?, suggestion? }
   findingsJson  Json?    @map("findings_json")
@@ -350,7 +355,7 @@ model PullRequest {
   title            String
   url              String
   headSha          String? @map("head_sha")
-  state            String  @default("OPEN") // OPEN, CLOSED, MERGED
+  state     PullRequestState  @default(OPEN) // OPEN, CLOSED, MERGED
   featureRequestId String  @map("feature_request_id")
   repositoryId     String? @map("repository_id")
   createdAt        DateTime @default(now())
@@ -393,7 +398,7 @@ model AuditLog {
 model WorkflowRun {
   id               String   @id @default(cuid())
   type             String   // PRD_GENERATION, AI_REVIEW, REPO_ANALYSIS
-  status           String   @default("RUNNING") // RUNNING, COMPLETED, FAILED
+  status    WorkflowStatus   @default(RUNNING) // RUNNING, COMPLETED, FAILED
   label            String?
   featureRequestId String?  @map("feature_request_id")
   repositoryId     String?  @map("repository_id")
@@ -405,6 +410,33 @@ model WorkflowRun {
   @@index([featureRequestId])
   @@index([repositoryId])
   @@map("workflow_run")
+}
+
+// AI-generated implementation runs. Codegen drafts a code patch across multiple
+// providers (ensemble), runs a Critic pass, and — if approved — opens a draft PR
+// that flows into the existing AI review loop.
+model CodegenRun {
+  id               String  @id @default(cuid())
+  featureRequestId String  @map("feature_request_id")
+  repositoryId     String? @map("repository_id")
+  // PENDING, DRAFTING, CRITIQUING, READY, PUSHED, FAILED
+  status           CodegenStatus  @default(PENDING)
+  // { files: [{path, action, newContent, rationale}], prTitle, prBody, testNotes[] }
+  patchJson        Json?   @map("patch_json")
+  // Critic verdict: { approved: bool, score: int, issues: [{severity, title, detail}] }
+  critiqueJson     Json?   @map("critique_json")
+  // How the patch was produced, surfaced in the UI (e.g. "ensemble:3 + critic")
+  modelStrategy    String? @map("model_strategy")
+  branch           String?
+  prNumber         Int?    @map("pr_number")
+  prUrl            String? @map("pr_url")
+  error            String? @db.Text
+  requestedById    String? @map("requested_by_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@index([featureRequestId])
+  @@map("codegen_run")
 }
 
 // Fixed-window rate limiting for abuse-prone (AI) endpoints.
@@ -423,15 +455,115 @@ model Review {
   id            String   @id @default(cuid())
   pullRequestId String   @map("pull_request_id")
   // PENDING, APPROVED, CHANGES_REQUESTED
-  status        String   @default("PENDING")
+  status        ReviewStatus   @default(PENDING)
   summary       String?  @db.Text
   // Array of { severity: BLOCKING|NON_BLOCKING, category, title, detail, file? }
   issuesJson    Json?    @map("issues_json")
   blockingCount Int      @default(0) @map("blocking_count")
+  iteration     Int      @default(1)
+  dimensionsJson Json?   @map("dimensions_json")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   pullRequest PullRequest @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
 
+  @@index([pullRequestId, createdAt])
   @@map("review")
+}
+
+enum PlanTier {
+  FREE
+  PRO
+}
+
+enum NotifyType {
+  SLACK
+  DISCORD
+}
+
+enum WorkspaceRole {
+  ADMIN
+  LEAD
+  MEMBER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+}
+
+enum FeatureSource {
+  UI
+  EMAIL
+  TICKET
+  API
+  SLACK
+}
+
+enum FeatureStatus {
+  DISCOVERY
+  GENERATING_PRD
+  PLANNING
+  PLAN_APPROVED
+  IN_PROGRESS
+  IN_REVIEW
+  FIX_NEEDED
+  APPROVED
+  SHIPPED
+  REJECTED
+  DUPLICATE_EDUCATION
+}
+
+enum JobStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum PullRequestState {
+  OPEN
+  CLOSED
+  MERGED
+}
+
+enum WorkflowStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum CodegenStatus {
+  PENDING
+  DRAFTING
+  CRITIQUING
+  READY
+  PUSHED
+  FAILED
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  CHANGES_REQUESTED
 }

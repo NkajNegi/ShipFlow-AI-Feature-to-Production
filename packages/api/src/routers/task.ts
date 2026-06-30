@@ -3,6 +3,43 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { assertWorkspaceMember } from "../lib/access";
 import { getInstallationOctokit, parseTaskRefs } from "../lib/github";
+import { enforceRateLimit } from "../lib/ratelimit";
+import { consumeAiCreditIfPlatform } from "../lib/credits";
+import {
+  generateTaskWalkthrough,
+  advanceTaskWalkthrough,
+} from "../lib/taskWalkthrough";
+
+/** Resolve the owning workspace for a task (via project or PRD) and assert access. */
+async function assertTaskAccess(
+  prisma: any,
+  userId: string,
+  taskId: string,
+): Promise<string> {
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: {
+      project: { select: { workspaceId: true } },
+      prd: {
+        select: {
+          featureRequest: {
+            select: { project: { select: { workspaceId: true } } },
+          },
+        },
+      },
+    },
+  });
+  if (!task) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Task not found." });
+  }
+  const workspaceId =
+    task.project?.workspaceId || task.prd?.featureRequest?.project?.workspaceId;
+  if (!workspaceId) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Task not found." });
+  }
+  await assertWorkspaceMember(prisma, userId, workspaceId);
+  return workspaceId;
+}
 
 export const taskRouter = createTRPCRouter({
   listByWorkspace: protectedProcedure
@@ -310,8 +347,8 @@ export const taskRouter = createTRPCRouter({
         const [owner, name] = repo.fullName.split("/");
         const prs = await octokit.rest.pulls
           .list({
-            owner,
-            repo: name,
+            owner: owner || "",
+            repo: name || "",
             state: "all",
             per_page: 50,
             sort: "updated",
@@ -338,5 +375,52 @@ export const taskRouter = createTRPCRouter({
       }
 
       return { success: true, synced };
+    }),
+
+  /**
+   * Generate (or regenerate) an AI implementation walkthrough for a task via the
+   * multi-provider ensemble. Read-only w.r.t. GitHub; resets the step cursor.
+   */
+  explainTask: protectedProcedure
+    .input(z.object({ taskId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const workspaceId = await assertTaskAccess(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.taskId,
+      );
+      await enforceRateLimit(
+        ctx.prisma,
+        `ai:walkthrough:${ctx.session.user.id}`,
+        15,
+        60,
+      );
+      await consumeAiCreditIfPlatform(ctx.prisma, workspaceId);
+      const walkthrough = await generateTaskWalkthrough(input.taskId);
+      return { walkthrough, step: 0 };
+    }),
+
+  /** Move the walkthrough step cursor (no AI, no credit). */
+  advanceWalkthrough: protectedProcedure
+    .input(
+      z.object({
+        taskId: z.string(),
+        direction: z.enum(["next", "prev"]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertTaskAccess(ctx.prisma, ctx.session.user.id, input.taskId);
+      return advanceTaskWalkthrough(input.taskId, input.direction);
+    }),
+
+  /** Read the stored walkthrough + cursor for a task. */
+  getWalkthrough: protectedProcedure
+    .input(z.object({ taskId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      await assertTaskAccess(ctx.prisma, ctx.session.user.id, input.taskId);
+      return ctx.prisma.task.findUnique({
+        where: { id: input.taskId },
+        select: { walkthroughJson: true, walkthroughStep: true },
+      });
     }),
 });

@@ -2,11 +2,12 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { inngest, EVENTS } from "@repo/inngest";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { assertWorkspaceMember, assertProjectAccess } from "../lib/access";
 import {
-  assertWorkspaceMember,
-  assertProjectAccess,
-} from "../lib/access";
-import { getInstallationOctokit, getInstallUrl, parseTaskRefs } from "../lib/github";
+  getInstallationOctokit,
+  getInstallUrl,
+  parseTaskRefs,
+} from "../lib/github";
 import { enforceRateLimit } from "../lib/ratelimit";
 import { assertRepoLimit } from "../lib/plan";
 
@@ -19,7 +20,7 @@ export const githubRouter = createTRPCRouter({
         ctx.prisma,
         ctx.session.user.id,
         input.workspaceId,
-        ["ADMIN", "LEAD"]
+        ["ADMIN", "LEAD"],
       );
       // Pass the workspaceId as `state` so the callback can map the installation.
       return { url: getInstallUrl(input.workspaceId) };
@@ -32,7 +33,7 @@ export const githubRouter = createTRPCRouter({
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
-        input.workspaceId
+        input.workspaceId,
       );
       const ws = await ctx.prisma.workspace.findUnique({
         where: { id: input.workspaceId },
@@ -51,7 +52,7 @@ export const githubRouter = createTRPCRouter({
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
-        input.workspaceId
+        input.workspaceId,
       );
       const ws = await ctx.prisma.workspace.findUnique({
         where: { id: input.workspaceId },
@@ -64,10 +65,9 @@ export const githubRouter = createTRPCRouter({
         });
       }
       const octokit = getInstallationOctokit(ws.githubInstallationId);
-      const res =
-        await octokit.rest.apps.listReposAccessibleToInstallation({
-          per_page: 100,
-        });
+      const res = await octokit.rest.apps.listReposAccessibleToInstallation({
+        per_page: 100,
+      });
       return res.data.repositories.map((r) => ({
         githubId: r.id,
         name: r.name,
@@ -87,7 +87,7 @@ export const githubRouter = createTRPCRouter({
         name: z.string(),
         fullName: z.string(),
         url: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       if (!input.projectId && !input.workspaceId) {
@@ -104,14 +104,14 @@ export const githubRouter = createTRPCRouter({
           ctx.prisma,
           ctx.session.user.id,
           finalProjectId,
-          ["ADMIN", "LEAD"]
+          ["ADMIN", "LEAD"],
         );
       } else if (input.workspaceId) {
         await assertWorkspaceMember(
           ctx.prisma,
           ctx.session.user.id,
           input.workspaceId,
-          ["ADMIN", "LEAD"]
+          ["ADMIN", "LEAD"],
         );
         // Auto-create a project
         const project = await ctx.prisma.project.create({
@@ -169,7 +169,7 @@ export const githubRouter = createTRPCRouter({
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
-        input.workspaceId
+        input.workspaceId,
       );
       return ctx.prisma.repository.findMany({
         where: { project: { workspaceId: input.workspaceId } },
@@ -195,19 +195,22 @@ export const githubRouter = createTRPCRouter({
         select: { project: { select: { workspaceId: true } } },
       });
       if (!repo) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Repository not found." });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Repository not found.",
+        });
       }
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
         repo.project.workspaceId,
-        ["ADMIN", "LEAD"]
+        ["ADMIN", "LEAD"],
       );
       await enforceRateLimit(
         ctx.prisma,
         `ai:repo:${ctx.session.user.id}`,
         10,
-        60
+        60,
       );
       await inngest.send({
         name: EVENTS.REPO_ANALYZE,
@@ -224,7 +227,7 @@ export const githubRouter = createTRPCRouter({
         ctx.prisma,
         ctx.session.user.id,
         input.workspaceId,
-        ["ADMIN", "LEAD"]
+        ["ADMIN", "LEAD"],
       );
 
       const ws = await ctx.prisma.workspace.findUnique({
@@ -262,7 +265,10 @@ export const githubRouter = createTRPCRouter({
             // See if we already have it to avoid redundant imports if we don't want to re-run
             const existing = await ctx.prisma.pullRequest.findUnique({
               where: {
-                repositoryId_number: { repositoryId: repo.id, number: pr.number },
+                repositoryId_number: {
+                  repositoryId: repo.id,
+                  number: pr.number,
+                },
               },
             });
 
@@ -297,12 +303,12 @@ export const githubRouter = createTRPCRouter({
 
             // Update task statuses
             await ctx.prisma.task.updateMany({
-              where: { 
+              where: {
                 ref: { in: refs },
                 OR: [
                   { projectId: repo.projectId },
-                  { prd: { featureRequest: { projectId: repo.projectId } } }
-                ]
+                  { prd: { featureRequest: { projectId: repo.projectId } } },
+                ],
               },
               data: { status: "REVIEW" },
             });

@@ -7,7 +7,8 @@
   },
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.1",
@@ -18,18 +19,21 @@
     "@octokit/webhooks": "^13.4.1",
     "@repo/db": "*",
     "@repo/inngest": "*",
-    "@trpc/client": "^10.45.0",
-    "@trpc/server": "^10.45.0",
+    "@trpc/client": "^11.18.0",
+    "@trpc/server": "^11.18.0",
     "ai": "^7.0.4",
     "better-auth": "^1.1.18",
     "inngest": "^3.27.0",
     "razorpay": "^2.9.5",
     "superjson": "^2.2.1",
+    "trpc-to-openapi": "^3.3.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^4.1.9",
+    "vitest-mock-extended": "^4.0.0"
   }
 }

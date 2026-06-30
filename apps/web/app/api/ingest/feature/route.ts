@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   if (!token || !title || !context) {
     return Response.json(
       { error: "token, title and context are required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
   if (title.length > 200 || context.length > 10000) {

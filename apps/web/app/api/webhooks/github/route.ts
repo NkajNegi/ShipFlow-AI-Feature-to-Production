@@ -1,6 +1,13 @@
 import crypto from "crypto";
 import { prisma } from "@repo/db";
-import { parseTaskRefs, inngest, EVENTS, alreadyProcessed, captureError } from "@repo/api";
+import {
+  parseTaskRefs,
+  inngest,
+  EVENTS,
+  alreadyProcessed,
+  captureError,
+  evictInstallationOctokit,
+} from "@repo/api";
 
 export const runtime = "nodejs";
 
@@ -21,10 +28,7 @@ function verifySignature(payload: string, signature: string | null): boolean {
     "sha256=" +
     crypto.createHmac("sha256", secret).update(payload).digest("hex");
   try {
-    return crypto.timingSafeEqual(
-      Buffer.from(digest),
-      Buffer.from(signature)
-    );
+    return crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(signature));
   } catch {
     return false;
   }
@@ -48,12 +52,43 @@ export async function POST(req: Request) {
 
   if (event === "pull_request") {
     const action = payload.action as string;
-    if (["opened", "reopened", "synchronize", "ready_for_review", "closed"].includes(action)) {
+    if (
+      [
+        "opened",
+        "reopened",
+        "synchronize",
+        "ready_for_review",
+        "closed",
+      ].includes(action)
+    ) {
       try {
         await handlePullRequest(payload);
       } catch (err) {
         captureError(err, { webhook: "github", action });
       }
+    }
+  }
+
+  if (event === "installation") {
+    if (payload.action === "deleted") {
+      const installationId = payload.installation?.id;
+      if (installationId) {
+        evictInstallationOctokit(installationId);
+        await prisma.workspace.updateMany({
+          where: { githubInstallationId: installationId },
+          data: { githubInstallationId: null },
+        });
+      }
+    }
+  }
+
+  if (event === "installation_repositories" && payload.action === "removed") {
+    const repos = payload.repositories_removed;
+    if (Array.isArray(repos) && repos.length > 0) {
+      const fullNames = repos.map((r: any) => r.full_name).filter(Boolean);
+      await prisma.repository.deleteMany({
+        where: { fullName: { in: fullNames } },
+      });
     }
   }
 
@@ -114,22 +149,25 @@ async function handlePullRequest(payload: any) {
   }
 
   // Update task statuses based on PR state
-  const newStatus = pr.merged ? "DONE" : (pr.state === "closed" ? "TODO" : "REVIEW");
+  const newStatus = pr.merged
+    ? "DONE"
+    : pr.state === "closed"
+      ? "TODO"
+      : "REVIEW";
   const taskIdsToUpdate = await prisma.task.findMany({
-    where: { 
+    where: {
       ref: { in: refs },
       OR: [
         { projectId: repository.projectId },
-        { prd: { featureRequest: { projectId: repository.projectId } } }
-      ]
+        { prd: { featureRequest: { projectId: repository.projectId } } },
+      ],
     },
     select: { id: true },
   });
   if (taskIdsToUpdate.length > 0) {
     await prisma.task.updateMany({
-      where: { id: { in: taskIdsToUpdate.map(t => t.id) } },
+      where: { id: { in: taskIdsToUpdate.map((t) => t.id) } },
       data: { status: newStatus },
     });
   }
-
 }

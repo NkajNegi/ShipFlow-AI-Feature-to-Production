@@ -17,12 +17,20 @@ const TaskSchema = z.object({
 });
 
 export const PRDSchema = z.object({
-  assumptions: z.array(z.string()).describe("List of assumptions made by the AI that were not explicitly stated in the request"),
+  assumptions: z
+    .array(z.string())
+    .describe(
+      "List of assumptions made by the AI that were not explicitly stated in the request",
+    ),
   problemStatement: z.string(),
   goals: z.array(z.string()),
   nonGoals: z.array(z.string()),
   userStories: z.array(z.string()),
   acceptanceCriteria: z.array(z.string()),
+  technicalRequirements: z.array(z.string()),
+  securityRequirements: z.array(z.string()),
+  testingStrategy: z.array(z.string()),
+  rollbackPlan: z.string(),
   edgeCases: z.array(z.string()),
   successMetrics: z.array(z.string()),
   tasks: z.array(TaskSchema).min(1),
@@ -55,7 +63,8 @@ export async function generatePrdForFeature(featureRequestId: string) {
     const prdContent = await generateEnsembleObject({
       keys: {
         anthropicWorkspace: featureRequest.project.workspace.anthropicApiKeyEnc,
-        openRouterWorkspace: featureRequest.project.workspace.openRouterApiKeyEnc,
+        openRouterWorkspace:
+          featureRequest.project.workspace.openRouterApiKeyEnc,
       },
       schema: PRDSchema,
       system:
@@ -81,7 +90,8 @@ ${featureRequest.context}
 </untrusted>
 
 Produce a complete PRD with a problem statement, goals, non-goals, user
-stories, acceptance criteria, edge cases, success metrics, and a list of
+stories, acceptance criteria, technical requirements, security requirements,
+testing strategy, a rollback plan, edge cases, success metrics, and a list of
 engineering tasks needed to implement it.`,
     });
 
@@ -111,7 +121,7 @@ engineering tasks needed to implement it.`,
     await finishRun(runId, "COMPLETED");
     await notifyWorkspace(
       workspaceId,
-      `✅ PRD ready for review: ${featureRequest.title}`
+      `✅ PRD ready for review: ${featureRequest.title}`,
     );
 
     return prd;
@@ -119,7 +129,7 @@ engineering tasks needed to implement it.`,
     await finishRun(
       runId,
       "FAILED",
-      error instanceof Error ? error.message : "Unknown error"
+      error instanceof Error ? error.message : "Unknown error",
     );
     // Roll the feature back to DISCOVERY so the user can retry.
     await prisma.featureRequest.update({

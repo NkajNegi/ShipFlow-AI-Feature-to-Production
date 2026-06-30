@@ -19,12 +19,17 @@ export const prdRouter = createTRPCRouter({
       const fr = await assertFeatureRequestAccess(
         ctx.prisma,
         ctx.session.user.id,
-        input.featureRequestId
+        input.featureRequestId,
       );
 
       // Abuse + cost guardrails: throttle, then consume a credit up front so the
       // user gets immediate feedback (skipped for BYOK workspaces).
-      await enforceRateLimit(ctx.prisma, `ai:prd:${ctx.session.user.id}`, 10, 60);
+      await enforceRateLimit(
+        ctx.prisma,
+        `ai:prd:${ctx.session.user.id}`,
+        10,
+        60,
+      );
       await consumeAiCreditIfPlatform(ctx.prisma, fr.project.workspaceId);
 
       // Mark in-flight so the UI can show progress.
@@ -51,7 +56,7 @@ export const prdRouter = createTRPCRouter({
       await assertFeatureRequestAccess(
         ctx.prisma,
         ctx.session.user.id,
-        input.featureRequestId
+        input.featureRequestId,
       );
 
       await ctx.prisma.featureRequest.update({
@@ -80,9 +85,13 @@ export const prdRouter = createTRPCRouter({
           userStories: z.array(z.string().max(1000)).max(100),
           acceptanceCriteria: z.array(z.string().max(1000)).max(100),
           edgeCases: z.array(z.string().max(1000)).max(100),
+          technicalRequirements: z.array(z.string().max(1000)).max(100),
+          securityRequirements: z.array(z.string().max(1000)).max(100),
+          testingStrategy: z.array(z.string().max(1000)).max(100),
+          rollbackPlan: z.string().max(5000),
           successMetrics: z.array(z.string().max(1000)).max(50),
         }),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const prd = await ctx.prisma.pRD.findUnique({
@@ -95,7 +104,7 @@ export const prdRouter = createTRPCRouter({
       await assertFeatureRequestAccess(
         ctx.prisma,
         ctx.session.user.id,
-        prd.featureRequestId
+        prd.featureRequestId,
       );
 
       // Preserve the AI-generated task list; only overwrite editable sections.
@@ -114,7 +123,7 @@ export const prdRouter = createTRPCRouter({
       await assertFeatureRequestAccess(
         ctx.prisma,
         ctx.session.user.id,
-        input.featureRequestId
+        input.featureRequestId,
       );
       return ctx.prisma.pRD.findFirst({
         where: { featureRequestId: input.featureRequestId },

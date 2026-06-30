@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,21 +6,27 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Loader2 } from "lucide-react"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
 
 export interface ConfirmModalProps {
-  isOpen: boolean
-  onClose: () => void
-  title: string
-  description: React.ReactNode
-  confirmText?: string
-  confirmVariant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
-  requireInput?: string
-  isPending?: boolean
-  onConfirm: () => void
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  description: React.ReactNode;
+  confirmText?: string;
+  confirmVariant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link";
+  requireInput?: string;
+  isPending?: boolean;
+  onConfirm: () => void;
 }
 
 export function ConfirmModal({
@@ -34,16 +40,16 @@ export function ConfirmModal({
   isPending = false,
   onConfirm,
 }: ConfirmModalProps) {
-  const [inputValue, setInputValue] = React.useState("")
+  const [inputValue, setInputValue] = React.useState("");
 
   React.useEffect(() => {
     if (!isOpen) {
-      setInputValue("")
+      setInputValue("");
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   const isConfirmDisabled =
-    isPending || (requireInput !== undefined && inputValue !== requireInput)
+    isPending || (requireInput !== undefined && inputValue !== requireInput);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -55,7 +61,8 @@ export function ConfirmModal({
             {requireInput && (
               <div className="space-y-2 mt-4 text-foreground">
                 <p className="text-sm font-medium">
-                  Please type <span className="font-bold">{requireInput}</span> to confirm.
+                  Please type <span className="font-bold">{requireInput}</span>{" "}
+                  to confirm.
                 </p>
                 <Input
                   value={inputValue}
@@ -82,5 +89,5 @@ export function ConfirmModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

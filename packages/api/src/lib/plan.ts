@@ -24,7 +24,7 @@ export function planLimits(tier?: string | null) {
  */
 export async function assertRepoLimit(
   prisma: PrismaClient,
-  workspaceId: string
+  workspaceId: string,
 ): Promise<void> {
   const ws = await prisma.workspace.findUnique({
     where: { id: workspaceId },

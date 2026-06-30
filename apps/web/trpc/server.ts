@@ -6,6 +6,6 @@ import { headers } from "next/headers";
 
 export const getTRPCServer = async () => {
   return appRouter.createCaller(
-    await createTRPCContext({ headers: await headers() })
+    await createTRPCContext({ headers: await headers() }),
   );
 };

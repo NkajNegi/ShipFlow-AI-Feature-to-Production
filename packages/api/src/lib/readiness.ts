@@ -31,7 +31,7 @@ export type ReadinessResult = z.infer<typeof ReadinessSchema>;
  * feature id, or null if prerequisites (a PRD) are missing.
  */
 export async function runReadinessCheck(
-  featureRequestId: string
+  featureRequestId: string,
 ): Promise<string | null> {
   const feature = await prisma.featureRequest.findUnique({
     where: { id: featureRequestId },
@@ -82,10 +82,10 @@ export async function runReadinessCheck(
       .filter(Boolean);
     const totalBlocking = latestReviews.reduce(
       (acc, r) => acc + (r?.blockingCount ?? 0),
-      0
+      0,
     );
     const allIssues = latestReviews.flatMap((r) =>
-      Array.isArray(r?.issuesJson) ? (r!.issuesJson as any[]) : []
+      Array.isArray(r?.issuesJson) ? (r!.issuesJson as any[]) : [],
     );
 
     await addStep(runId, "Assessing production readiness with AI");
@@ -120,26 +120,23 @@ ${prd.tasks.map((t) => `- [${t.status}] ${t.title}: ${t.description}`).join("\n"
 
 <untrusted type="pull_requests">
 ${
-        feature.pullRequests
-          .map(
-            (pr) =>
-              `PR #${pr.number} (${pr.state}) — latest review: ${
-                pr.reviews[0]?.status ?? "none"
-              }, blocking: ${pr.reviews[0]?.blockingCount ?? 0}`
-          )
-          .join("\n") || "(no pull requests yet)"
-      }
+  feature.pullRequests
+    .map(
+      (pr) =>
+        `PR #${pr.number} (${pr.state}) — latest review: ${
+          pr.reviews[0]?.status ?? "none"
+        }, blocking: ${pr.reviews[0]?.blockingCount ?? 0}`,
+    )
+    .join("\n") || "(no pull requests yet)"
+}
 </untrusted>
 
 <untrusted type="open_review_issues">
 ${
-        allIssues
-          .map(
-            (i: any) =>
-              `- [${i.severity}/${i.category}] ${i.title}: ${i.detail}`
-          )
-          .join("\n") || "(none reported)"
-      }
+  allIssues
+    .map((i: any) => `- [${i.severity}/${i.category}] ${i.title}: ${i.detail}`)
+    .join("\n") || "(none reported)"
+}
 </untrusted>
 
 There are currently ${totalBlocking} unresolved blocking issue(s) across all PRs.

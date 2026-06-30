@@ -12,7 +12,7 @@ export async function assertWorkspaceMember(
   prisma: Db,
   userId: string,
   workspaceId: string,
-  roles?: string[]
+  roles?: string[],
 ) {
   const member = await prisma.workspaceMember.findUnique({
     where: { userId_workspaceId: { userId, workspaceId } },
@@ -40,7 +40,7 @@ export async function assertProjectAccess(
   prisma: Db,
   userId: string,
   projectId: string,
-  roles?: string[]
+  roles?: string[],
 ) {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
@@ -58,7 +58,7 @@ export async function assertFeatureRequestAccess(
   prisma: Db,
   userId: string,
   featureRequestId: string,
-  roles?: string[]
+  roles?: string[],
 ) {
   const fr = await prisma.featureRequest.findUnique({
     where: { id: featureRequestId },

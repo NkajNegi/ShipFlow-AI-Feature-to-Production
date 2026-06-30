@@ -2,7 +2,10 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { inngest, EVENTS } from "@repo/inngest";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { assertFeatureRequestAccess, assertWorkspaceMember } from "../lib/access";
+import {
+  assertFeatureRequestAccess,
+  assertWorkspaceMember,
+} from "../lib/access";
 import { enforceRateLimit } from "../lib/ratelimit";
 import { logAudit } from "../lib/audit";
 
@@ -14,7 +17,7 @@ export const reviewRouter = createTRPCRouter({
       await assertFeatureRequestAccess(
         ctx.prisma,
         ctx.session.user.id,
-        input.featureRequestId
+        input.featureRequestId,
       );
       return ctx.prisma.featureRequest.findUnique({
         where: { id: input.featureRequestId },
@@ -29,7 +32,19 @@ export const reviewRouter = createTRPCRouter({
             orderBy: { createdAt: "desc" },
             include: {
               repository: { select: { fullName: true, url: true } },
-              reviews: { orderBy: { createdAt: "desc" } },
+              reviews: {
+                orderBy: { createdAt: "desc" },
+                select: {
+                  id: true,
+                  status: true,
+                  summary: true,
+                  issuesJson: true,
+                  dimensionsJson: true,
+                  blockingCount: true,
+                  iteration: true,
+                  createdAt: true,
+                },
+              },
             },
           },
         },
@@ -50,12 +65,17 @@ export const reviewRouter = createTRPCRouter({
       await assertFeatureRequestAccess(
         ctx.prisma,
         ctx.session.user.id,
-        pr.featureRequestId
+        pr.featureRequestId,
       );
 
       // Throttle manual re-reviews. (The credit itself is consumed when the
       // Inngest workflow actually runs, in runReviewForPullRequest.)
-      await enforceRateLimit(ctx.prisma, `ai:review:${ctx.session.user.id}`, 20, 60);
+      await enforceRateLimit(
+        ctx.prisma,
+        `ai:review:${ctx.session.user.id}`,
+        20,
+        60,
+      );
 
       // Create a PENDING review immediately so the UI shows it's running
       const review = await ctx.prisma.review.create({
@@ -80,12 +100,13 @@ export const reviewRouter = createTRPCRouter({
         where: { id: input.reviewId },
         include: { pullRequest: true },
       });
-      if (!review) throw new TRPCError({ code: "NOT_FOUND", message: "Review not found" });
+      if (!review)
+        throw new TRPCError({ code: "NOT_FOUND", message: "Review not found" });
 
       await assertFeatureRequestAccess(
         ctx.prisma,
         ctx.session.user.id,
-        review.pullRequest.featureRequestId
+        review.pullRequest.featureRequestId,
       );
 
       // Delete the pending review row so the UI returns to the "Run Review" state
@@ -108,13 +129,13 @@ export const reviewRouter = createTRPCRouter({
       await assertFeatureRequestAccess(
         ctx.prisma,
         ctx.session.user.id,
-        input.featureRequestId
+        input.featureRequestId,
       );
       await enforceRateLimit(
         ctx.prisma,
         `ai:readiness:${ctx.session.user.id}`,
         15,
-        60
+        60,
       );
       await ctx.prisma.featureRequest.update({
         where: { id: input.featureRequestId },
@@ -133,7 +154,10 @@ export const reviewRouter = createTRPCRouter({
    */
   approveAndShip: protectedProcedure
     .input(
-      z.object({ featureRequestId: z.string(), mergePr: z.boolean().default(false) })
+      z.object({
+        featureRequestId: z.string(),
+        mergePr: z.boolean().default(false),
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const fr = await ctx.prisma.featureRequest.findUnique({
@@ -147,18 +171,21 @@ export const reviewRouter = createTRPCRouter({
         },
       });
       if (!fr) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Feature not found." });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Feature not found.",
+        });
       }
 
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
         fr.project.workspaceId,
-        ["ADMIN", "LEAD"]
+        ["ADMIN", "LEAD"],
       );
 
       const hasBlocking = fr.pullRequests.some(
-        (pr) => (pr.reviews[0]?.blockingCount ?? 0) > 0
+        (pr) => (pr.reviews[0]?.blockingCount ?? 0) > 0,
       );
       if (hasBlocking) {
         throw new TRPCError({
@@ -194,7 +221,7 @@ export const reviewRouter = createTRPCRouter({
         ctx.prisma,
         ctx.session.user.id,
         input.featureRequestId,
-        ["ADMIN", "LEAD"]
+        ["ADMIN", "LEAD"],
       );
       const rejected = await ctx.prisma.featureRequest.update({
         where: { id: fr.id },
@@ -217,7 +244,7 @@ export const reviewRouter = createTRPCRouter({
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
-        input.workspaceId
+        input.workspaceId,
       );
 
       const shipped = await ctx.prisma.featureRequest.findMany({
@@ -232,12 +259,10 @@ export const reviewRouter = createTRPCRouter({
       const totalMs = shipped.reduce(
         (acc, f) =>
           acc + ((f.shippedAt?.getTime() ?? 0) - f.createdAt.getTime()),
-        0
+        0,
       );
       const avgCycleHours =
-        shipped.length > 0
-          ? Math.round(totalMs / shipped.length / 36e5)
-          : 0;
+        shipped.length > 0 ? Math.round(totalMs / shipped.length / 36e5) : 0;
 
       const reviews = await ctx.prisma.review.findMany({
         where: {
@@ -245,13 +270,60 @@ export const reviewRouter = createTRPCRouter({
             featureRequest: { project: { workspaceId: input.workspaceId } },
           },
         },
-        select: { blockingCount: true, issuesJson: true },
+        select: { blockingCount: true, issuesJson: true, iteration: true },
       });
 
       const bugsCaught = reviews.reduce(
-        (acc, r) => acc + (Array.isArray(r.issuesJson) ? r.issuesJson.length : 0),
-        0
+        (acc, r) =>
+          acc + (Array.isArray(r.issuesJson) ? r.issuesJson.length : 0),
+        0,
       );
+
+      const totalIterations = reviews.reduce(
+        (a, r) => a + (r.iteration || 1),
+        0,
+      );
+      const avgIssuesPerIteration =
+        totalIterations > 0 ? (bugsCaught / totalIterations).toFixed(1) : 0;
+      const passRate =
+        reviews.length > 0
+          ? (
+              (reviews.filter((r) => r.blockingCount === 0).length /
+                reviews.length) *
+              100
+            ).toFixed(0)
+          : 0;
+
+      const prs = await ctx.prisma.pullRequest.findMany({
+        where: {
+          featureRequest: { project: { workspaceId: input.workspaceId } },
+        },
+        include: {
+          reviews: {
+            orderBy: { createdAt: "asc" },
+            select: { createdAt: true, status: true },
+          },
+        },
+      });
+
+      let totalReviewMs = 0;
+      let reviewedPrs = 0;
+      for (const pr of prs) {
+        if (pr.reviews.length > 0) {
+          const firstReview = pr.reviews[0];
+          const approvedReview = pr.reviews.find(
+            (r) => r.status === "APPROVED",
+          );
+          if (firstReview && approvedReview) {
+            totalReviewMs +=
+              approvedReview.createdAt.getTime() -
+              firstReview.createdAt.getTime();
+            reviewedPrs++;
+          }
+        }
+      }
+      const avgTimeInReviewHours =
+        reviewedPrs > 0 ? (totalReviewMs / reviewedPrs / 36e5).toFixed(1) : 0;
 
       return {
         shippedCount: shipped.length,
@@ -259,6 +331,9 @@ export const reviewRouter = createTRPCRouter({
         reviewCount: reviews.length,
         bugsCaught,
         blockingCaught: reviews.reduce((a, r) => a + r.blockingCount, 0),
+        avgIssuesPerIteration,
+        passRate: `${passRate}%`,
+        avgTimeInReviewHours,
       };
     }),
 
@@ -269,7 +344,7 @@ export const reviewRouter = createTRPCRouter({
       await assertWorkspaceMember(
         ctx.prisma,
         ctx.session.user.id,
-        input.workspaceId
+        input.workspaceId,
       );
       return ctx.prisma.review.findMany({
         where: {
@@ -284,6 +359,7 @@ export const reviewRouter = createTRPCRouter({
           status: true,
           summary: true,
           blockingCount: true,
+          iteration: true,
           createdAt: true,
           pullRequest: {
             select: {

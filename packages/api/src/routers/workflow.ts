@@ -10,7 +10,7 @@ export const workflowRouter = createTRPCRouter({
       await assertFeatureRequestAccess(
         ctx.prisma,
         ctx.session.user.id,
-        input.featureRequestId
+        input.featureRequestId,
       );
       return ctx.prisma.workflowRun.findMany({
         where: { featureRequestId: input.featureRequestId },

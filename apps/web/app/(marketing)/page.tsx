@@ -1,6 +1,14 @@
 import { MarketingHeader } from "@/components/marketing-header";
 import { CoreLoop } from "@/components/core-loop";
 import { HeroOrbitalGraphic } from "@/components/hero-orbital-graphic";
+import {
+  HowItWorks,
+  ReviewShowcase,
+  AgentTeaser,
+  EngineBand,
+  Integrations,
+  Faq,
+} from "@/components/marketing/landing-sections";
 import Link from "next/link";
 import { Zap, CheckSquare, ShieldCheck, BarChart, Users } from "lucide-react";
 
@@ -58,7 +66,11 @@ export default function MarketingPage() {
         <div className="text-left">
           <div
             className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold"
-            style={{ border: `1px solid ${ACCENT_LINE}`, background: ACCENT_SOFT, color: "#fff" }}
+            style={{
+              border: `1px solid ${ACCENT_LINE}`,
+              background: ACCENT_SOFT,
+              color: "#fff",
+            }}
           >
             <span style={{ color: "#F5A524" }}>✨</span>
             Idea → Production, on autopilot
@@ -69,13 +81,16 @@ export default function MarketingPage() {
             software <span className="sf-shine-text">delivery</span>
           </h1>
           <p className="mt-5 max-w-[500px] text-[18.5px] leading-relaxed text-muted-foreground text-pretty">
-            MetroFlow runs the whole loop — clarifies the request, writes the PRD,
-            plans the tasks, reviews every pull request against the spec, and gates
-            the release on a human.
-            <br /><br />
-            <span style={{ color: "#F5A524" }}>Not a code generator. An operator.</span>
+            MetroFlow runs the whole loop — clarifies the request, writes the
+            PRD, plans the tasks, reviews every pull request against the spec,
+            and gates the release on a human.
+            <br />
+            <br />
+            <span style={{ color: "#F5A524" }}>
+              Not a code generator. An operator.
+            </span>
           </p>
-          
+
           <div className="mt-9 flex flex-wrap gap-4">
             <Link
               href="/login"
@@ -93,24 +108,40 @@ export default function MarketingPage() {
                 border: "1px solid rgba(255,255,255,0.1)",
               }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="10 8 16 12 10 16 10 8"></polygon>
+              </svg>
               See the workflow
             </a>
           </div>
 
           <div className="mt-8 flex gap-6 text-sm text-muted-foreground">
-            <span className="flex items-center gap-2"><span className="text-emerald-400">✓</span> No credit card</span>
-            <span className="flex items-center gap-2"><span className="text-purple-400">✓</span> Setup in 2 minutes</span>
-            <span className="flex items-center gap-2"><span className="text-yellow-400">✓</span> Cancel anytime</span>
+            <span className="flex items-center gap-2">
+              <span className="text-emerald-400">✓</span> No credit card
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="text-purple-400">✓</span> Setup in 2 minutes
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="text-yellow-400">✓</span> Cancel anytime
+            </span>
           </div>
         </div>
 
         <div className="relative hidden lg:block h-full min-h-[600px] w-full pl-8">
           <HeroOrbitalGraphic />
         </div>
-
       </section>
-
 
       {/* bottom features */}
       <section className="relative z-[2] mx-auto mt-20 max-w-[1200px] px-7 pb-32">
@@ -122,8 +153,12 @@ export default function MarketingPage() {
               <Zap className="h-5 w-5" fill="currentColor" />
             </div>
             <div className="flex flex-col gap-1.5 mt-1">
-              <h3 className="text-[14px] font-semibold text-white">End-to-end automation</h3>
-              <p className="text-[13px] leading-[1.6] text-muted-foreground/80">From idea to production with human-in-the-loop safety.</p>
+              <h3 className="text-[14px] font-semibold text-white">
+                End-to-end automation
+              </h3>
+              <p className="text-[13px] leading-[1.6] text-muted-foreground/80">
+                From idea to production with human-in-the-loop safety.
+              </p>
             </div>
           </div>
 
@@ -134,8 +169,12 @@ export default function MarketingPage() {
               <CheckSquare className="h-5 w-5" fill="currentColor" />
             </div>
             <div className="flex flex-col gap-1.5 mt-1">
-              <h3 className="text-[14px] font-semibold text-white">Spec-driven delivery</h3>
-              <p className="text-[13px] leading-[1.6] text-muted-foreground/80">Every PR is checked against the spec, not assumptions.</p>
+              <h3 className="text-[14px] font-semibold text-white">
+                Spec-driven delivery
+              </h3>
+              <p className="text-[13px] leading-[1.6] text-muted-foreground/80">
+                Every PR is checked against the spec, not assumptions.
+              </p>
             </div>
           </div>
 
@@ -146,8 +185,13 @@ export default function MarketingPage() {
               <ShieldCheck className="h-5 w-5" fill="currentColor" />
             </div>
             <div className="flex flex-col gap-1.5 mt-1">
-              <h3 className="text-[14px] font-semibold text-white">Built-in quality gates</h3>
-              <p className="text-[13px] leading-[1.6] text-muted-foreground/80">Automated reviews, tests, security scans, and performance checks.</p>
+              <h3 className="text-[14px] font-semibold text-white">
+                Built-in quality gates
+              </h3>
+              <p className="text-[13px] leading-[1.6] text-muted-foreground/80">
+                Automated reviews, tests, security scans, and performance
+                checks.
+              </p>
             </div>
           </div>
 
@@ -158,8 +202,12 @@ export default function MarketingPage() {
               <BarChart className="h-5 w-5" fill="currentColor" />
             </div>
             <div className="flex flex-col gap-1.5 mt-1">
-              <h3 className="text-[14px] font-semibold text-white">Observability first</h3>
-              <p className="text-[13px] leading-[1.6] text-muted-foreground/80">Real-time insights with built-in dashboards and alerts.</p>
+              <h3 className="text-[14px] font-semibold text-white">
+                Observability first
+              </h3>
+              <p className="text-[13px] leading-[1.6] text-muted-foreground/80">
+                Real-time insights with built-in dashboards and alerts.
+              </p>
             </div>
           </div>
 
@@ -170,19 +218,43 @@ export default function MarketingPage() {
               <Users className="h-5 w-5" fill="currentColor" />
             </div>
             <div className="flex flex-col gap-1.5 mt-1">
-              <h3 className="text-[14px] font-semibold text-white">Collaborate with confidence</h3>
-              <p className="text-[13px] leading-[1.6] text-muted-foreground/80">Clear handoffs, audit trails, and instant context for your team.</p>
+              <h3 className="text-[14px] font-semibold text-white">
+                Collaborate with confidence
+              </h3>
+              <p className="text-[13px] leading-[1.6] text-muted-foreground/80">
+                Clear handoffs, audit trails, and instant context for your team.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Integrations strip */}
+      <Integrations />
+
+      {/* How it works — numbered pipeline */}
+      <HowItWorks />
+
       {/* The Core Loop Redesign */}
       <CoreLoop />
 
+      {/* Product proof — AI review showcase (ensemble + critic) */}
+      <ReviewShowcase />
+
+      {/* Multi-model engine band — our moat */}
+      <EngineBand />
+
+      {/* Agent teaser */}
+      <AgentTeaser />
+
+      {/* FAQ */}
+      <Faq />
+
       {/* final CTA */}
       <section className="relative z-[2] mx-auto mt-20 max-w-[760px] px-7 pb-[90px] text-center">
-        <h2 className="text-[38px] font-extrabold tracking-[-0.03em]">Ship with confidence.</h2>
+        <h2 className="text-[38px] font-extrabold tracking-[-0.03em]">
+          Ship with confidence.
+        </h2>
         <p className="mt-2.5 text-base text-muted-foreground">
           Free to start. Connect a repo and watch the loop run.
         </p>
@@ -197,7 +269,8 @@ export default function MarketingPage() {
           className="mt-[60px] border-t pt-6 text-[13px] text-muted-foreground/70"
           style={{ borderColor: "oklch(1 0 0 / 0.07)" }}
         >
-          MetroFlow AI — Your AI operator for software delivery · Builder Mode On
+          MetroFlow AI — Your AI operator for software delivery · Builder Mode
+          On
         </div>
       </section>
     </div>

@@ -18,7 +18,7 @@ export const RepoAnalysisSchema = z.object({
  * an Inngest workflow.
  */
 export async function analyzeRepository(
-  repositoryId: string
+  repositoryId: string,
 ): Promise<string | null> {
   const repo = await prisma.repository.findUnique({
     where: { id: repositoryId },
@@ -57,7 +57,9 @@ export async function analyzeRepository(
     ]);
 
     const readmeText =
-      readme.length > 12000 ? readme.slice(0, 12000) + "\n...[truncated]" : readme;
+      readme.length > 12000
+        ? readme.slice(0, 12000) + "\n...[truncated]"
+        : readme;
 
     await addStep(runId, "Summarizing with AI");
     const object = await generateEnsembleObject({
@@ -93,7 +95,7 @@ Summarize this repository.`,
     await finishRun(
       runId,
       "FAILED",
-      error instanceof Error ? error.message : "Unknown error"
+      error instanceof Error ? error.message : "Unknown error",
     );
     throw error;
   }

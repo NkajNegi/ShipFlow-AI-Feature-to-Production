@@ -8,7 +8,7 @@ import { prisma } from "@repo/db";
  */
 export async function alreadyProcessed(
   provider: string,
-  eventId: string | null | undefined
+  eventId: string | null | undefined,
 ): Promise<boolean> {
   if (!eventId) return false; // can't dedupe without an id; process it
   try {
