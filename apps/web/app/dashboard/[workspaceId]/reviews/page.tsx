@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   ExternalLink,
 } from "lucide-react";
+import { SkeletonList } from "@/components/ui/skeleton";
+import { QueryError } from "@/components/ui/query-error";
 
 export default function ReviewHistoryPage({
   params,
@@ -30,8 +32,14 @@ export default function ReviewHistoryPage({
         </p>
       </div>
 
-      {reviews.isLoading ? (
-        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+      {reviews.isError ? (
+        <QueryError
+          title="Couldn't load reviews"
+          onRetry={() => reviews.refetch()}
+          retrying={reviews.isFetching}
+        />
+      ) : reviews.isLoading ? (
+        <SkeletonList rows={4} />
       ) : (reviews.data ?? []).length === 0 ? (
         <Card className="border-border">
           <CardContent className="py-8 text-center text-muted-foreground">

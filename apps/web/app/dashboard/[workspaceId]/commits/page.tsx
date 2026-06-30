@@ -3,6 +3,8 @@
 import { use, useMemo, useState, useEffect, useRef } from "react";
 import { trpc } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
+import { SkeletonList } from "@/components/ui/skeleton";
+import { QueryError } from "@/components/ui/query-error";
 import {
   Card,
   CardContent,
@@ -81,8 +83,14 @@ export default function CommitsPage({
         </Button>
       </div>
 
-      {repos.isLoading ? (
-        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+      {repos.isError ? (
+        <QueryError
+          title="Couldn't load repositories"
+          onRetry={() => repos.refetch()}
+          retrying={repos.isFetching}
+        />
+      ) : repos.isLoading ? (
+        <SkeletonList rows={3} />
       ) : !repos.data || repos.data.length === 0 ? (
         <Card className="border-border">
           <CardContent className="py-8 text-center text-muted-foreground">

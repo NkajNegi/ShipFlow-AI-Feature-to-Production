@@ -25,6 +25,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { SkeletonPanels } from "@/components/ui/skeleton";
+import { QueryError } from "@/components/ui/query-error";
 
 const COLUMNS = ["TODO", "IN_PROGRESS", "REVIEW", "DONE"];
 const COLUMN_LABELS: Record<string, string> = {
@@ -66,6 +68,8 @@ export default function KanbanBoardPage({
   const {
     data: tasks,
     isLoading,
+    isError,
+    isFetching,
     refetch,
   } = trpc.task.listByWorkspace.useQuery({
     workspaceId,
@@ -455,9 +459,17 @@ export default function KanbanBoardPage({
         </select>
       </div>
 
-      {isLoading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      {isError ? (
+        <div className="flex-1 p-4">
+          <QueryError
+            title="Couldn't load the board"
+            onRetry={() => refetch()}
+            retrying={isFetching}
+          />
+        </div>
+      ) : isLoading ? (
+        <div className="flex-1 p-4">
+          <SkeletonPanels count={4} />
         </div>
       ) : (
         <DragDropContext onDragEnd={handleDragEnd}>
