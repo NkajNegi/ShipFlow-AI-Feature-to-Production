@@ -1,6 +1,8 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { assertWorkspaceMember } from "../lib/access";
+import { getInstallationOctokit, parseTaskRefs } from "../lib/github";
 
 export const taskRouter = createTRPCRouter({
   listByWorkspace: protectedProcedure
@@ -254,6 +256,11 @@ export const taskRouter = createTRPCRouter({
       return ctx.prisma.task.delete({ where: { id: input.taskId } });
     }),
 
+  /**
+   * Sync task statuses from GitHub: for each linked repo, read recent PRs,
+   * parse "SF-<ref>" references, and move the referenced tasks — open PR →
+   * REVIEW, merged PR → DONE. Real data only (Octokit), no hardcoding.
+   */
   syncGithub: protectedProcedure
     .input(z.object({ workspaceId: z.string() }))
     .mutation(async ({ ctx, input }) => {
@@ -262,9 +269,74 @@ export const taskRouter = createTRPCRouter({
         ctx.session.user.id,
         input.workspaceId
       );
-      // In a full implementation, this would iterate over Repositories in the workspace,
-      // fetch recent PRs from GitHub, and update task statuses.
-      // For now, it returns success to unblock the UI.
-      return { success: true, synced: 0 };
+
+      const ws = await ctx.prisma.workspace.findUnique({
+        where: { id: input.workspaceId },
+        select: { githubInstallationId: true },
+      });
+      if (!ws?.githubInstallationId) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Connect GitHub for this workspace first.",
+        });
+      }
+
+      const repos = await ctx.prisma.repository.findMany({
+        where: { project: { workspaceId: input.workspaceId } },
+        select: { fullName: true },
+      });
+      if (repos.length === 0) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Link a repository to a project before syncing.",
+        });
+      }
+
+      const octokit = getInstallationOctokit(ws.githubInstallationId);
+      const inWorkspace = {
+        OR: [
+          { project: { workspaceId: input.workspaceId } },
+          {
+            prd: {
+              featureRequest: { project: { workspaceId: input.workspaceId } },
+            },
+          },
+        ],
+      };
+
+      let synced = 0;
+      for (const repo of repos) {
+        if (!repo.fullName) continue;
+        const [owner, name] = repo.fullName.split("/");
+        const prs = await octokit.rest.pulls
+          .list({
+            owner,
+            repo: name,
+            state: "all",
+            per_page: 50,
+            sort: "updated",
+            direction: "desc",
+          })
+          .then((r) => r.data)
+          .catch(() => [] as any[]);
+
+        for (const pr of prs) {
+          const refs = parseTaskRefs(`${pr.title}\n${pr.body ?? ""}`);
+          if (refs.length === 0) continue;
+          const newStatus = pr.merged_at
+            ? "DONE"
+            : pr.state === "open"
+              ? "REVIEW"
+              : null;
+          if (!newStatus) continue;
+          const res = await ctx.prisma.task.updateMany({
+            where: { ref: { in: refs }, ...inWorkspace },
+            data: { status: newStatus },
+          });
+          synced += res.count;
+        }
+      }
+
+      return { success: true, synced };
     }),
 });

@@ -102,10 +102,13 @@ export default function KanbanBoardPage({ params }: { params: Promise<{ workspac
   });
 
   const syncGithub = trpc.task.syncGithub.useMutation({
-    onSuccess: () => {
-      alert("GitHub Sync completed!");
+    onSuccess: (data) => {
+      alert(
+        `GitHub sync complete — ${data.synced} task${data.synced === 1 ? "" : "s"} updated from pull requests.`
+      );
       refetch();
-    }
+    },
+    onError: (err) => alert(err.message),
   });
 
   // Modal State
@@ -257,7 +260,9 @@ export default function KanbanBoardPage({ params }: { params: Promise<{ workspac
       projectMap.set("UNASSIGNED", { id: "UNASSIGNED", title: "No Project", tasks: [] });
       
       tasks.forEach(t => {
-        if (t.projectId && projectMap.has(t.projectId)) projectMap.get(t.projectId)!.tasks.push(t);
+        // PRD-generated tasks have no direct projectId; resolve via the PRD's feature.
+        const pid = t.projectId ?? t.prd?.featureRequest?.project?.id ?? null;
+        if (pid && projectMap.has(pid)) projectMap.get(pid)!.tasks.push(t);
         else projectMap.get("UNASSIGNED")!.tasks.push(t);
       });
       return Array.from(projectMap.values()).filter(s => s.tasks.length > 0 || s.id !== "UNASSIGNED");
