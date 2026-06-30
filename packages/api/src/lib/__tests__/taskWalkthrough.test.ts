@@ -15,6 +15,10 @@ vi.mock("@repo/db", () => ({
       findUnique: (...a: any[]) => taskFindUnique(...a),
       update: (...a: any[]) => taskUpdate(...a),
     },
+    // No GitHub installation in tests → repo grounding is skipped.
+    gitHubInstallation: {
+      findFirst: vi.fn().mockResolvedValue(null),
+    },
   },
 }));
 
