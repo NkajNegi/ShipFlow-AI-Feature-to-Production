@@ -175,24 +175,21 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Top Logo */}
-      <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20">
+      {/* Top Logo — mark + wordmark lockup */}
+      <div className="absolute top-10 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
         <div
-          className="w-14 h-14 rounded-2xl flex items-center justify-center"
+          className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
           style={{
             background:
-              "linear-gradient(135deg, rgba(20,20,20,1) 0%, rgba(0,0,0,1) 100%)",
-            border: "1px solid rgba(250,204,21,0.3)",
-            boxShadow: "0 4px 30px rgba(250,204,21,0.15)",
+              "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)",
+            boxShadow: "0 4px 30px rgba(250,204,21,0.35)",
           }}
         >
-          <span
-            className="text-2xl font-extrabold"
-            style={{ color: "#facc15" }}
-          >
-            S
-          </span>
+          <span className="text-2xl font-black text-black leading-none">S</span>
         </div>
+        <span className="text-2xl font-extrabold tracking-tight text-white">
+          ShipFlow<span className="text-[#facc15]"> AI</span>
+        </span>
       </div>
 
       {/* Login Card */}
@@ -216,8 +213,8 @@ export default function LoginPage() {
             </h1>
             <p className="text-[14.5px] text-muted-foreground">
               {isSignUp
-                ? "Sign up for your MetroFlow AI account"
-                : "Sign in to your MetroFlow AI account"}
+                ? "Start shipping features from idea to production"
+                : "Sign in to your ShipFlow AI account"}
             </p>
           </div>
 
