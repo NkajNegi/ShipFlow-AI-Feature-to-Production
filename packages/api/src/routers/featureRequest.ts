@@ -139,6 +139,7 @@ export const featureRequestRouter = createTRPCRouter({
           status: true,
           source: true,
           createdAt: true,
+          shippedAt: true,
           project: { select: { id: true, name: true } },
           _count: { select: { pullRequests: true } },
         },

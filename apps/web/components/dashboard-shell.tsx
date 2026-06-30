@@ -27,6 +27,8 @@ import {
   Calendar,
   GitPullRequest,
   CheckCircle2,
+  Timer,
+  Activity,
 } from "lucide-react";
 import { signOut } from "@/lib/auth-client";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
@@ -87,6 +89,9 @@ export function DashboardShell({
       | "calendar"
       | "queue"
       | "agent"
+      | "review-sla"
+      | "shipped"
+      | "activity"
       | "settings",
     label: string,
     Icon: any,
@@ -252,9 +257,12 @@ export function DashboardShell({
           {navLink("board", "Kanban Board", LayoutList)}
           {navLink("calendar", "Calendar", Calendar)}
           {navLink("queue", "Approval Queue", Inbox)}
+          {navLink("review-sla", "Review SLA", Timer)}
           {navLink("commits", "Commit Review", GitCommit)}
           {navLink("reviews", "Review History", ShieldCheck)}
+          {navLink("shipped", "Shipped", Rocket)}
           {navLink("analytics", "Analytics", BarChart)}
+          {navLink("activity", "Activity", Activity)}
           {navLink("settings", "Settings", Settings)}
         </nav>
 

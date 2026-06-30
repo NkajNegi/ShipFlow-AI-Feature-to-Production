@@ -16,6 +16,9 @@ import {
   Settings,
   Bot,
   User,
+  Timer,
+  Activity,
+  Rocket,
   CornerDownLeft,
 } from "lucide-react";
 
@@ -76,10 +79,13 @@ export function CommandPalette({ workspaceId }: { workspaceId: string | null }) 
       { label: "Projects", icon: FolderKanban, run: go("projects"), keywords: "features requests" },
       { label: "Engineering board", icon: LayoutList, run: go("board"), keywords: "tasks kanban" },
       { label: "Reviews", icon: ShieldCheck, run: go("reviews"), keywords: "ai review pr" },
+      { label: "Review SLA", icon: Timer, run: go("review-sla"), keywords: "sla deadline breach overdue" },
       { label: "Commits", icon: GitCommit, run: go("commits"), keywords: "commit review" },
       { label: "Analytics", icon: BarChart, run: go("analytics"), keywords: "metrics throughput" },
+      { label: "Activity", icon: Activity, run: go("activity"), keywords: "feed timeline audit log" },
       { label: "Inbox", icon: Inbox, run: go("inbox"), keywords: "intake email" },
       { label: "Approval queue", icon: CheckCircle2, run: go("queue"), keywords: "approve human gate" },
+      { label: "Shipped", icon: Rocket, run: go("shipped"), keywords: "released production done" },
       { label: "Calendar", icon: Calendar, run: go("calendar"), keywords: "schedule" },
       { label: "AI Agent", icon: Bot, run: go("agent"), keywords: "copilot chat" },
       { label: "Settings", icon: Settings, run: go("settings"), keywords: "github billing workspace" },

@@ -8,6 +8,7 @@ import {
 } from "../lib/access";
 import { enforceRateLimit } from "../lib/ratelimit";
 import { logAudit } from "../lib/audit";
+import { computeSlaState, SLA_OPEN_STATUSES } from "../lib/sla";
 
 export const reviewRouter = createTRPCRouter({
   /** Full command-center payload for a feature request (Phase 5 aggregation). */
@@ -372,5 +373,57 @@ export const reviewRouter = createTRPCRouter({
           },
         },
       });
+    }),
+
+  /**
+   * Review SLA board: features currently in review/approval, each with their
+   * SLA state (on_track / due_soon / breached), sorted by deadline. Returns
+   * summary counts for the dashboard header.
+   */
+  slaBoard: protectedProcedure
+    .input(z.object({ workspaceId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      await assertWorkspaceMember(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.workspaceId,
+      );
+
+      const ws = await ctx.prisma.workspace.findUnique({
+        where: { id: input.workspaceId },
+        select: { reviewSlaHours: true },
+      });
+      const slaHours = ws?.reviewSlaHours ?? 24;
+
+      const features = await ctx.prisma.featureRequest.findMany({
+        where: {
+          project: { workspaceId: input.workspaceId },
+          status: { in: [...SLA_OPEN_STATUSES] as any },
+        },
+        orderBy: { reviewDueAt: "asc" },
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          reviewStartedAt: true,
+          reviewDueAt: true,
+          updatedAt: true,
+          project: { select: { id: true, name: true } },
+        },
+      });
+
+      const now = new Date();
+      const items = features.map((f) => {
+        const sla = computeSlaState(f.reviewDueAt, f.status, slaHours, now);
+        return { ...f, sla };
+      });
+
+      const counts = {
+        onTrack: items.filter((i) => i.sla.state === "on_track").length,
+        dueSoon: items.filter((i) => i.sla.state === "due_soon").length,
+        breached: items.filter((i) => i.sla.state === "breached").length,
+      };
+
+      return { slaHours, counts, items };
     }),
 });

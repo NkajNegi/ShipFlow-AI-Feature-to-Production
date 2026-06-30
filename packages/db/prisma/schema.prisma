@@ -106,6 +106,9 @@ model Workspace {
   // Notifications (Slack / Discord incoming webhook)
   notifyWebhookUrl String? @map("notify_webhook_url")
 
+  // Review SLA: hours allowed in human review/approval before a feature breaches.
+  reviewSlaHours Int @default(24) @map("review_sla_hours")
+
   labels           Label[]
   notifyType  NotifyType? @map("notify_type") // SLACK or DISCORD
 
@@ -212,6 +215,12 @@ model FeatureRequest {
   approvedAt   DateTime? @map("approved_at")
   shippedAt    DateTime? @map("shipped_at")
 
+  // Review SLA: when the feature first entered human review, and the deadline by
+  // which it must be actioned. Set once on entering IN_REVIEW (not reset on
+  // re-review loops, so breaches stay honest).
+  reviewStartedAt DateTime? @map("review_started_at")
+  reviewDueAt     DateTime? @map("review_due_at")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -220,6 +229,7 @@ model FeatureRequest {
   pullRequests PullRequest[]
 
   @@index([projectId, status])
+  @@index([status, reviewDueAt])
   @@map("feature_request")
 }
 

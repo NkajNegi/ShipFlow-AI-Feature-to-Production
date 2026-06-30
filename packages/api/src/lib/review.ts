@@ -367,9 +367,26 @@ export async function runReviewForPullRequest(
       });
     }
 
+    // Start the review SLA clock the first time a feature reaches a clean
+    // (non-blocking) AI review. Set once — re-review loops don't reset it, so
+    // breach tracking stays honest.
+    const enteringReview =
+      blockingCount === 0 && !pr.featureRequest.reviewStartedAt;
+    const slaHours = workspace.reviewSlaHours ?? 24;
+    const slaStart = new Date();
     await prisma.featureRequest.update({
       where: { id: pr.featureRequestId },
-      data: { status: blockingCount > 0 ? "FIX_NEEDED" : "IN_REVIEW" },
+      data: {
+        status: blockingCount > 0 ? "FIX_NEEDED" : "IN_REVIEW",
+        ...(enteringReview
+          ? {
+              reviewStartedAt: slaStart,
+              reviewDueAt: new Date(
+                slaStart.getTime() + slaHours * 60 * 60 * 1000,
+              ),
+            }
+          : {}),
+      },
     });
 
     await addStep(runId, "Posting feedback to the pull request");

@@ -279,4 +279,111 @@ export const workspaceRouter = createTRPCRouter({
       });
       return { ok: true };
     }),
+
+  // --- Review SLA ----------------------------------------------------------
+
+  getReviewSla: protectedProcedure
+    .input(z.object({ workspaceId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      await assertWorkspaceMember(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.workspaceId,
+      );
+      const ws = await ctx.prisma.workspace.findUnique({
+        where: { id: input.workspaceId },
+        select: { reviewSlaHours: true },
+      });
+      return { reviewSlaHours: ws?.reviewSlaHours ?? 24 };
+    }),
+
+  setReviewSla: protectedProcedure
+    .input(
+      z.object({
+        workspaceId: z.string(),
+        hours: z.number().int().min(1).max(720),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertWorkspaceMember(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.workspaceId,
+        ["ADMIN", "LEAD"],
+      );
+      await ctx.prisma.workspace.update({
+        where: { id: input.workspaceId },
+        data: { reviewSlaHours: input.hours },
+      });
+      return { ok: true };
+    }),
+
+  // --- Activity feed -------------------------------------------------------
+
+  /**
+   * Chronological workspace activity: merges the audit trail (human actions)
+   * and workflow runs (AI operations) into a single normalized stream.
+   */
+  getActivityFeed: protectedProcedure
+    .input(z.object({ workspaceId: z.string(), limit: z.number().min(1).max(100).default(40) }))
+    .query(async ({ ctx, input }) => {
+      await assertWorkspaceMember(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.workspaceId,
+      );
+
+      // WorkflowRun has no workspace relation, so scope it via the workspace's
+      // feature IDs.
+      const features = await ctx.prisma.featureRequest.findMany({
+        where: { project: { workspaceId: input.workspaceId } },
+        select: { id: true },
+      });
+      const featureIds = features.map((f) => f.id);
+
+      const [audit, runs] = await Promise.all([
+        ctx.prisma.auditLog.findMany({
+          where: { workspaceId: input.workspaceId },
+          orderBy: { createdAt: "desc" },
+          take: input.limit,
+        }),
+        featureIds.length
+          ? ctx.prisma.workflowRun.findMany({
+              where: { featureRequestId: { in: featureIds } },
+              orderBy: { createdAt: "desc" },
+              take: input.limit,
+              select: {
+                id: true,
+                type: true,
+                status: true,
+                label: true,
+                createdAt: true,
+              },
+            })
+          : Promise.resolve([]),
+      ]);
+
+      const items = [
+        ...audit.map((a) => ({
+          id: `audit-${a.id}`,
+          kind: "human" as const,
+          actor: a.actorName ?? "A teammate",
+          summary: a.action,
+          target: a.target ?? null,
+          at: a.createdAt,
+        })),
+        ...runs.map((r) => ({
+          id: `run-${r.id}`,
+          kind: "ai" as const,
+          actor: "MetroFlow AI",
+          summary: `${r.type}${r.status ? ` · ${r.status}` : ""}`,
+          target: r.label ?? null,
+          at: r.createdAt,
+        })),
+      ]
+        .sort((a, b) => b.at.getTime() - a.at.getTime())
+        .slice(0, input.limit);
+
+      return { items };
+    }),
 });

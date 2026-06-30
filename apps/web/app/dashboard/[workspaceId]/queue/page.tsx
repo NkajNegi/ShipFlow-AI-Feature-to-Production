@@ -1,8 +1,14 @@
 import { prisma } from "@repo/db";
+import { computeSlaState, formatSlaLabel } from "@repo/api";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, CheckCircle, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCircle, ShieldCheck, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+
+const SLA_PILL: Record<string, string> = {
+  breached: "bg-red-500/15 text-red-400 border-red-500/30",
+  due_soon: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+};
 
 export default async function QueuePage(props: {
   params: Promise<{ workspaceId: string }>;
@@ -96,6 +102,25 @@ export default async function QueuePage(props: {
                             addSuffix: true,
                           })}
                         </span>
+                        {(() => {
+                          const sla = computeSlaState(
+                            feature.reviewDueAt,
+                            feature.status,
+                            workspace.reviewSlaHours,
+                          );
+                          if (sla.state !== "breached" && sla.state !== "due_soon")
+                            return null;
+                          return (
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${SLA_PILL[sla.state]}`}
+                            >
+                              {sla.state === "breached" && (
+                                <AlertTriangle className="h-3 w-3" />
+                              )}
+                              {formatSlaLabel(sla)}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
