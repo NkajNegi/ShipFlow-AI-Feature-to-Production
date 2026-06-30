@@ -105,7 +105,12 @@ export async function runCommitReview(
   if (!cr || !cr.repository?.fullName) return null;
 
   const workspace = cr.repository.project.workspace;
-  if (!workspace.githubInstallationId) {
+
+  const installation = await prisma.gitHubInstallation.findFirst({
+    where: { workspaceId: workspace.id },
+  });
+
+  if (!installation?.installationId) {
     await prisma.commitReview.update({
       where: { id: commitReviewId },
       data: { status: "FAILED", error: "GitHub is not connected." },
@@ -143,7 +148,7 @@ export async function runCommitReview(
     }
 
     const [owner, repo] = cr.repository.fullName.split("/") as [string, string];
-    const octokit = getInstallationOctokit(workspace.githubInstallationId);
+    const octokit = getInstallationOctokit(installation.installationId);
 
     await addStep(runId, "Fetching commit diff from GitHub");
     const diffResp = await octokit.request(

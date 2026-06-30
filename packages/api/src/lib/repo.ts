@@ -27,7 +27,12 @@ export async function analyzeRepository(
   if (!repo || !repo.fullName) return null;
 
   const workspace = repo.project.workspace;
-  if (!workspace.githubInstallationId) return null;
+
+  const installation = await prisma.gitHubInstallation.findFirst({
+    where: { workspaceId: workspace.id },
+  });
+
+  if (!installation?.installationId) return null;
 
   const runId = await startRun("REPO_ANALYSIS", {
     label: `Analyze · ${repo.fullName}`,
@@ -37,7 +42,7 @@ export async function analyzeRepository(
   try {
     await consumeAiCreditIfPlatform(prisma, workspace.id);
     const [owner, name] = repo.fullName.split("/") as [string, string];
-    const octokit = getInstallationOctokit(workspace.githubInstallationId);
+    const octokit = getInstallationOctokit(installation.installationId);
 
     await addStep(runId, "Reading repository from GitHub");
     const [info, languages, readme, root] = await Promise.all([

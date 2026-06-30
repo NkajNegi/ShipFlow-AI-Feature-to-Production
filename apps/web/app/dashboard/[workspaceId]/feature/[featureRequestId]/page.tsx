@@ -21,7 +21,8 @@ import {
   Pencil,
   Activity,
   Trash2,
-  Plus
+  Plus,
+  Bot
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -99,6 +100,16 @@ export default function FeatureCommandCenter({
   const approvePlan = trpc.featureRequest.approvePlan.useMutation({
     onSuccess: () => featureQuery.refetch(),
   });
+  const dismissIssue = trpc.review.dismissIssue.useMutation({
+    onSuccess: () => featureQuery.refetch(),
+  });
+
+  const briefingQuery = trpc.featureRequest.getApprovalBriefing.useQuery(
+    { featureRequestId },
+    {
+      enabled: feature?.status === "PLANNING" || feature?.status === "PLAN_APPROVED",
+    }
+  );
 
   // Require a deliberate confirmation before overriding a non-READY decision
   // (ALREADY_EXISTS / NEEDS_CLARIFICATION) and generating a PRD anyway.
@@ -116,6 +127,7 @@ export default function FeatureCommandCenter({
   const prd = feature.prds[0];
   const content = (prd?.contentJson ?? {}) as any;
   const clar = (feature as any).clarificationJson as any;
+  const thread = (feature as any).clarificationMessages || [];
   // (ALREADY_EXISTS / NEEDS_CLARIFICATION) and generating a PRD anyway.
   const hasBlocking = feature.pullRequests.some(
     (pr: any) => (pr.reviews[0]?.blockingCount ?? 0) > 0
@@ -175,6 +187,26 @@ export default function FeatureCommandCenter({
 
             {clar && (
               <div className="space-y-4">
+                {thread.length > 0 && (
+                  <div className="space-y-3 rounded-lg border border-border p-4 bg-muted/10">
+                    <p className="text-sm font-medium flex items-center gap-2">
+                      <HelpCircle className="h-4 w-4 text-primary" /> Discussion Thread
+                    </p>
+                    <div className="space-y-4">
+                      {thread.map((msg: any) => (
+                        <div key={msg.id} className={`text-sm ${msg.role === "USER" ? "ml-8" : "mr-8"}`}>
+                          <p className="font-semibold text-xs text-muted-foreground mb-1">
+                            {msg.role === "USER" ? "You" : "AI PM"}
+                          </p>
+                          <div className={`p-3 rounded-lg whitespace-pre-wrap ${msg.role === "USER" ? "bg-primary/10 text-primary-foreground border border-primary/20" : "bg-muted border border-border"}`}>
+                            {msg.content}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {clar.decision === "ALREADY_EXISTS" && (
                   <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
                     <p className="flex items-center gap-2 font-medium text-amber-400">
@@ -286,7 +318,7 @@ export default function FeatureCommandCenter({
       {prd && <PrdSection prd={prd} content={content} onSaved={() => featureQuery.refetch()} />}
 
       {prd?.tasks?.length || prd ? (
-        <TasksSection prd={prd} projectId={feature.projectId} onSaved={() => featureQuery.refetch()} />
+        <TasksSection prd={prd} projectId={feature.projectId} workspaceId={workspaceId} onSaved={() => featureQuery.refetch()} />
       ) : null}
 
       {/* Phase 2 — human approval of the plan before development starts */}
@@ -302,10 +334,59 @@ export default function FeatureCommandCenter({
               <>
                 <div className="text-sm">
                   <p className="font-medium">Review the PRD &amp; tasks, then approve the plan</p>
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground mb-4">
                     Approving signs off Phase 2 and marks the feature ready for
                     development (Admins/Leads only).
                   </p>
+                  
+                  {briefingQuery.isLoading && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground my-4 p-4 border rounded-md">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      Generating AI Approval Briefing...
+                    </div>
+                  )}
+
+                  {briefingQuery.data && (
+                    <div className="my-4 p-4 rounded-md border border-border bg-card shadow-sm max-w-2xl text-sm">
+                      <h4 className="font-semibold flex items-center gap-2 mb-2">
+                        <Sparkles className="h-4 w-4 text-primary" /> AI Approval Briefing
+                      </h4>
+                      <p className="text-muted-foreground mb-3">{briefingQuery.data.executiveSummary}</p>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <span className="font-semibold text-xs text-amber-500 uppercase">Technical Risks</span>
+                          <ul className="list-disc pl-5 mt-1 space-y-1 text-muted-foreground">
+                            {briefingQuery.data.technicalRisks.length > 0 ? (
+                              briefingQuery.data.technicalRisks.map((risk, i) => <li key={i}>{risk}</li>)
+                            ) : (
+                              <li>None identified</li>
+                            )}
+                          </ul>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-xs text-blue-500 uppercase">QA Edge Cases</span>
+                          <ul className="list-disc pl-5 mt-1 space-y-1 text-muted-foreground">
+                            {briefingQuery.data.qaEdgeCases.length > 0 ? (
+                              briefingQuery.data.qaEdgeCases.map((case_, i) => <li key={i}>{case_}</li>)
+                            ) : (
+                              <li>None identified</li>
+                            )}
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t flex items-center gap-2 font-medium">
+                        Recommendation: 
+                        <span className={
+                          briefingQuery.data.overallRecommendation === "READY" ? "text-emerald-500" :
+                          briefingQuery.data.overallRecommendation === "NEEDS_WORK" ? "text-amber-500" : "text-red-500"
+                        }>
+                          {briefingQuery.data.overallRecommendation}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <Button
@@ -422,21 +503,37 @@ export default function FeatureCommandCenter({
                           ).map((issue: any, i: number) => (
                             <div
                               key={i}
-                              className="text-xs rounded border border-border px-2 py-1"
+                              className="text-xs rounded border border-border px-2 py-1 flex justify-between items-start"
                             >
-                              <span
-                                className={
-                                  issue.severity === "BLOCKING"
-                                    ? "text-red-400 font-semibold"
-                                    : "text-amber-400 font-semibold"
-                                }
+                              <div>
+                                <span
+                                  className={
+                                    issue.severity === "BLOCKING"
+                                      ? "text-red-400 font-semibold"
+                                      : "text-amber-400 font-semibold"
+                                  }
+                                >
+                                  {issue.severity}
+                                </span>{" "}
+                                <span className="text-muted-foreground">
+                                  [{issue.category}]
+                                </span>{" "}
+                                {issue.title}
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-muted-foreground hover:text-red-400 -mr-1"
+                                title="Dismiss as false positive & teach AI to ignore"
+                                disabled={dismissIssue.isPending}
+                                onClick={() => dismissIssue.mutate({ reviewId: latest.id, issueIndex: i })}
                               >
-                                {issue.severity}
-                              </span>{" "}
-                              <span className="text-muted-foreground">
-                                [{issue.category}]
-                              </span>{" "}
-                              {issue.title}
+                                {dismissIssue.isPending && dismissIssue.variables?.issueIndex === i && dismissIssue.variables?.reviewId === latest.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-3 w-3" />
+                                )}
+                              </Button>
                             </div>
                           ))}
                         </div>
@@ -708,14 +805,8 @@ function ClarifyQuestions({
   return (
     <div className="rounded-lg border border-border p-4 space-y-3">
       <p className="flex items-center gap-2 font-medium text-foreground">
-        <HelpCircle className="h-4 w-4 text-primary" /> A few questions first
+        <Pencil className="h-4 w-4 text-primary" /> Your Reply
       </p>
-      <p className="text-sm text-muted-foreground">{reasoning}</p>
-      <ul className="list-disc pl-5 space-y-1 text-sm">
-        {questions.map((q, i) => (
-          <li key={i}>{q}</li>
-        ))}
-      </ul>
       <Textarea
         placeholder="Answer the questions here to give the AI more context…"
         className="h-28"
@@ -725,10 +816,13 @@ function ClarifyQuestions({
       <Button
         size="sm"
         disabled={!text.trim() || pending}
-        onClick={() => onSubmit(text)}
+        onClick={() => {
+          onSubmit(text);
+          setText("");
+        }}
       >
         {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Submit Answers
+        Submit Reply
       </Button>
     </div>
   );
@@ -1038,7 +1132,7 @@ function FeatureInfoEditor({ feature, onSaved }: { feature: any; onSaved: () => 
   );
 }
 
-function TasksSection({ prd, projectId, onSaved }: { prd: any; projectId: string; onSaved: () => void }) {
+function TasksSection({ prd, projectId, workspaceId, onSaved }: { prd: any; projectId: string; workspaceId: string; onSaved: () => void }) {
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState({ title: "", description: "" });
@@ -1147,6 +1241,11 @@ function TasksSection({ prd, projectId, onSaved }: { prd: any; projectId: string
                 </div>
               </div>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-500 hover:text-blue-600 hover:bg-blue-500/10" asChild>
+                  <Link href={`/dashboard/${workspaceId}/agent?seed=${encodeURIComponent(`Explain task SF-${t.ref} (${t.title}) and guide me through the codebase to implement it. My task ID is: ${t.id}`)}`}>
+                    <Bot className="h-4 w-4" />
+                  </Link>
+                </Button>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => startEdit(t)}>
                   <Pencil className="h-4 w-4" />
                 </Button>

@@ -37,11 +37,12 @@ export const githubRouter = createTRPCRouter({
       );
       const ws = await ctx.prisma.workspace.findUnique({
         where: { id: input.workspaceId },
-        select: { githubInstallationId: true, githubAccountLogin: true },
+        include: { githubInstallations: true },
       });
+      const inst = ws?.githubInstallations[0];
       return {
-        connected: Boolean(ws?.githubInstallationId),
-        accountLogin: ws?.githubAccountLogin ?? null,
+        connected: Boolean(inst),
+        accountLogin: inst?.accountLogin ?? null,
       };
     }),
 
@@ -56,15 +57,16 @@ export const githubRouter = createTRPCRouter({
       );
       const ws = await ctx.prisma.workspace.findUnique({
         where: { id: input.workspaceId },
-        select: { githubInstallationId: true },
+        include: { githubInstallations: true },
       });
-      if (!ws?.githubInstallationId) {
+      const inst = ws?.githubInstallations[0];
+      if (!inst?.installationId) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "GitHub is not connected for this workspace.",
         });
       }
-      const octokit = getInstallationOctokit(ws.githubInstallationId);
+      const octokit = getInstallationOctokit(inst.installationId);
       const res = await octokit.rest.apps.listReposAccessibleToInstallation({
         per_page: 100,
       });
@@ -232,10 +234,11 @@ export const githubRouter = createTRPCRouter({
 
       const ws = await ctx.prisma.workspace.findUnique({
         where: { id: input.workspaceId },
-        select: { githubInstallationId: true },
+        include: { githubInstallations: true },
       });
 
-      if (!ws?.githubInstallationId) {
+      const inst = ws?.githubInstallations[0];
+      if (!inst?.installationId) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "GitHub is not connected for this workspace.",
@@ -246,11 +249,19 @@ export const githubRouter = createTRPCRouter({
         where: { project: { workspaceId: input.workspaceId } },
       });
 
-      const octokit = getInstallationOctokit(ws.githubInstallationId);
+      const octokit = getInstallationOctokit(inst.installationId);
       let syncedCount = 0;
 
-      for (const repo of repositories) {
-        const [owner, repoName] = (repo.fullName || "").split("/");
+      const syncRun = await ctx.prisma.syncRun.create({
+        data: {
+          workspaceId: input.workspaceId,
+          status: "RUNNING",
+        },
+      });
+
+      try {
+        for (const repo of repositories) {
+          const [owner, repoName] = (repo.fullName || "").split("/");
         if (!owner || !repoName) continue;
 
         try {
@@ -325,6 +336,26 @@ export const githubRouter = createTRPCRouter({
         }
       }
 
+      await ctx.prisma.syncRun.update({
+        where: { id: syncRun.id },
+        data: {
+          status: "COMPLETED",
+          completedAt: new Date(),
+          metadata: { syncedCount },
+        },
+      });
+
       return { syncedCount };
-    }),
+    } catch (error: any) {
+      await ctx.prisma.syncRun.update({
+        where: { id: syncRun.id },
+        data: {
+          status: "FAILED",
+          completedAt: new Date(),
+          error: error.message || String(error),
+        },
+      });
+      throw error;
+    }
+  }),
 });

@@ -74,9 +74,8 @@ export async function POST(req: Request) {
       const installationId = payload.installation?.id;
       if (installationId) {
         evictInstallationOctokit(installationId);
-        await prisma.workspace.updateMany({
-          where: { githubInstallationId: installationId },
-          data: { githubInstallationId: null },
+        await prisma.gitHubInstallation.deleteMany({
+          where: { installationId },
         });
       }
     }

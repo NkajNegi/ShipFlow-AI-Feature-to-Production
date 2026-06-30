@@ -1,4 +1,5 @@
 import { prisma } from "@repo/db";
+import { inngest, EVENTS } from "@repo/inngest";
 
 export const runtime = "nodejs";
 
@@ -52,6 +53,12 @@ export async function POST(req: Request) {
       source,
       status: "DISCOVERY",
     },
+  });
+
+  // Trigger duplicate checking workflow asynchronously
+  await inngest.send({
+    name: EVENTS.FEATURE_DUPLICATE_CHECK,
+    data: { featureRequestId: fr.id },
   });
 
   return Response.json({ ok: true, featureRequestId: fr.id }, { status: 201 });

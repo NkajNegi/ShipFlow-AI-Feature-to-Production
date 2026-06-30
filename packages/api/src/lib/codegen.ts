@@ -311,7 +311,12 @@ export async function runCodegenForFeature(
 
   try {
     if (!prd) throw new Error("No PRD found — generate a PRD first.");
-    if (!workspace.githubInstallationId || !repository?.fullName) {
+
+    const installation = await prisma.gitHubInstallation.findFirst({
+      where: { workspaceId: workspace.id },
+    });
+
+    if (!installation?.installationId || !repository?.fullName) {
       throw new Error("Connect a GitHub repository before generating code.");
     }
 
@@ -321,7 +326,7 @@ export async function runCodegenForFeature(
     });
 
     const [owner, repo] = repository.fullName.split("/") as [string, string];
-    const octokit = getInstallationOctokit(workspace.githubInstallationId);
+    const octokit = getInstallationOctokit(installation.installationId);
 
     await addStep(workflowRunId, "Reading repository context");
     const repoContext = await readRepoContext(

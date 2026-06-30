@@ -6,6 +6,7 @@ import { analyzeRepository } from "../lib/repo";
 import { runCommitReview } from "../lib/commitReview";
 import { runReadinessCheck } from "../lib/readiness";
 import { runCodegenForFeature } from "../lib/codegen";
+import { detectSimilarFeatureRequests } from "../lib/similarity";
 
 /**
  * Inngest workflow functions (async, durable, retryable).
@@ -177,6 +178,57 @@ export const cleanupFn = inngest.createFunction(
   },
 );
 
+export const runDuplicateCheckFn = inngest.createFunction(
+  {
+    id: "run-duplicate-check",
+    name: "Run Duplicate Feature Check",
+    retries: 2,
+  },
+  { event: EVENTS.FEATURE_DUPLICATE_CHECK },
+  async ({ event, step }) => {
+    const { featureRequestId } = event.data;
+    
+    // Fetch feature and history inside the step to ensure fresh data
+    const result = await step.run("check-duplicates", async () => {
+      const newFeature = await prisma.featureRequest.findUnique({
+        where: { id: featureRequestId }, include: { project: true },
+      });
+      if (!newFeature) return { error: "Feature not found" };
+      
+      const existingFeatures = await prisma.featureRequest.findMany({
+        where: {
+          projectId: newFeature.projectId,
+          id: { not: newFeature.id },
+          status: { notIn: ["REJECTED", "DUPLICATE_EDUCATION"] }
+        },
+        orderBy: { createdAt: "desc" },
+        take: 20
+      });
+      
+      const res = await detectSimilarFeatureRequests(
+        newFeature.project?.workspaceId || "", 
+        null, 
+        { title: newFeature.title, context: newFeature.context }, 
+        existingFeatures
+      );
+      
+      if (res.isDuplicate && res.similarFeatureId) {
+        await prisma.featureRequest.update({
+          where: { id: featureRequestId }, include: { project: true },
+          data: { 
+            status: "DUPLICATE_EDUCATION",
+            // We append the reasoning to the context or leave a note
+            context: newFeature.context + "\n\n---\n**AI Duplicate Detection**:\n" + res.reasoning
+          }
+        });
+      }
+      return res;
+    });
+    
+    return { featureRequestId, result };
+  },
+);
+
 export const inngestFunctions = [
   generatePrdFn,
   runReviewFn,
@@ -184,5 +236,6 @@ export const inngestFunctions = [
   runCommitReviewFn,
   runReadinessCheckFn,
   runCodegenFn,
+  runDuplicateCheckFn,
   cleanupFn,
 ];

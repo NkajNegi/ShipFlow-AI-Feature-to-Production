@@ -44,7 +44,8 @@ jobs:
           node-version: 18
       - run: npm install
       - run: npm run --workspace=@repo/db generate
-      - run: npx prisma db push --schema=packages/db/prisma/schema.prisma
+      - run: npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
+      - run: npx prisma migrate status --schema=packages/db/prisma/schema.prisma
       - run: npm run test --workspace=@repo/api
 
   e2e:

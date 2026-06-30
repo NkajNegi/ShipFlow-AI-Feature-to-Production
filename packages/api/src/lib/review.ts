@@ -213,7 +213,12 @@ export async function runReviewForPullRequest(
 
   const workspace = pr.featureRequest.project.workspace;
   const prd = pr.featureRequest.prds[0];
-  if (!workspace.githubInstallationId || !pr.repository?.fullName || !prd) {
+
+  const installation = await prisma.gitHubInstallation.findFirst({
+    where: { workspaceId: workspace.id },
+  });
+
+  if (!installation?.installationId || !pr.repository?.fullName || !prd) {
     return null;
   }
 
@@ -227,7 +232,7 @@ export async function runReviewForPullRequest(
     await consumeAiCreditIfPlatform(prisma, workspace.id);
 
     const [owner, repo] = pr.repository.fullName.split("/") as [string, string];
-    const octokit = getInstallationOctokit(workspace.githubInstallationId);
+    const octokit = getInstallationOctokit(installation.installationId);
 
     await addStep(runId, "Fetching code diff from GitHub");
     const files = await octokit.paginate(octokit.rest.pulls.listFiles, {

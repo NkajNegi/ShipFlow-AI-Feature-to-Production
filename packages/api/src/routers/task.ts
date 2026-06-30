@@ -309,9 +309,9 @@ export const taskRouter = createTRPCRouter({
 
       const ws = await ctx.prisma.workspace.findUnique({
         where: { id: input.workspaceId },
-        select: { githubInstallationId: true },
+        select: { githubInstallations: true },
       });
-      if (!ws?.githubInstallationId) {
+      if (!ws?.githubInstallations?.[0]?.installationId) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "Connect GitHub for this workspace first.",
@@ -329,7 +329,7 @@ export const taskRouter = createTRPCRouter({
         });
       }
 
-      const octokit = getInstallationOctokit(ws.githubInstallationId);
+      const octokit = getInstallationOctokit(ws.githubInstallations?.[0]?.installationId);
       const inWorkspace = {
         OR: [
           { project: { workspaceId: input.workspaceId } },

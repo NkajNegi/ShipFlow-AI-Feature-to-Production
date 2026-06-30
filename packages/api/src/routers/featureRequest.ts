@@ -6,7 +6,8 @@ import {
   assertWorkspaceMember,
   assertFeatureRequestAccess,
 } from "../lib/access";
-import { logAudit } from "../lib/audit";
+import { logAudit, logActivity } from "../lib/audit";
+import { generateApprovalBriefing } from "../lib/approval";
 
 export const featureRequestRouter = createTRPCRouter({
   create: protectedProcedure
@@ -58,8 +59,10 @@ export const featureRequestRouter = createTRPCRouter({
       const feature = await ctx.prisma.featureRequest.findUnique({
         where: { id: input.featureRequestId },
         select: {
+          id: true,
           title: true,
           status: true,
+          projectId: true,
           _count: { select: { prds: true } },
         },
       });
@@ -84,7 +87,15 @@ export const featureRequestRouter = createTRPCRouter({
 
       const updated = await ctx.prisma.featureRequest.update({
         where: { id: input.featureRequestId },
-        data: { status: "PLAN_APPROVED" },
+        data: { 
+          status: "PLAN_APPROVED",
+          featureApprovals: {
+            create: {
+              type: "PLAN",
+              approvedById: ctx.session.user.id,
+            }
+          }
+        },
       });
 
       await logAudit({
@@ -95,7 +106,68 @@ export const featureRequestRouter = createTRPCRouter({
         target: updated.title,
       });
 
+      await logActivity({
+        workspaceId: fr.project.workspaceId,
+        projectId: updated.projectId,
+        userId: ctx.session.user.id,
+        type: "PLAN_APPROVED",
+        metadata: {
+          featureRequestId: updated.id,
+          featureRequestTitle: updated.title,
+        },
+      });
+
       return updated;
+    }),
+
+  getApprovalBriefing: protectedProcedure
+    .input(z.object({ featureRequestId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const fr = await assertFeatureRequestAccess(
+        ctx.prisma,
+        ctx.session.user.id,
+        input.featureRequestId,
+        ["ADMIN", "LEAD", "MEMBER"],
+      );
+
+      const feature = await ctx.prisma.featureRequest.findUnique({
+        where: { id: input.featureRequestId },
+        include: {
+          prds: { orderBy: { createdAt: "desc" }, take: 1 },
+          pullRequests: {
+            include: {
+              reviews: {
+                orderBy: { createdAt: "desc" },
+                select: { id: true, createdAt: true, status: true, issuesJson: true, iteration: true },
+              },
+            },
+          },
+        },
+      });
+
+      if (!feature) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Feature not found.",
+        });
+      }
+
+      // Collect review history
+      const reviewHistory = (feature as any).pullRequests.flatMap((pr: any) => 
+        pr.reviews.map((r: any) => ({
+          iteration: r.iteration,
+          summary: `Status: ${r.status}, Issues: ${Array.isArray(r.issuesJson) ? r.issuesJson.length : 0}`,
+          issues: Array.isArray(r.issuesJson) ? r.issuesJson : []
+        }))
+      );
+
+      return generateApprovalBriefing(
+        fr.project.workspaceId,
+        ctx.session.user.id,
+        { title: feature.title, context: feature.context },
+        feature.prds[0]?.contentJson ? JSON.stringify(feature.prds[0]?.contentJson) : null,
+        reviewHistory
+      );
     }),
 
   list: protectedProcedure

@@ -32,6 +32,7 @@ model User {
   workspaceMembers WorkspaceMember[]
   tasks            Task[]
   taskComments     TaskComment[]
+  featureApprovals FeatureApproval[]
 
   @@map("user")
 }
@@ -93,9 +94,7 @@ model Workspace {
   razorpaySubscriptionId String? @unique @map("razorpay_subscription_id")
   aiReviewCredits        Int     @default(20) @map("ai_review_credits")
 
-  // GitHub App installation
-  githubInstallationId Int?    @unique @map("github_installation_id")
-  githubAccountLogin   String? @map("github_account_login")
+  // Bring-your-own AI key (Anthropic/Claude only), encrypted at rest
 
   // Bring-your-own AI key (Anthropic/Claude only), encrypted at rest
   anthropicApiKeyEnc String? @map("anthropic_api_key_enc")
@@ -119,6 +118,11 @@ model Workspace {
   projects     Project[]
   subscription Subscription?
   invitations  Invitation[]
+  checkoutOrders CheckoutOrder[]
+  reviewRules  ReviewRule[]
+  activityEvents ActivityEvent[]
+  githubInstallations GitHubInstallation[]
+  syncRuns     SyncRun[]
 
   @@map("workspace")
 }
@@ -182,6 +186,7 @@ model Project {
 
   workspace       Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   featureRequests FeatureRequest[]
+  activityEvents  ActivityEvent[]
   repositories    Repository[]
   tasks           Task[]
 
@@ -227,6 +232,8 @@ model FeatureRequest {
   project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   prds         PRD[]
   pullRequests PullRequest[]
+  featureApprovals FeatureApproval[]
+  clarificationMessages ClarificationMessage[]
 
   @@index([projectId, status])
   @@index([status, reviewDueAt])
@@ -576,4 +583,154 @@ enum ReviewStatus {
   PENDING
   APPROVED
   CHANGES_REQUESTED
+}
+
+// -----------------------------
+// Billing Models
+// -----------------------------
+model CheckoutOrder {
+  id          String         @id @default(cuid())
+  workspaceId String         @map("workspace_id")
+  razorpayId  String         @unique @map("razorpay_id")
+  type        CheckoutType
+  status      CheckoutStatus @default(PENDING)
+  amountInr   Int            @map("amount_inr")
+  credits     Int?
+  planTier    PlanTier?      @map("plan_tier")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@map("checkout_order")
+}
+
+enum CheckoutType {
+  SUBSCRIPTION
+  CREDITS
+}
+
+enum CheckoutStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+// -----------------------------
+// AI Learning Rules
+// -----------------------------
+model ReviewRule {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  pattern     String   @db.Text
+  hitCount    Int      @default(0) @map("hit_count")
+  createdBy   String?  @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@map("review_rule")
+}
+
+// -----------------------------
+// Relational Approvals
+// -----------------------------
+enum ApprovalType {
+  PLAN
+  RELEASE
+}
+
+model FeatureApproval {
+  id               String       @id @default(cuid())
+  featureRequestId String       @map("feature_request_id")
+  type             ApprovalType
+  approvedById     String       @map("approved_by_id")
+  notes            String?      @db.Text
+  createdAt        DateTime     @default(now()) @map("created_at")
+
+  featureRequest   FeatureRequest @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
+  approvedBy       User           @relation(fields: [approvedById], references: [id], onDelete: Cascade)
+
+  @@index([featureRequestId])
+  @@map("feature_approval")
+}
+
+// -----------------------------
+// AI Product Discovery
+// -----------------------------
+enum MessageRole {
+  SYSTEM
+  USER
+  ASSISTANT
+}
+
+model ClarificationMessage {
+  id               String       @id @default(cuid())
+  featureRequestId String       @map("feature_request_id")
+  role             MessageRole
+  content          String       @db.Text
+  createdAt        DateTime     @default(now()) @map("created_at")
+
+  featureRequest   FeatureRequest @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
+
+  @@index([featureRequestId])
+  @@map("clarification_message")
+}
+
+// -----------------------------
+// Activity & Telemetry
+// -----------------------------
+model ActivityEvent {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  projectId   String?  @map("project_id")
+  userId      String?  @map("user_id")
+  type        String   // FEATURE_CREATED, PR_MERGED, PRD_GENERATED, etc.
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId])
+  @@index([projectId])
+  @@index([userId])
+  @@map("activity_event")
+}
+
+// -----------------------------
+// GitHub Integration
+// -----------------------------
+model GitHubInstallation {
+  id               String   @id @default(cuid())
+  workspaceId      String   @map("workspace_id")
+  installationId   Int      @unique @map("installation_id")
+  accountLogin     String   @map("account_login")
+  accountAvatarUrl String?  @map("account_avatar_url")
+  installedAt      DateTime @default(now()) @map("installed_at")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@map("github_installation")
+}
+
+model SyncRun {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  status      WorkflowStatus @default(RUNNING) // RUNNING, COMPLETED, FAILED
+  startedAt   DateTime @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  error       String?  @db.Text
+  metadata    Json?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@map("sync_run")
 }

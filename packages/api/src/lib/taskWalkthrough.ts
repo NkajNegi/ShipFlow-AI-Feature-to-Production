@@ -74,10 +74,14 @@ export async function generateTaskWalkthrough(
 
   // Best-effort repo grounding — optional, never fatal.
   let repoContext: { path: string; content: string }[] = [];
-  if (workspace?.githubInstallationId && repository?.fullName) {
+  const installation = workspace ? await prisma.gitHubInstallation.findFirst({
+    where: { workspaceId: workspace.id },
+  }) : null;
+
+  if (installation?.installationId && repository?.fullName) {
     const [owner, repo] = repository.fullName.split("/") as [string, string];
     try {
-      const octokit = getInstallationOctokit(workspace.githubInstallationId);
+      const octokit = getInstallationOctokit(installation.installationId);
       repoContext = await readRepoContext(
         octokit,
         owner,

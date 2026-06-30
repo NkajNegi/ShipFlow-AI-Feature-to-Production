@@ -27,7 +27,7 @@ async function repoWithWorkspace(
       project: {
         select: {
           workspaceId: true,
-          workspace: { select: { githubInstallationId: true } },
+          workspace: { select: { githubInstallations: true } },
         },
       },
     },
@@ -57,7 +57,7 @@ export const commitRouter = createTRPCRouter({
         ctx.session.user.id,
         input.repositoryId,
       );
-      const installationId = repo.project.workspace.githubInstallationId;
+      const installationId = repo.project.workspace.githubInstallations?.[0]?.installationId;
       if (!installationId || !repo.fullName) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
@@ -97,7 +97,7 @@ export const commitRouter = createTRPCRouter({
         ctx.session.user.id,
         input.repositoryId,
       );
-      const installationId = repo.project.workspace.githubInstallationId;
+      const installationId = repo.project.workspace.githubInstallations?.[0]?.installationId;
       if (!installationId || !repo.fullName) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",

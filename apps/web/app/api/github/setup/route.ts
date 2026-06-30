@@ -39,6 +39,7 @@ export async function GET(req: Request) {
 
   // Best-effort lookup of the installation account login for display.
   let accountLogin: string | null = null;
+  let accountAvatarUrl: string | null = null;
   try {
     const octokit = getInstallationOctokit(installationId);
     const { data } = await octokit.rest.apps.getInstallation({
@@ -46,16 +47,26 @@ export async function GET(req: Request) {
     });
     accountLogin =
       (data.account && "login" in data.account ? data.account.login : null) ??
+      "";
+    accountAvatarUrl =
+      (data.account && "avatar_url" in data.account ? data.account.avatar_url : null) ??
       null;
   } catch {
     // ignore; we still store the installation id
   }
 
-  await prisma.workspace.update({
-    where: { id: workspaceId },
-    data: {
-      githubInstallationId: installationId,
-      githubAccountLogin: accountLogin,
+  await prisma.gitHubInstallation.upsert({
+    where: { installationId },
+    update: {
+      workspaceId,
+      accountLogin: accountLogin || "",
+      accountAvatarUrl,
+    },
+    create: {
+      installationId,
+      workspaceId,
+      accountLogin: accountLogin || "",
+      accountAvatarUrl,
     },
   });
 

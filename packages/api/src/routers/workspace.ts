@@ -32,8 +32,7 @@ export const workspaceRouter = createTRPCRouter({
           name: true,
           planTier: true,
           aiReviewCredits: true,
-          githubInstallationId: true,
-          githubAccountLogin: true,
+          githubInstallations: true,
           createdAt: true,
         },
       });

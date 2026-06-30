@@ -32,6 +32,9 @@ type Events = {
   "codegen/run.requested": {
     data: { codegenRunId: string };
   };
+  "feature/duplicate.requested": {
+    data: { featureRequestId: string };
+  };
 };
 
 export const EVENTS = {
@@ -43,6 +46,7 @@ export const EVENTS = {
   COMMIT_REVIEW: "commit/review.requested",
   READINESS_CHECK: "readiness/check.requested",
   CODEGEN_RUN: "codegen/run.requested",
+  FEATURE_DUPLICATE_CHECK: "feature/duplicate.requested",
 } as const;
 
 export const inngest = new Inngest({

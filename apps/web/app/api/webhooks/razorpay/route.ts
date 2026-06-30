@@ -58,13 +58,14 @@ export async function POST(req: Request) {
       }
     }
   } else if (type === "payment_link.paid") {
-    const workspaceId = event.payload?.payment_link?.entity?.notes?.workspaceId;
-    const credits = Number(
-      event.payload?.payment_link?.entity?.notes?.credits || 0,
+    const paymentLinkId = event.payload?.payment_link?.entity?.id;
+    const amountPaidPaise = Number(
+      event.payload?.payment_link?.entity?.amount_paid || 0,
     );
-    if (workspaceId && credits) {
+    
+    if (paymentLinkId && amountPaidPaise > 0) {
       try {
-        await addCreditsFromPaymentLink(workspaceId, credits);
+        await addCreditsFromPaymentLink(paymentLinkId, amountPaidPaise);
       } catch (err) {
         captureError(err, { webhook: "razorpay", type });
       }

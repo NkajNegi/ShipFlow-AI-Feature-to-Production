@@ -25,3 +25,28 @@ export async function logAudit(args: {
     // auditing must never break the primary action
   }
 }
+
+/**
+ * Append an entry to the user-facing Activity Feed. Best-effort.
+ */
+export async function logActivity(args: {
+  workspaceId: string;
+  projectId?: string | null;
+  userId?: string | null;
+  type: string;
+  metadata?: any;
+}) {
+  try {
+    await prisma.activityEvent.create({
+      data: {
+        workspaceId: args.workspaceId,
+        projectId: args.projectId ?? null,
+        userId: args.userId ?? null,
+        type: args.type,
+        metadata: args.metadata ?? null,
+      },
+    });
+  } catch (err) {
+    console.error("Failed to log activity:", err);
+  }
+}

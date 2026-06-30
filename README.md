@@ -103,9 +103,9 @@ cp .env.example apps/web/.env        # fill in the values
 
 ```bash
 npm run db:generate --workspace @repo/db
-npm run db:push --workspace @repo/db      # quick local sync
-# For production, use migrations instead:
-# npm run db:migrate --workspace @repo/db  (dev)  /  db:deploy (prod)
+npm run db:deploy --workspace @repo/db      # Apply versioned migrations to the database
+# For local development schema changes:
+# npm run db:migrate --workspace @repo/db
 ```
 
 ### Run (3 terminals for full local dev)

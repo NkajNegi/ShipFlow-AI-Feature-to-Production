@@ -43,7 +43,10 @@ export const clarifyRouter = createTRPCRouter({
 
       const feature = await ctx.prisma.featureRequest.findUnique({
         where: { id: input.featureRequestId },
-        include: { project: { include: { workspace: true } } },
+        include: { 
+          project: { include: { workspace: true } },
+          clarificationMessages: { orderBy: { createdAt: "asc" } }
+        },
       });
       if (!feature) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Not found." });
@@ -96,6 +99,10 @@ export const clarifyRouter = createTRPCRouter({
             .join("\n")
         : "(none yet)";
 
+      const threadText = feature.clarificationMessages.length > 0 
+        ? feature.clarificationMessages.map(m => `[${m.role}] ${m.content}`).join("\n\n")
+        : "(no previous discussion)";
+
       const { object } = await generateObject({
         model,
         schema: ClarificationSchema,
@@ -125,13 +132,36 @@ ${feature.context}
 ${siblingText}
 </untrusted>
 
+<untrusted type="discussion_thread">
+${threadText}
+</untrusted>
+
 Decide the next step and, if needed, list concise clarifying questions or an
 educational note about existing functionality.`,
       });
 
-      await ctx.prisma.featureRequest.update({
-        where: { id: feature.id },
-        data: { clarificationJson: object as object },
+      let assistantMsgContent = null;
+      if (object.decision === "NEEDS_CLARIFICATION" && object.clarifyingQuestions?.length > 0) {
+        assistantMsgContent = `${object.reasoning}\n\n` + object.clarifyingQuestions.map((q) => `- ${q}`).join("\n");
+      } else if (object.decision === "ALREADY_EXISTS" && object.existingFeatureNote) {
+        assistantMsgContent = `${object.reasoning}\n\n${object.existingFeatureNote}`;
+      }
+
+      await ctx.prisma.$transaction(async (tx) => {
+        await tx.featureRequest.update({
+          where: { id: feature.id },
+          data: { clarificationJson: object as object },
+        });
+
+        if (assistantMsgContent) {
+          await tx.clarificationMessage.create({
+            data: {
+              featureRequestId: feature.id,
+              role: "ASSISTANT",
+              content: assistantMsgContent,
+            },
+          });
+        }
       });
 
       return object;
@@ -151,16 +181,18 @@ educational note about existing functionality.`,
         ctx.session.user.id,
         input.featureRequestId,
       );
-      const current = await ctx.prisma.featureRequest.findUnique({
-        where: { id: feature.id },
-        select: { context: true },
-      });
-      return ctx.prisma.featureRequest.update({
-        where: { id: feature.id },
-        data: {
-          context: `${current?.context ?? ""}\n\n--- Added context ---\n${input.answers}`,
-          clarificationJson: Prisma.DbNull,
-        },
+      return ctx.prisma.$transaction(async (tx) => {
+        await tx.clarificationMessage.create({
+          data: {
+            featureRequestId: feature.id,
+            role: "USER",
+            content: input.answers,
+          },
+        });
+        return tx.featureRequest.update({
+          where: { id: feature.id },
+          data: { clarificationJson: Prisma.DbNull },
+        });
       });
     }),
 });

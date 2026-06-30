@@ -7,8 +7,10 @@ import {
   assertWorkspaceMember,
 } from "../lib/access";
 import { enforceRateLimit } from "../lib/ratelimit";
-import { logAudit } from "../lib/audit";
+import { logAudit, logActivity } from "../lib/audit";
 import { computeSlaState, SLA_OPEN_STATUSES } from "../lib/sla";
+import { formatReviewComment } from "../lib/review";
+import { getInstallationOctokit } from "../lib/github";
 
 export const reviewRouter = createTRPCRouter({
   /** Full command-center payload for a feature request (Phase 5 aggregation). */
@@ -48,6 +50,7 @@ export const reviewRouter = createTRPCRouter({
               },
             },
           },
+          clarificationMessages: { orderBy: { createdAt: "asc" } },
         },
       });
     }),
@@ -203,6 +206,12 @@ export const reviewRouter = createTRPCRouter({
           approvedById: ctx.session.user.id,
           approvedAt: new Date(),
           shippedAt: new Date(),
+          featureApprovals: {
+            create: {
+              type: "RELEASE",
+              approvedById: ctx.session.user.id,
+            }
+          }
         },
       });
       await logAudit({
@@ -211,6 +220,17 @@ export const reviewRouter = createTRPCRouter({
         actorName: ctx.session.user.name,
         action: "FEATURE_SHIPPED",
         target: shippedFr.title,
+      });
+
+      await logActivity({
+        workspaceId: fr.project.workspaceId,
+        projectId: shippedFr.projectId,
+        userId: ctx.session.user.id,
+        type: "FEATURE_SHIPPED",
+        metadata: {
+          featureRequestId: shippedFr.id,
+          featureRequestTitle: shippedFr.title,
+        },
       });
       return shippedFr;
     }),
@@ -235,7 +255,118 @@ export const reviewRouter = createTRPCRouter({
         action: "FEATURE_REJECTED",
         target: rejected.title,
       });
+
+      await logActivity({
+        workspaceId: fr.project.workspaceId,
+        projectId: rejected.projectId,
+        userId: ctx.session.user.id,
+        type: "FEATURE_REJECTED",
+        metadata: {
+          featureRequestId: rejected.id,
+          featureRequestTitle: rejected.title,
+        },
+      });
       return rejected;
+    }),
+
+  /** Dismiss an AI false positive, immediately unblocking the PR and teaching the AI to ignore it. */
+  dismissIssue: protectedProcedure
+    .input(z.object({ reviewId: z.string(), issueIndex: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const review = await ctx.prisma.review.findUnique({
+        where: { id: input.reviewId },
+        include: { 
+          pullRequest: { 
+            include: { 
+              repository: true,
+              featureRequest: { include: { project: { include: { workspace: { include: { githubInstallations: true } } } } } } 
+            } 
+          } 
+        },
+      });
+      if (!review) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const workspace = review.pullRequest.featureRequest.project.workspace;
+      await assertWorkspaceMember(ctx.prisma, ctx.session.user.id, workspace.id);
+
+      const issues = (Array.isArray(review.issuesJson) ? review.issuesJson : []) as any[];
+      const issue = issues[input.issueIndex];
+      if (!issue) throw new TRPCError({ code: "NOT_FOUND", message: "Issue not found" });
+
+      // Remove the issue from the list
+      issues.splice(input.issueIndex, 1);
+
+      // Recalculate status
+      const blockingCount = issues.filter(
+        (i: any) => i.severity === "BLOCKING" && i.resolutionStatus !== "RESOLVED",
+      ).length;
+      const status = blockingCount > 0 ? "CHANGES_REQUESTED" : "APPROVED";
+
+      // Update the review row
+      const updatedReview = await ctx.prisma.review.update({
+        where: { id: review.id },
+        data: { issuesJson: issues, blockingCount, status },
+      });
+
+      // Update feature request if this unblocked it
+      if (status === "APPROVED") {
+        await ctx.prisma.featureRequest.update({
+          where: { id: review.pullRequest.featureRequest.id },
+          data: { status: "IN_REVIEW" }, // wait, FIX_NEEDED -> IN_REVIEW
+        });
+      }
+
+      // Create a ReviewRule to teach the AI
+      const pattern = `Ignore this false positive: [${issue.category}] ${issue.title}\n${issue.detail}`;
+      await ctx.prisma.reviewRule.create({
+        data: {
+          workspaceId: workspace.id,
+          pattern,
+          createdBy: ctx.session.user.id,
+        },
+      });
+
+      // Update the GitHub comment!
+      const repo = review.pullRequest.repository;
+      const installation = workspace.githubInstallations[0];
+      if (installation?.installationId && repo?.fullName) {
+        try {
+          const parts = repo.fullName.split("/");
+          const owner = parts[0] as string;
+          const repoName = parts[1] as string;
+          const octokit = getInstallationOctokit(installation.installationId);
+          const comments = await octokit.paginate(octokit.rest.issues.listComments, {
+            owner,
+            repo: repoName,
+            issue_number: review.pullRequest.number,
+          });
+          const existingComment = comments.find((c: any) =>
+            c.body?.includes("<!-- metroflow-ai-review -->"),
+          );
+          if (existingComment) {
+            // reconstruct the ReviewResult object for formatting
+            const result = {
+              summary: review.summary || "",
+              meetsAcceptanceCriteria: true,
+              dimensions: (Array.isArray(review.dimensionsJson) ? review.dimensionsJson : []) as any,
+              issues,
+              suggestedTests: [],
+            };
+            const commentBody = formatReviewComment(result as any, blockingCount);
+            await octokit.rest.issues.updateComment({
+              owner,
+              repo: repoName,
+              comment_id: existingComment.id,
+              body: commentBody,
+            });
+          }
+        } catch (err) {
+          // Ignore failures here, we've already done the DB update
+          console.error("Failed to update GitHub comment on dismiss", err);
+        }
+      }
+
+      return updatedReview;
     }),
 
   /** Velocity & AI metrics for the analytics dashboard. */

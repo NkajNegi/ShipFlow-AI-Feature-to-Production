@@ -36,7 +36,7 @@ export const codegenRouter = createTRPCRouter({
           prds: { take: 1 },
           project: {
             select: {
-              workspace: { select: { githubInstallationId: true } },
+              workspace: { select: { githubInstallations: true } },
               repositories: { take: 1, select: { id: true } },
             },
           },
@@ -52,7 +52,7 @@ export const codegenRouter = createTRPCRouter({
         });
       }
       if (
-        !feature.project.workspace.githubInstallationId ||
+        !feature.project.workspace.githubInstallations?.[0]?.installationId ||
         feature.project.repositories.length === 0
       ) {
         throw new TRPCError({
