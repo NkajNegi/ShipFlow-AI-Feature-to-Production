@@ -10,7 +10,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, CheckCircle2, GitBranch } from "lucide-react";
+import {
+  Loader2,
+  CheckCircle2,
+  GitBranch,
+  AlertTriangle,
+  Lock,
+} from "lucide-react";
 
 export function SetupChecklist({
   workspaceId,
@@ -19,14 +25,25 @@ export function SetupChecklist({
   workspaceId: string;
   mode: "wizard" | "dashboard";
 }) {
+  // Current user's role in this workspace — installing the GitHub App requires
+  // ADMIN or LEAD (enforced server-side in github.getInstallUrl).
+  const ws = trpc.workspace.getById.useQuery({ workspaceId });
+  const role = ws.data?.currentUserRole;
+  const canInstall = role === "ADMIN" || role === "LEAD";
+
   // 1. GitHub Connection Status (App installed on workspace?)
   const ghStatus = trpc.github.getStatus.useQuery({ workspaceId });
-  const ghInstall = trpc.github.getInstallUrl.useQuery({ workspaceId });
+  // Only ADMIN/LEAD may fetch the install URL; skip the query for others so we
+  // don't surface an expected 403 as an error.
+  const ghInstall = trpc.github.getInstallUrl.useQuery(
+    { workspaceId },
+    { enabled: canInstall, retry: false },
+  );
   // 2. Repositories
   const repos = trpc.github.listLinkedRepositories.useQuery({ workspaceId });
   const hasRepo = (repos.data ?? []).length > 0;
 
-  const isLoading = ghStatus.isLoading || repos.isLoading;
+  const isLoading = ws.isLoading || ghStatus.isLoading || repos.isLoading;
 
   if (isLoading) {
     if (mode === "wizard") {
@@ -77,18 +94,58 @@ export function SetupChecklist({
           </div>
           {!isGitHubConnected && (
             <div className="ml-9 p-4 rounded-md border border-border bg-muted/40">
-              <p className="text-sm text-muted-foreground mb-3">
-                Install the GitHub App on your workspace to allow ShipFlow to
-                read PRs and post reviews.
-              </p>
-              <Button
-                asChild
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <a href={ghInstall.data?.url ?? "#"}>
-                  <GitBranch className="mr-2 h-4 w-4" /> Install GitHub App
-                </a>
-              </Button>
+              {!canInstall ? (
+                // MEMBERs can't install — explain instead of showing a dead button.
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Lock className="h-4 w-4 shrink-0" />
+                  Only workspace Admins or Leads can install the GitHub App. Ask
+                  an admin to connect it.
+                </p>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Install the GitHub App on your workspace to allow ShipFlow to
+                    read PRs and post reviews.
+                  </p>
+                  {ghInstall.isError ? (
+                    <div className="flex flex-col gap-2">
+                      <p className="flex items-center gap-2 text-sm text-red-400">
+                        <AlertTriangle className="h-4 w-4 shrink-0" />
+                        Couldn&apos;t generate the install link.{" "}
+                        {ghInstall.error?.message}
+                      </p>
+                      <Button
+                        variant="outline"
+                        className="w-fit"
+                        onClick={() => ghInstall.refetch()}
+                        disabled={ghInstall.isFetching}
+                      >
+                        {ghInstall.isFetching && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Retry
+                      </Button>
+                    </div>
+                  ) : ghInstall.data?.url ? (
+                    <Button
+                      asChild
+                      className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    >
+                      <a href={ghInstall.data.url}>
+                        <GitBranch className="mr-2 h-4 w-4" /> Install GitHub App
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button
+                      disabled
+                      className="bg-primary text-primary-foreground"
+                    >
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Preparing…
+                    </Button>
+                  )}
+                </>
+              )}
             </div>
           )}
         </div>
