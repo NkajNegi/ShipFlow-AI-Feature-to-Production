@@ -1,0 +1,69 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# testing / CI artifacts
+coverage
+test-results/
+playwright-report/
+blob-report/
+.last-run.json
+**/error-context.md
+
+# next.js
+.next/
+out/
+build
+.swc/
+
+# misc
+.DS_Store
+*.pem
+*.bak
+*.tsbuildinfo
+*.log
+
+# deploy
+.vercel
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files (never commit secrets — ignore .env everywhere in the monorepo)
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# turbo
+.turbo
+
+# ui
+dist/
+
+# custom ignores
+.claude/
+.claude
+uiux/
+UIUX design project/
+REQUIREMENTS.md
+PROJECT_DESCRIPTION.md
+
+# non-standard local env files holding secrets (underscore-prefixed)
+_env*
+**/_env*
+
+# local scratch / one-off scripts (never commit — may contain DB credentials)
+fix-roles.ts
+test-tool.ts
+**/test-create.ts
+**/test-role.ts
+**/test-*.local.ts
+scratch/
